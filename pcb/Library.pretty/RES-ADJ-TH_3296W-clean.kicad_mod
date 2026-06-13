@@ -1,0 +1,230 @@
+(footprint "RES-ADJ-TH_3296W-clean"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(property "Reference" "R3"
+		(at 1.1 -5.94 180)
+		(layer "F.SilkS")
+		(uuid "0587e796-f974-4b59-9794-dcb0e2399090")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "3296W-1-254LF"
+		(at 0 6.54 180)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "3d5b7619-9dd4-4c7d-86c4-2c7978c97d12")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" "https://lcsc.com/product-detail/Precision-Potentiometer_BOURNS_3296W-1-254LF_250KR_C83691.html"
+		(at 0 0 180)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "71b4089f-f645-4839-b8df-4e4d021545ee")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 180)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "eaf141ba-9361-43ad-b9e0-6882c010a293")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "LCSC Part" "C83691"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "db8e419f-782f-4ffb-84f7-04e395065456")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(sheetname "/driverR/")
+	(sheetfile "numb12_driver.kicad_sch")
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start 1.33 -2.81)
+		(end 1.71 -2.81)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "c72ad29c-c9a7-49aa-9ff7-3dc2660e0d6b")
+	)
+	(fp_line
+		(start 1.71 -2.81)
+		(end 2.09 -2.81)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "bc1fc423-c4c5-4fad-9f3e-7634f2f0f705")
+	)
+	(fp_line
+		(start 2.09 -2.81)
+		(end 1.71 -2.81)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "f241c8f8-41e9-455e-a025-28aff486e74e")
+	)
+	(fp_arc
+		(start 2.25 -2.8)
+		(mid 1.170023 -2.795005)
+		(end 2.249908 -2.80999)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "9c8c4376-4ec8-44fa-8bec-5dcc6b3cc2df")
+	)
+	(fp_line
+		(start -2.73 -4.83)
+		(end 2.6 -4.83)
+		(stroke
+			(width 0.33)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "61440dec-34db-4e05-9539-785c90f5e924")
+	)
+	(fp_line
+		(start 2.6 -4.83)
+		(end 2.6 4.83)
+		(stroke
+			(width 0.33)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "e337d1e0-7936-4537-9e43-ef5492245259")
+	)
+	(fp_line
+		(start 2.6 4.83)
+		(end -2.73 4.83)
+		(stroke
+			(width 0.33)
+			(type solid)
+		)
+		(layer "F.Fab")
+		(uuid "4908e5c3-e7cb-46a4-8a6e-83fc52767cff")
+	)
+	(fp_circle
+		(center -2.36 -4.77)
+		(end -2.33 -4.77)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "5ce7cd6f-01d0-410d-82e0-3014d2229feb")
+	)
+	(fp_circle
+		(center 0 -2.55)
+		(end 0.12 -2.55)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "f4a80632-150a-4905-b768-042d14324004")
+	)
+	(fp_circle
+		(center 0 -0.01)
+		(end 0.12 -0.01)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "9988c677-0134-42b3-84b7-b990d3f87433")
+	)
+	(fp_circle
+		(center 0 2.55)
+		(end 0.12 2.55)
+		(stroke
+			(width 0.25)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "05cef78f-750e-405d-86e4-7f6f748fa4fb")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 0 180)
+		(layer "F.Fab")
+		(uuid "b06261da-5114-4281-803a-0fdb4faa48ca")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" thru_hole circle
+		(at 0 -2.54 270)
+		(size 1.52 1.52)
+		(drill 0.762)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "62d12e2a-2ef6-45dd-bf7e-88be9e84ed92")
+	)
+	(pad "2" thru_hole circle
+		(at 0 0 270)
+		(size 1.52 1.52)
+		(drill 0.762)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "edd8871b-f11d-4b89-bd43-97b1544e4853")
+	)
+	(pad "3" thru_hole circle
+		(at 0 2.54 270)
+		(size 1.52 1.52)
+		(drill 0.762)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "8315695d-4152-45fc-890b-b3fa1bc74120")
+	)
+	(embedded_fonts no)
+	(model "${EASYEDA2KICAD}/easyeda2kicad.3dshapes/RES-ADJ-TH_3296W.wrl"
+		(offset
+			(xyz 0.06 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 270)
+		)
+	)
+)
