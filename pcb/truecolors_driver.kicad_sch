@@ -3963,12 +3963,6 @@
 		(uuid "55e8651e-31e0-43df-b8d8-bf2f20489f8b")
 	)
 	(junction
-		(at 130.81 85.09)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "5e97a0ae-4be8-4b35-9579-b7be505a24a9")
-	)
-	(junction
 		(at 130.81 106.68)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4011,16 +4005,16 @@
 		(uuid "9909b9c3-23a0-4c44-9e1c-2a2e1198e457")
 	)
 	(junction
-		(at 123.19 77.47)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "9b3c9ab4-1c23-4768-8c58-7cf489ddf7dc")
-	)
-	(junction
 		(at 134.62 120.65)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "9f6defe5-9212-41dc-ba38-ab1710a5f7f8")
+	)
+	(junction
+		(at 123.19 77.47)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a155c868-fe1b-442a-a436-851118afa0f6")
 	)
 	(junction
 		(at 105.41 109.22)
@@ -4297,16 +4291,6 @@
 			(type default)
 		)
 		(uuid "27108c95-8bb3-48d7-8cb9-3749856a7bcb")
-	)
-	(wire
-		(pts
-			(xy 123.19 85.09) (xy 130.81 85.09)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2a980a00-c1b8-4d67-9ae7-c2d15b192909")
 	)
 	(wire
 		(pts
@@ -4737,6 +4721,16 @@
 			(type default)
 		)
 		(uuid "893c5196-91a0-421f-8b7e-d406fa452d6b")
+	)
+	(wire
+		(pts
+			(xy 123.19 72.39) (xy 123.19 77.47)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8cd60386-1ca5-42bf-ae89-537777d76ce8")
 	)
 	(wire
 		(pts
@@ -7395,6 +7389,84 @@
 		)
 	)
 	(symbol
+		(lib_id "power:+3.3V")
+		(at 123.19 64.77 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "625fc555-10df-43bf-8614-aadc4b18d985")
+		(property "Reference" "#PWR042"
+			(at 123.19 68.58 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3.3V"
+			(at 123.19 59.69 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 123.19 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 123.19 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 123.19 64.77 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "45cce3dd-3f72-41d8-8a5d-158ac5a8e3e9")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
+					(reference "#PWR042")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:+15V")
 		(at 259.08 130.81 0)
 		(mirror y)
@@ -9759,7 +9831,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 123.19 81.28 0)
+		(at 123.19 68.58 180)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -9769,7 +9841,7 @@
 		(dnp no)
 		(uuid "b2de1d4f-f98a-403d-a370-7e90a7416e4e")
 		(property "Reference" "R26"
-			(at 116.332 80.0099 0)
+			(at 130.048 69.8501 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9780,7 +9852,7 @@
 			)
 		)
 		(property "Value" "120k"
-			(at 116.332 82.5499 0)
+			(at 130.048 67.3101 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9791,7 +9863,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 121.412 81.28 90)
+			(at 124.968 68.58 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9802,7 +9874,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 123.19 81.28 0)
+			(at 123.19 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9813,7 +9885,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 123.19 81.28 0)
+			(at 123.19 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9850,7 +9922,7 @@
 		(dnp no)
 		(uuid "b70832f6-4634-4570-a29c-b84b6b3dc56d")
 		(property "Reference" "Q4"
-			(at 119.888 70.6119 0)
+			(at 114.554 70.6119 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -9861,7 +9933,7 @@
 			)
 		)
 		(property "Value" "BSS138"
-			(at 119.888 73.1519 0)
+			(at 114.554 73.1519 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
