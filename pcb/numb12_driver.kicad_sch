@@ -1878,6 +1878,16 @@
 	)
 	(wire
 		(pts
+			(xy 162.56 69.85) (xy 162.56 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5e160aef-b6ba-4566-a31e-eebce83324d6")
+	)
+	(wire
+		(pts
 			(xy 127 109.22) (xy 121.92 109.22)
 		)
 		(stroke
@@ -2366,6 +2376,16 @@
 		)
 		(uuid "ff45577c-77c9-4ae4-9f4a-9abaaedb0e46")
 	)
+	(label "PWM"
+		(at 162.56 69.85 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "288ef343-6fe6-4352-b038-6140988641ca")
+	)
 	(label "VOUT"
 		(at 96.52 96.52 0)
 		(effects
@@ -2807,6 +2827,93 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 162.56 80.01 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0af9cf0a-9ccb-4e47-922f-f8f1ecf90e89")
+		(property "Reference" "#PWR025"
+			(at 162.56 86.36 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 162.56 85.09 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 162.56 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 162.56 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 162.56 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "be350992-983f-4e49-ab10-6e1874b8e4f9")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116/306a859c-b66d-4a58-8268-acded61abc87"
+					(reference "#PWR026")
+					(unit 1)
+				)
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116/c7c90c78-98e5-4b90-942c-a53d63abc2e8"
+					(reference "#PWR025")
+					(unit 1)
+				)
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116/cb4b8fa4-b701-4d54-a1e4-dd3a16f1a18b"
+					(reference "#PWR027")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C")
 		(at 41.91 69.85 0)
 		(unit 1)
@@ -2828,7 +2935,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "4.7uF 35V"
 			(at 39.37 72.136 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2862,6 +2969,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 41.91 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C307467"
 			(at 41.91 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -2916,7 +3034,7 @@
 				)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "4.7uF 35V"
 			(at 102.616 103.886 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2959,6 +3077,17 @@
 				)
 			)
 		)
+		(property "LCSC Part" "C307467"
+			(at 101.6 101.6 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "a1dc889e-2a86-4e8f-bb71-661f20420a8c")
 		)
@@ -2977,6 +3106,96 @@
 				)
 				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116/cb4b8fa4-b701-4d54-a1e4-dd3a16f1a18b"
 					(reference "C29")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 162.56 76.2 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "20808b8a-fa44-47cc-92b4-16e53aec5ea7")
+		(property "Reference" "R17"
+			(at 165.1 74.9299 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "10k"
+			(at 165.1 77.4699 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 160.782 76.2 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 162.56 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 162.56 76.2 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "5c6d2a19-1d1f-40d2-87aa-e2fb7751ea08")
+		)
+		(pin "2"
+			(uuid "34f95161-476a-407a-a6dd-92c4333b30dd")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116/306a859c-b66d-4a58-8268-acded61abc87"
+					(reference "R18")
+					(unit 1)
+				)
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116/c7c90c78-98e5-4b90-942c-a53d63abc2e8"
+					(reference "R17")
+					(unit 1)
+				)
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116/cb4b8fa4-b701-4d54-a1e4-dd3a16f1a18b"
+					(reference "R19")
 					(unit 1)
 				)
 			)
@@ -3320,7 +3539,7 @@
 				)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "4.7uF 35V"
 			(at 117.856 103.886 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3353,6 +3572,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 116.84 101.6 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C307467"
 			(at 116.84 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -3600,7 +3830,7 @@
 				)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "4.7uF 35V"
 			(at 112.776 103.886 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3633,6 +3863,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 111.76 101.6 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C307467"
 			(at 111.76 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -3688,7 +3929,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "4.7uF 35V"
 			(at 34.29 72.136 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3722,6 +3963,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 36.83 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C307467"
 			(at 36.83 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -3777,7 +4029,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1uF"
+		(property "Value" "1uF 50V"
 			(at 55.88 83.566 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3812,6 +4064,17 @@
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 58.42 81.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C5199872"
+			(at 58.42 81.28 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3865,7 +4128,7 @@
 				)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "4.7uF 35V"
 			(at 115.824 70.104 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3899,6 +4162,17 @@
 		)
 		(property "Description" "Unpolarized capacitor"
 			(at 119.38 68.58 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C307467"
+			(at 119.38 68.58 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3952,7 +4226,7 @@
 				)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "4.7uF 35V"
 			(at 107.696 103.886 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3985,6 +4259,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 106.68 101.6 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C307467"
 			(at 106.68 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -4129,7 +4414,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "4.7uF"
+		(property "Value" "4.7uF 35V"
 			(at 44.45 72.136 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4163,6 +4448,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 46.99 69.85 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C307467"
 			(at 46.99 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -4217,7 +4513,7 @@
 				)
 			)
 		)
-		(property "Value" "470pF"
+		(property "Value" "470pF 50V"
 			(at 85.598 78.994 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4250,6 +4546,17 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 81.28 77.47 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C16194503"
 			(at 81.28 77.47 0)
 			(hide yes)
 			(show_name no)
