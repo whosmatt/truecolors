@@ -401,9 +401,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/6a2b9bd6-6090-4f7c-977b-294eb64d3579")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/c9363144-a9cf-477d-a909-02509f3fb497")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -1050,9 +1050,9 @@
 			)
 		)
 		(property ki_fp_filters "R_*")
-		(path "/9af6e77e-35e8-435d-810e-c9bff0289c21")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/f367eb24-e857-4303-9001-26b337981e66")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -2994,9 +2994,9 @@
 			)
 		)
 		(property ki_fp_filters "R_*")
-		(path "/a90342f2-1026-42ec-b754-69be24437539")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/ca736ce6-f8ac-42e5-a263-faa18b3464b4")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -3166,9 +3166,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/7f716f2e-af8d-40b9-83c2-220647e16474")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/0f27942a-758b-451c-b909-73a957484a24")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -3624,6 +3624,12 @@
 		(path "/cb4b8fa4-b701-4d54-a1e4-dd3a16f1a18b/79272aa2-e4a9-478c-8b61-c2de4d591671")
 		(sheetname "/driverB/")
 		(sheetfile "numb12_driver.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1" "2" "3" "4" "5" "11" "10" "9" "8" "7" "6")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -4748,9 +4754,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/6ea51468-a2c8-489e-90f8-78ced5634ecc")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/8036bf0f-56b5-45e5-bb43-f7d0e62b496d")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -4930,9 +4936,9 @@
 				)
 			)
 		)
-		(path "/4585d675-b228-49b7-91fc-1bc86e8ef01e")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/68b67fed-51a2-4197-943e-c2b2d8ff427b")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -9311,6 +9317,12 @@
 		(path "/c7c90c78-98e5-4b90-942c-a53d63abc2e8/79272aa2-e4a9-478c-8b61-c2de4d591671")
 		(sheetname "/driverR/")
 		(sheetfile "numb12_driver.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1" "2" "3" "4" "5" "11" "10" "9" "8" "7" "6")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -11282,9 +11294,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/c36b2d78-14b6-4eca-a8ee-b2dc9ad386df")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/4399dd20-1b1b-44e5-9c95-388dc28e068b")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -11467,6 +11479,12 @@
 		(path "/69cc76de-7e80-4efa-8274-18633e253e5f")
 		(sheetname "/")
 		(sheetfile "truecolors_driver.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1" "2" "3" "4")
+			)
+		)
 		(attr through_hole)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -13431,9 +13449,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/0ff9857c-d8b5-4345-aa2a-fc49ad3c55e2")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/e368eef6-9074-4d7b-81e7-b826019a665f")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -14116,6 +14134,12 @@
 		(path "/306a859c-b66d-4a58-8268-acded61abc87/79272aa2-e4a9-478c-8b61-c2de4d591671")
 		(sheetname "/driverG/")
 		(sheetfile "numb12_driver.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1" "2" "3" "4" "5" "11" "10" "9" "8" "7" "6")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -14953,9 +14977,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/8aebff39-d49a-415b-ac3c-1c50c890b659")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/502c72d2-4b53-419a-90d8-30fd7eb1d31d")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -15454,9 +15478,15 @@
 				)
 			)
 		)
-		(path "/a9bc7960-7899-4344-bb71-8c455304eb35")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/5740f420-a629-4b9f-88db-ad09bb932e31")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "1" "2" "3" "4" "5" "11" "10" "9" "8" "7" "6")
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -15654,7 +15684,7 @@
 			(at 2 -3 270)
 			(size 1.5 0.6)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "/CC2")
+			(net "/power/CC2")
 			(pinfunction "CC2_6")
 			(pintype "unspecified")
 			(uuid "37b5e063-7b4f-4317-9033-b8c83a137325")
@@ -15663,7 +15693,7 @@
 			(at 1 -3 270)
 			(size 1.5 0.6)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "/CC1")
+			(net "/power/CC1")
 			(pinfunction "CC1_7")
 			(pintype "unspecified")
 			(uuid "51c80135-6d93-45a5-830b-78f8ae4371ff")
@@ -16806,9 +16836,9 @@
 				)
 			)
 		)
-		(path "/f20971de-9ba0-4cb1-b92d-73059b46154f")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/58c6732e-3c08-4696-82ab-699ab54e4a20")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -17347,9 +17377,9 @@
 			)
 		)
 		(property ki_fp_filters "R_*")
-		(path "/d821a9fb-799f-4525-ab0c-4b3dab2e2402")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/057205a1-4c2e-475e-947e-f0daaf04d5aa")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -18518,9 +18548,9 @@
 				)
 			)
 		)
-		(path "/53327b12-9a4d-416b-b482-569eb280bee1")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/3b75990f-d067-4525-a071-56fb6d8f41f4")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -18777,9 +18807,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/ab98231e-e622-40f3-88fe-eeaf8d611cb4")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/3cebbb5c-0e45-489d-9661-3672eb89108b")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -19405,7 +19435,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO5-Pad5)")
 			(pinfunction "IO5_5")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "f331d85a-c1ad-473c-8010-b52a7a59ef3f")
 		)
 		(pad "6" smd rect
@@ -19432,7 +19462,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO15-Pad8)")
 			(pinfunction "IO15_8")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "21ebf74d-3507-49f8-8942-7daedcae2ea3")
 		)
 		(pad "9" smd rect
@@ -19441,7 +19471,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO16-Pad9)")
 			(pinfunction "IO16_9")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "0a4caade-f4fd-43df-b859-f79718dc473d")
 		)
 		(pad "10" smd rect
@@ -19450,7 +19480,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO17-Pad10)")
 			(pinfunction "IO17_10")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "24645e80-322b-4e07-b45e-951c2520c098")
 		)
 		(pad "11" smd rect
@@ -19459,7 +19489,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO18-Pad11)")
 			(pinfunction "IO18_11")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "111e7ec1-422a-4ee7-a64e-894ec7e29dee")
 		)
 		(pad "12" smd rect
@@ -19517,7 +19547,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO3-Pad15)")
 			(pinfunction "IO3_15")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "c69d2a56-3b6d-417e-a885-1ddc10a77ccd")
 		)
 		(pad "16" smd rect
@@ -19526,7 +19556,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO46-Pad16)")
 			(pinfunction "IO46_16")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "31e1132b-e641-4369-9290-e8404190a91f")
 		)
 		(pad "17" smd rect
@@ -19553,7 +19583,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO11-Pad19)")
 			(pinfunction "IO11_19")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "ef0874d1-1745-4733-bc72-5bd1414c3f51")
 		)
 		(pad "20" smd rect
@@ -19580,7 +19610,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO14-Pad22)")
 			(pinfunction "IO14_22")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "b39d0201-9432-4593-bc0d-a281ba79a7bc")
 		)
 		(pad "23" smd rect
@@ -19589,7 +19619,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO21-Pad23)")
 			(pinfunction "IO21_23")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "38de4199-ccc7-4fe8-becd-282e0fa04586")
 		)
 		(pad "24" smd rect
@@ -19598,7 +19628,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO47-Pad24)")
 			(pinfunction "IO47_24")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "b72cf8a0-13aa-4626-aaaf-829c72d92c0c")
 		)
 		(pad "25" smd rect
@@ -19607,7 +19637,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO48-Pad25)")
 			(pinfunction "IO48_25")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "c6df320d-a2dd-4432-9fec-20783ddc0a86")
 		)
 		(pad "26" smd rect
@@ -19616,7 +19646,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO45-Pad26)")
 			(pinfunction "IO45_26")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "f8f98f32-231b-45b3-96bf-f59c3c86d54f")
 		)
 		(pad "27" smd rect
@@ -19634,7 +19664,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO35-Pad28)")
 			(pinfunction "IO35_28")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "b08e5be7-4bf2-44b8-99bd-57f181e14957")
 		)
 		(pad "29" smd rect
@@ -19643,7 +19673,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO36-Pad29)")
 			(pinfunction "IO36_29")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "14aa0d8f-4afd-4f98-ae00-6ac4bc045baa")
 		)
 		(pad "30" smd rect
@@ -19652,7 +19682,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO37-Pad30)")
 			(pinfunction "IO37_30")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "6154c9d9-5619-4881-8f3b-b84b1a5f4e37")
 		)
 		(pad "31" smd rect
@@ -19688,7 +19718,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO41-Pad34)")
 			(pinfunction "IO41_34")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "dafdf099-3442-4cc3-bf3a-95269fa2ab1d")
 		)
 		(pad "35" smd rect
@@ -19697,7 +19727,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO42-Pad35)")
 			(pinfunction "IO42_35")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "3f148537-319c-4943-9d7f-fb3fdc32916a")
 		)
 		(pad "36" smd rect
@@ -19724,7 +19754,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO2-Pad38)")
 			(pinfunction "IO2_38")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "508f751c-7c28-4325-a43c-224e763f5577")
 		)
 		(pad "39" smd rect
@@ -19733,7 +19763,7 @@
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(net "unconnected-(U3-IO1-Pad39)")
 			(pinfunction "IO1_39")
-			(pintype "unspecified")
+			(pintype "unspecified+no_connect")
 			(uuid "5e839f6c-26f4-4c85-9c2b-cbcbcc75a935")
 		)
 		(pad "40" smd rect
@@ -20073,9 +20103,17 @@
 				)
 			)
 		)
-		(path "/95786705-0878-4dd4-ad68-b33ae25a7e7b")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/8324b0f9-b65d-42ba-82d7-5b7333188b17")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
+		(units
+			(unit
+				(name "A")
+				(pins "A1B12" "A4B9" "B8" "A5" "B7" "A6" "A7" "B6" "A8" "B5" "B4A9" "B1A12"
+					"4" "3" "2" "1"
+				)
+			)
+		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_line
@@ -20280,7 +20318,7 @@
 			(at -1.25 -2.47 90)
 			(size 0.3 1.3)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "/CC1")
+			(net "/power/CC1")
 			(pinfunction "CC1_A5")
 			(pintype "unspecified")
 			(uuid "9e654336-18d4-4d84-9a5b-c2ca96336eda")
@@ -20362,7 +20400,7 @@
 			(at 1.75 -2.47 90)
 			(size 0.3 1.3)
 			(layers "F.Cu" "F.Mask" "F.Paste")
-			(net "/CC2")
+			(net "/power/CC2")
 			(pinfunction "CC2_B5")
 			(pintype "unspecified")
 			(uuid "cd3e5b7f-d6d0-4f52-afe2-5e91457c430f")
@@ -21077,9 +21115,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/7a2f5d7c-7493-456c-b9d1-df4ede00b320")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/58d0f21e-d2f2-4b0f-ada4-61c87d5a7dab")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -21249,9 +21287,9 @@
 			)
 		)
 		(property ki_fp_filters "C_*")
-		(path "/03625cc5-eb3f-4842-8fc3-49cdf67584fb")
-		(sheetname "/")
-		(sheetfile "truecolors_driver.kicad_sch")
+		(path "/8716911c-dc26-4098-895e-a395ac91e4b7/6a9f54de-e988-4e1e-b362-0472f254a46e")
+		(sheetname "/power/")
+		(sheetfile "power.kicad_sch")
 		(units
 			(unit
 				(name "A")
@@ -25180,54 +25218,6 @@
 		(uuid "f53c3508-09e0-43a0-af68-09b77914e2a2")
 	)
 	(segment
-		(start 124.68 134.32)
-		(end 125.015348 133.984652)
-		(width 0.2)
-		(layer "F.Cu")
-		(net "/CC2")
-		(uuid "585f215c-00b8-4077-b587-765e8f7f19c8")
-	)
-	(segment
-		(start 122.7 134.32)
-		(end 124.68 134.32)
-		(width 0.2)
-		(layer "F.Cu")
-		(net "/CC2")
-		(uuid "cfed4967-1e88-4a44-bb1c-fb026e6cb799")
-	)
-	(segment
-		(start 125.015348 133.984652)
-		(end 125.015348 128.454788)
-		(width 0.2)
-		(layer "F.Cu")
-		(net "/CC2")
-		(uuid "d5f05294-21bb-4b41-9317-87e2262b29aa")
-	)
-	(segment
-		(start 126.015348 128.454788)
-		(end 126.015348 134.854652)
-		(width 0.2)
-		(layer "F.Cu")
-		(net "/CC1")
-		(uuid "4ae80a76-38b3-44ea-b1bb-8aec921221ea")
-	)
-	(segment
-		(start 123.55 137.32)
-		(end 122.7 137.32)
-		(width 0.2)
-		(layer "F.Cu")
-		(net "/CC1")
-		(uuid "8b8b805d-9f97-471f-a367-fe9411df3294")
-	)
-	(segment
-		(start 126.015348 134.854652)
-		(end 123.55 137.32)
-		(width 0.2)
-		(layer "F.Cu")
-		(net "/CC1")
-		(uuid "8ea99627-1036-4f82-8688-3dd919fb21fe")
-	)
-	(segment
 		(start 122.7 135.82)
 		(end 121.724999 135.82)
 		(width 0.26)
@@ -25761,6 +25751,54 @@
 		(layer "F.Cu")
 		(net "/BOOT")
 		(uuid "f49aaf74-15cc-433d-8d66-d4bb25b73a57")
+	)
+	(segment
+		(start 124.68 134.32)
+		(end 125.015348 133.984652)
+		(width 0.2)
+		(layer "F.Cu")
+		(net "/power/CC2")
+		(uuid "585f215c-00b8-4077-b587-765e8f7f19c8")
+	)
+	(segment
+		(start 122.7 134.32)
+		(end 124.68 134.32)
+		(width 0.2)
+		(layer "F.Cu")
+		(net "/power/CC2")
+		(uuid "cfed4967-1e88-4a44-bb1c-fb026e6cb799")
+	)
+	(segment
+		(start 125.015348 133.984652)
+		(end 125.015348 128.454788)
+		(width 0.2)
+		(layer "F.Cu")
+		(net "/power/CC2")
+		(uuid "d5f05294-21bb-4b41-9317-87e2262b29aa")
+	)
+	(segment
+		(start 126.015348 128.454788)
+		(end 126.015348 134.854652)
+		(width 0.2)
+		(layer "F.Cu")
+		(net "/power/CC1")
+		(uuid "4ae80a76-38b3-44ea-b1bb-8aec921221ea")
+	)
+	(segment
+		(start 123.55 137.32)
+		(end 122.7 137.32)
+		(width 0.2)
+		(layer "F.Cu")
+		(net "/power/CC1")
+		(uuid "8b8b805d-9f97-471f-a367-fe9411df3294")
+	)
+	(segment
+		(start 126.015348 134.854652)
+		(end 123.55 137.32)
+		(width 0.2)
+		(layer "F.Cu")
+		(net "/power/CC1")
+		(uuid "8ea99627-1036-4f82-8688-3dd919fb21fe")
 	)
 	(zone
 		(net "GND")
