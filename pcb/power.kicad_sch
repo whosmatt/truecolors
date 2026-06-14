@@ -2,7 +2,7 @@
 	(version 20260306)
 	(generator "eeschema")
 	(generator_version "10.0")
-	(uuid "6a5dcbe7-8798-4684-b64e-a10468153348")
+	(uuid "09833a43-09d3-4618-b894-bd64bfa1f5c2")
 	(paper "A4")
 	(lib_symbols
 		(symbol "Device:C"
@@ -3221,6 +3221,17 @@
 				)
 			)
 		)
+		(property "LCSC Part" "C2907005"
+			(at 129.54 39.37 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "e2117595-ce5f-4308-b061-9da1c582a9fa")
 		)
@@ -5410,6 +5421,17 @@
 				)
 			)
 		)
+		(property "LCSC Part" "C2907005"
+			(at 125.73 39.37 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "5402bb2f-ba2f-476a-b33c-b170f9363865")
 		)
@@ -5732,6 +5754,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 83.82 58.42 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C2907095"
 			(at 83.82 58.42 0)
 			(hide yes)
 			(show_name no)

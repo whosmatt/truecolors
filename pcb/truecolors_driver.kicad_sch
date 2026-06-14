@@ -1270,9 +1270,13 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Mechanical:MountingHole"
+		(symbol "Mechanical:MountingHole_Pad"
+			(pin_numbers
+				(hide yes)
+			)
 			(pin_names
 				(offset 1.016)
+				(hide yes)
 			)
 			(exclude_from_sim no)
 			(in_bom no)
@@ -1280,7 +1284,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "H"
-				(at 0 5.08 0)
+				(at 0 6.35 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -1289,8 +1293,8 @@
 					)
 				)
 			)
-			(property "Value" "MountingHole"
-				(at 0 3.175 0)
+			(property "Value" "MountingHole_Pad"
+				(at 0 4.445 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(effects
@@ -1321,7 +1325,7 @@
 					)
 				)
 			)
-			(property "Description" "Mounting Hole without connection"
+			(property "Description" "Mounting Hole with connection"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1343,7 +1347,7 @@
 					)
 				)
 			)
-			(property "ki_fp_filters" "MountingHole*"
+			(property "ki_fp_filters" "MountingHole*Pad*"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -1354,9 +1358,9 @@
 					)
 				)
 			)
-			(symbol "MountingHole_0_1"
+			(symbol "MountingHole_Pad_0_1"
 				(circle
-					(center 0 0)
+					(center 0 1.27)
 					(radius 1.27)
 					(stroke
 						(width 1.27)
@@ -1364,6 +1368,26 @@
 					)
 					(fill
 						(type none)
+					)
+				)
+			)
+			(symbol "MountingHole_Pad_1_1"
+				(pin input line
+					(at 0 -2.54 90)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
 					)
 				)
 			)
@@ -3218,8 +3242,16 @@
 		(uuid "8b6eedcd-5502-4d6c-8857-b43e2d1bfff0")
 	)
 	(no_connect
+		(at 26.67 71.12)
+		(uuid "8fa9693f-c011-4d6e-9703-8716b388d45e")
+	)
+	(no_connect
 		(at 160.02 109.22)
 		(uuid "9ead8e54-469a-413c-bba7-132677e38ba1")
+	)
+	(no_connect
+		(at 34.29 71.12)
+		(uuid "a7912478-54b6-4e09-b9a7-2bc036fdfa3f")
 	)
 	(no_connect
 		(at 160.02 81.28)
@@ -3234,12 +3266,24 @@
 		(uuid "c9cf7a3d-8d13-4503-8f2f-ab84124c664c")
 	)
 	(no_connect
+		(at 41.91 71.12)
+		(uuid "cc63dde3-e108-4818-b7ad-a91bc1ff2a6e")
+	)
+	(no_connect
 		(at 160.02 91.44)
 		(uuid "eb50858e-a749-4d87-a356-48c05622bdf9")
 	)
 	(no_connect
+		(at 49.53 71.12)
+		(uuid "ebde0505-bf3a-4b98-887b-2a58b6b60d24")
+	)
+	(no_connect
 		(at 143.51 124.46)
 		(uuid "ed14441d-6cc2-4384-afa4-999858a7f919")
+	)
+	(no_connect
+		(at 19.05 71.12)
+		(uuid "edc910db-6adf-4499-858a-0480f5819fd8")
 	)
 	(no_connect
 		(at 151.13 124.46)
@@ -4459,7 +4503,7 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
@@ -4612,8 +4656,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 24.13 80.01 0)
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 34.29 68.58 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -4624,7 +4668,7 @@
 		(fields_autoplaced yes)
 		(uuid "216debe4-973b-45c5-8bb2-276edcfbe4f1")
 		(property "Reference" "H3"
-			(at 26.67 78.7399 0)
+			(at 36.83 66.0399 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -4635,7 +4679,7 @@
 			)
 		)
 		(property "Value" "M3"
-			(at 26.67 81.2799 0)
+			(at 36.83 68.5799 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -4646,7 +4690,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 24.13 80.01 0)
+			(at 34.29 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4657,7 +4701,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 24.13 80.01 0)
+			(at 34.29 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4667,8 +4711,8 @@
 				)
 			)
 		)
-		(property "Description" "Mounting Hole"
-			(at 24.13 80.01 0)
+		(property "Description" "Mounting Hole with connection"
+			(at 34.29 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4677,6 +4721,9 @@
 					(size 1.27 1.27)
 				)
 			)
+		)
+		(pin "1"
+			(uuid "2da138b7-61d3-40d8-b358-4baf578c221c")
 		)
 		(instances
 			(project "truecolors_driver"
@@ -5219,8 +5266,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 24.13 90.17 0)
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 49.53 68.58 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -5231,7 +5278,7 @@
 		(fields_autoplaced yes)
 		(uuid "43852b0c-b8a7-4e03-b65e-5f1f7de03e61")
 		(property "Reference" "H5"
-			(at 26.67 88.8999 0)
+			(at 52.07 66.0399 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5242,7 +5289,7 @@
 			)
 		)
 		(property "Value" "M3"
-			(at 26.67 91.4399 0)
+			(at 52.07 68.5799 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5253,7 +5300,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 24.13 90.17 0)
+			(at 49.53 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5264,7 +5311,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 24.13 90.17 0)
+			(at 49.53 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5274,8 +5321,8 @@
 				)
 			)
 		)
-		(property "Description" "Mounting Hole"
-			(at 24.13 90.17 0)
+		(property "Description" "Mounting Hole with connection"
+			(at 49.53 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5284,6 +5331,9 @@
 					(size 1.27 1.27)
 				)
 			)
+		)
+		(pin "1"
+			(uuid "bb31e36d-4395-490d-9e8d-3b2248b13355")
 		)
 		(instances
 			(project "truecolors_driver"
@@ -5300,7 +5350,7 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
@@ -5455,7 +5505,7 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
@@ -5664,6 +5714,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 149.86 27.94 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C2906982"
 			(at 149.86 27.94 0)
 			(hide yes)
 			(show_name no)
@@ -5894,8 +5955,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 24.13 74.93 0)
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 26.67 68.58 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -5906,7 +5967,7 @@
 		(fields_autoplaced yes)
 		(uuid "5ade4123-13cd-451b-a594-bc1e4fc0b41c")
 		(property "Reference" "H2"
-			(at 26.67 73.6599 0)
+			(at 29.21 66.0399 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5917,7 +5978,7 @@
 			)
 		)
 		(property "Value" "M3"
-			(at 26.67 76.1999 0)
+			(at 29.21 68.5799 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -5928,7 +5989,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 24.13 74.93 0)
+			(at 26.67 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5939,7 +6000,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 24.13 74.93 0)
+			(at 26.67 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5949,8 +6010,8 @@
 				)
 			)
 		)
-		(property "Description" "Mounting Hole"
-			(at 24.13 74.93 0)
+		(property "Description" "Mounting Hole with connection"
+			(at 26.67 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -5959,6 +6020,9 @@
 					(size 1.27 1.27)
 				)
 			)
+		)
+		(pin "1"
+			(uuid "5d582454-6e58-4fe6-9f5d-f1bd176cee4d")
 		)
 		(instances
 			(project "truecolors_driver"
@@ -5975,7 +6039,7 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
@@ -6572,6 +6636,17 @@
 				)
 			)
 		)
+		(property "LCSC Part" "C2906982"
+			(at 252.73 41.91 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "6cdb43e6-91b2-4b46-8299-871c9fbd9fe4")
 		)
@@ -6750,7 +6825,7 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
@@ -7042,6 +7117,17 @@
 				)
 			)
 		)
+		(property "LCSC Part" "C114633"
+			(at 252.73 34.29 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "6d026ac3-7d2a-4faa-bb2c-b0437fa161c9")
 		)
@@ -7267,8 +7353,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 24.13 85.09 0)
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 41.91 68.58 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7279,7 +7365,7 @@
 		(fields_autoplaced yes)
 		(uuid "8fb9421c-cc04-41f6-a630-4b87280d39f2")
 		(property "Reference" "H4"
-			(at 26.67 83.8199 0)
+			(at 44.45 66.0399 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7290,7 +7376,7 @@
 			)
 		)
 		(property "Value" "M3"
-			(at 26.67 86.3599 0)
+			(at 44.45 68.5799 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7301,7 +7387,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 24.13 85.09 0)
+			(at 41.91 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7312,7 +7398,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 24.13 85.09 0)
+			(at 41.91 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7322,8 +7408,8 @@
 				)
 			)
 		)
-		(property "Description" "Mounting Hole"
-			(at 24.13 85.09 0)
+		(property "Description" "Mounting Hole with connection"
+			(at 41.91 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7332,6 +7418,9 @@
 					(size 1.27 1.27)
 				)
 			)
+		)
+		(pin "1"
+			(uuid "84352c4e-58e4-4a7e-9ed7-99af7bc03f9a")
 		)
 		(instances
 			(project "truecolors_driver"
@@ -7524,6 +7613,17 @@
 				)
 			)
 		)
+		(property "LCSC Part" "C2906982"
+			(at 255.27 82.55 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "84a180e4-e7b4-4f06-b502-b15e8c344022")
 		)
@@ -7545,7 +7645,7 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
@@ -7761,6 +7861,17 @@
 				)
 			)
 		)
+		(property "LCSC Part" "C2907095"
+			(at 218.44 82.55 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
 		(pin "1"
 			(uuid "b797ea32-6c9b-4f79-8c5b-b72b161be9b2")
 		)
@@ -7777,8 +7888,8 @@
 		)
 	)
 	(symbol
-		(lib_id "Mechanical:MountingHole")
-		(at 24.13 69.85 0)
+		(lib_id "Mechanical:MountingHole_Pad")
+		(at 19.05 68.58 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -7789,7 +7900,7 @@
 		(fields_autoplaced yes)
 		(uuid "b6a45a89-fd68-4f7e-94e5-f88f8fd311a0")
 		(property "Reference" "H1"
-			(at 26.67 68.5799 0)
+			(at 21.59 66.0399 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7800,7 +7911,7 @@
 			)
 		)
 		(property "Value" "M3"
-			(at 26.67 71.1199 0)
+			(at 21.59 68.5799 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -7811,7 +7922,7 @@
 			)
 		)
 		(property "Footprint" "MountingHole:MountingHole_3.2mm_M3_DIN965_Pad"
-			(at 24.13 69.85 0)
+			(at 19.05 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7822,7 +7933,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 24.13 69.85 0)
+			(at 19.05 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7832,8 +7943,8 @@
 				)
 			)
 		)
-		(property "Description" "Mounting Hole"
-			(at 24.13 69.85 0)
+		(property "Description" "Mounting Hole with connection"
+			(at 19.05 68.58 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -7842,6 +7953,9 @@
 					(size 1.27 1.27)
 				)
 			)
+		)
+		(pin "1"
+			(uuid "f56cb414-a21e-4403-8522-7cf293ad01f2")
 		)
 		(instances
 			(project "truecolors_driver"
@@ -8034,7 +8148,7 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
@@ -8349,7 +8463,7 @@
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(in_pos_files yes)
 		(dnp no)
@@ -8805,6 +8919,17 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 201.93 33.02 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C2906982"
 			(at 201.93 33.02 0)
 			(hide yes)
 			(show_name no)
