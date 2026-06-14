@@ -66,6 +66,8 @@ CFG2/CFG3). Lasers are held off by their EN pulldowns until firmware drives them
 | MIC_CLK | GPIO12 | 20 | I²S PDM CLK | no series R (short trace); → MIC1 CLK |
 | MIC_DATA | GPIO13 | 21 | I²S PDM DATA RX | no series R (short trace); ← MIC1 DATA |
 | NTC_ADC | GPIO10 | 18 | ADC1_CH9 | laser module NTC sense via divider (below) |
+| LED_DATA | GPIO11 | 19 | RMT TX | WS2812B-B data |
+
 
 ## Subsystems
 
@@ -129,6 +131,15 @@ run on **+5 V** (validated: smooth control, starts at ~1% duty).
 - Mode is set by clock frequency alone — sleep ≤ 50 kHz, low-power 150–900 kHz,
   standard 1.1–4.0 MHz. No control register.
 - **Top-ported package**: acoustic port faces away from PCB
+
+### Status LED — WS2812B-B (LED1)
+
+- Single WS2812B-B RGB LED; VDD = **+5 V** (from the +5 V rail), GND.
+- **LED_DATA (GPIO11, module pin 19)** → data in. Driven by **RMT TX** peripheral
+  (one of 4 available channels; none previously allocated).
+- Firmware: ESP-IDF `led_strip` driver (RMT backend). For static color, write once
+  at init; LED holds state until power-cycled. Reset pulse ≥ 50 µs handled
+  automatically by the driver.
 
 ### Laser module NTC — temperature monitoring
 

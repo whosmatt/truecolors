@@ -1270,6 +1270,219 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "EasyEDA:WS2812B-B"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "LED"
+				(at 0 6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "WS2812B-B"
+				(at 0 -6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" "EasyEDA:LED-SMD_4P-L5.0-W5.0-BL_TC5050RGB"
+				(at 0 -8.89 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" "https://lcsc.com/product-detail/Light-Emitting-Diodes-LED_5050-RGBIntegrated-Light-4Pin_C114586.html"
+				(at 0 -11.43 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Manufacturer" "worldsemi"
+				(at 0 -13.97 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "MPN" "WS2812B-B/W"
+				(at 0 -16.51 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "LCSC Part" "C114586"
+				(at 0 -19.05 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "Light Emitting Diodes (LED)"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "WS2812B-B_0_1"
+				(rectangle
+					(start -10.16 3.81)
+					(end 10.16 -3.81)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(circle
+					(center -8.89 2.54)
+					(radius 0.38)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 9.65 -1.78) (xy 9.65 -3.3) (xy 8.13 -3.3) (xy 9.65 -1.78)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin unspecified line
+					(at -12.7 1.27 0)
+					(length 2.54)
+					(name "VDD"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin unspecified line
+					(at -12.7 -1.27 0)
+					(length 2.54)
+					(name "DOUT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin unspecified line
+					(at 12.7 -1.27 180)
+					(length 2.54)
+					(name "VSS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin unspecified line
+					(at 12.7 1.27 180)
+					(length 2.54)
+					(name "DIN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Mechanical:MountingHole_Pad"
 			(pin_numbers
 				(hide yes)
@@ -3082,6 +3295,12 @@
 		(uuid "01b40fca-a4f8-4b56-aadc-269b01a66b32")
 	)
 	(junction
+		(at 41.91 71.12)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "06be3768-1391-4313-92b2-abd047a4526c")
+	)
+	(junction
 		(at 201.93 36.83)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3094,6 +3313,12 @@
 		(uuid "255706d7-6cb6-4a26-83c9-b8286c4d9da9")
 	)
 	(junction
+		(at 34.29 71.12)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "320b27d2-b683-460f-bc0d-3e8a2d17f488")
+	)
+	(junction
 		(at 135.89 184.15)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3104,6 +3329,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "401d51fe-f4d5-4b8f-9514-fdc59fe67035")
+	)
+	(junction
+		(at 33.02 128.27)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4af1491b-2d0b-4438-be32-9b94e31c2980")
 	)
 	(junction
 		(at 29.21 184.15)
@@ -3130,10 +3361,22 @@
 		(uuid "a155c868-fe1b-442a-a436-851118afa0f6")
 	)
 	(junction
+		(at 19.05 71.12)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a9fff826-cc6a-46c3-9a36-02fb32cf73a1")
+	)
+	(junction
 		(at 81.28 184.15)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "bf93f303-aa61-407f-89d1-7df550bce48d")
+	)
+	(junction
+		(at 26.67 71.12)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c284cb06-e2e4-4310-bd15-89863a811c2a")
 	)
 	(junction
 		(at 85.09 109.22)
@@ -3164,6 +3407,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "efa5973e-6f56-4694-baa9-ce05110224a1")
+	)
+	(junction
+		(at 62.23 130.81)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "f28d5ef4-209d-4452-8e91-e41db80b4e67")
 	)
 	(junction
 		(at 233.68 133.35)
@@ -3238,20 +3487,8 @@
 		(uuid "7e568dda-5b72-4b91-ae3e-5d135a580e5e")
 	)
 	(no_connect
-		(at 135.89 124.46)
-		(uuid "8b6eedcd-5502-4d6c-8857-b43e2d1bfff0")
-	)
-	(no_connect
-		(at 26.67 71.12)
-		(uuid "8fa9693f-c011-4d6e-9703-8716b388d45e")
-	)
-	(no_connect
 		(at 160.02 109.22)
 		(uuid "9ead8e54-469a-413c-bba7-132677e38ba1")
-	)
-	(no_connect
-		(at 34.29 71.12)
-		(uuid "a7912478-54b6-4e09-b9a7-2bc036fdfa3f")
 	)
 	(no_connect
 		(at 160.02 81.28)
@@ -3266,24 +3503,12 @@
 		(uuid "c9cf7a3d-8d13-4503-8f2f-ab84124c664c")
 	)
 	(no_connect
-		(at 41.91 71.12)
-		(uuid "cc63dde3-e108-4818-b7ad-a91bc1ff2a6e")
-	)
-	(no_connect
 		(at 160.02 91.44)
 		(uuid "eb50858e-a749-4d87-a356-48c05622bdf9")
 	)
 	(no_connect
-		(at 49.53 71.12)
-		(uuid "ebde0505-bf3a-4b98-887b-2a58b6b60d24")
-	)
-	(no_connect
 		(at 143.51 124.46)
 		(uuid "ed14441d-6cc2-4384-afa4-999858a7f919")
-	)
-	(no_connect
-		(at 19.05 71.12)
-		(uuid "edc910db-6adf-4499-858a-0480f5819fd8")
 	)
 	(no_connect
 		(at 151.13 124.46)
@@ -3318,6 +3543,16 @@
 			(type default)
 		)
 		(uuid "08c40e92-d589-4355-ab7b-fc02d6edace3")
+	)
+	(wire
+		(pts
+			(xy 41.91 71.12) (xy 49.53 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "08d872fe-1131-4d39-bc02-54cf34c61f1a")
 	)
 	(wire
 		(pts
@@ -3388,6 +3623,16 @@
 			(type default)
 		)
 		(uuid "1c56ab7d-8a38-4720-8d92-b52a7e03c4dc")
+	)
+	(wire
+		(pts
+			(xy 135.89 124.46) (xy 135.89 137.16)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1da5f2b3-367a-40a6-b1e8-cd53743f1f28")
 	)
 	(wire
 		(pts
@@ -3471,6 +3716,16 @@
 	)
 	(wire
 		(pts
+			(xy 62.23 130.81) (xy 64.77 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "33a64f01-0d1b-4671-97a1-40b68b011c29")
+	)
+	(wire
+		(pts
 			(xy 105.41 106.68) (xy 119.38 106.68)
 		)
 		(stroke
@@ -3488,6 +3743,26 @@
 			(type default)
 		)
 		(uuid "43e1fce0-33e2-4abc-9a59-aa4266104fa8")
+	)
+	(wire
+		(pts
+			(xy 19.05 71.12) (xy 19.05 73.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "49bdc239-c26b-4d5e-b7db-d8e0d0438991")
+	)
+	(wire
+		(pts
+			(xy 29.21 128.27) (xy 33.02 128.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4a2e22ed-f409-4339-aff3-42ffa665d939")
 	)
 	(wire
 		(pts
@@ -3521,6 +3796,16 @@
 	)
 	(wire
 		(pts
+			(xy 60.96 128.27) (xy 71.12 128.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "513f948a-0183-4f4c-85c8-70dd64c036ff")
+	)
+	(wire
+		(pts
 			(xy 107.95 91.44) (xy 119.38 91.44)
 		)
 		(stroke
@@ -3538,6 +3823,16 @@
 			(type default)
 		)
 		(uuid "52c76c5a-9da5-41dc-82a3-7a9a4849d7b3")
+	)
+	(wire
+		(pts
+			(xy 33.02 128.27) (xy 33.02 125.73)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "54caf449-10fb-49be-b416-8775e4edf7f3")
 	)
 	(wire
 		(pts
@@ -3671,6 +3966,26 @@
 	)
 	(wire
 		(pts
+			(xy 60.96 130.81) (xy 62.23 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8e82b290-7bb9-4b58-869f-f763f803cb86")
+	)
+	(wire
+		(pts
+			(xy 19.05 71.12) (xy 26.67 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "91890aa3-90ad-49e5-aec4-ce46e8aaafb7")
+	)
+	(wire
+		(pts
 			(xy 111.76 111.76) (xy 119.38 111.76)
 		)
 		(stroke
@@ -3761,6 +4076,16 @@
 	)
 	(wire
 		(pts
+			(xy 62.23 130.81) (xy 62.23 133.35)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a427f383-f61b-4df5-a319-f1492839c38d")
+	)
+	(wire
+		(pts
 			(xy 133.35 124.46) (xy 133.35 137.16)
 		)
 		(stroke
@@ -3831,6 +4156,16 @@
 	)
 	(wire
 		(pts
+			(xy 34.29 71.12) (xy 41.91 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b957e60e-6eb8-4739-88dc-ead30ba4c431")
+	)
+	(wire
+		(pts
 			(xy 160.02 73.66) (xy 160.02 78.74)
 		)
 		(stroke
@@ -3878,6 +4213,16 @@
 			(type default)
 		)
 		(uuid "c48df414-59f5-4988-9ba6-8145b7bacd97")
+	)
+	(wire
+		(pts
+			(xy 26.67 71.12) (xy 34.29 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c63bb4cc-bb6a-4fc1-83d4-f32b0cfbc697")
 	)
 	(wire
 		(pts
@@ -4099,6 +4444,26 @@
 		)
 		(uuid "fc401270-a500-49c9-8e63-faca1cf73b17")
 	)
+	(wire
+		(pts
+			(xy 35.56 128.27) (xy 33.02 128.27)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fdc0da52-dbde-42c4-8883-7517ebff5e93")
+	)
+	(wire
+		(pts
+			(xy 29.21 130.81) (xy 35.56 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ff339c23-c52d-4b14-a61b-1aa876abbcb5")
+	)
 	(label "BOOT"
 		(at 156.21 31.75 0)
 		(effects
@@ -4178,6 +4543,16 @@
 			(justify left bottom)
 		)
 		(uuid "2f24d1b8-a16b-47b2-a6cd-766445f4e942")
+	)
+	(label "LED_DIN"
+		(at 71.12 128.27 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "311854d5-997f-4c9c-ac45-010e181c930f")
 	)
 	(label "CH224A_SCL"
 		(at 111.76 30.48 180)
@@ -4298,6 +4673,16 @@
 			(justify right bottom)
 		)
 		(uuid "a83ea039-6ffe-4bc9-bb0c-6fa93f526644")
+	)
+	(label "LED_DIN"
+		(at 135.89 137.16 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ab37c794-4cea-4ee9-98e4-b4d65d7e9a1f")
 	)
 	(label "D+"
 		(at 106.68 38.1 180)
@@ -4492,6 +4877,125 @@
 			(project "truecolors_driver"
 				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
 					(reference "#PWR043")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "EasyEDA:WS2812B-B")
+		(at 48.26 129.54 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "04f1a30d-b3b3-41d4-8543-5e2f00ce748e")
+		(property "Reference" "LED1"
+			(at 48.26 120.65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "WS2812B-B"
+			(at 48.26 123.19 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "EasyEDA:LED-SMD_4P-L5.0-W5.0-BL_TC5050RGB"
+			(at 48.26 138.43 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "https://lcsc.com/product-detail/Light-Emitting-Diodes-LED_5050-RGBIntegrated-Light-4Pin_C114586.html"
+			(at 48.26 140.97 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 48.26 129.54 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "worldsemi"
+			(at 48.26 143.51 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "WS2812B-B/W"
+			(at 48.26 146.05 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC Part" "C114586"
+			(at 48.26 148.59 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9ba54803-54fd-4d89-9e01-dac3aadf0cc3")
+		)
+		(pin "3"
+			(uuid "5e037a8e-3cf0-4e31-bb1c-5116bd26e9db")
+		)
+		(pin "4"
+			(uuid "2f8dac52-2e69-4b00-ae11-62d53cfaae5a")
+		)
+		(pin "2"
+			(uuid "2d3218b3-ca15-4cb8-ad0e-a9f9d7db05c0")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
+					(reference "LED1")
 					(unit 1)
 				)
 			)
@@ -5108,6 +5612,161 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 19.05 73.66 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "2b13f5ba-2e84-4570-84fe-f740412d7998")
+		(property "Reference" "#PWR047"
+			(at 19.05 80.01 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 19.05 78.74 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 19.05 73.66 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 19.05 73.66 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 19.05 73.66 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "f3f4e257-2f7f-4892-81f9-fed234dbd392")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
+					(reference "#PWR047")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint")
+		(at 29.21 130.81 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "2d9857f3-2da7-4d9b-a974-bdde343acc8e")
+		(property "Reference" "TP11"
+			(at 25.654 133.35 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "D"
+			(at 25.654 135.89 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "TestPoint:TestPoint_Pad_D2.0mm"
+			(at 29.21 125.73 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 29.21 125.73 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "test point"
+			(at 29.21 130.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "36801a76-4e26-42d9-ab73-6f8d132861d8")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
+					(reference "TP11")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:+15V")
 		(at 135.89 156.21 0)
 		(mirror y)
@@ -5339,6 +5998,82 @@
 			(project "truecolors_driver"
 				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
 					(reference "H5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint")
+		(at 29.21 128.27 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "45c1e63b-54df-4e97-a3ce-01e252a5316c")
+		(property "Reference" "TP10"
+			(at 25.654 123.444 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "5V"
+			(at 25.654 125.984 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "TestPoint:TestPoint_Pad_D2.0mm"
+			(at 29.21 123.19 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 29.21 123.19 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "test point"
+			(at 29.21 128.27 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c8511fe7-206f-42bd-9567-a9de01c83f99")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
+					(reference "TP10")
 					(unit 1)
 				)
 			)
@@ -7353,6 +8088,84 @@
 		)
 	)
 	(symbol
+		(lib_id "power:+5V")
+		(at 33.02 125.73 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "8eb1bfb1-b6fd-4aa4-b70f-f4a9e252685f")
+		(property "Reference" "#PWR049"
+			(at 33.02 129.54 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+5V"
+			(at 33.02 120.65 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 33.02 125.73 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 33.02 125.73 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+5V\""
+			(at 33.02 125.73 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "327e5198-42a2-4308-a01e-ae8cc960a5d0")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
+					(reference "#PWR049")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Mechanical:MountingHole_Pad")
 		(at 41.91 68.58 0)
 		(unit 1)
@@ -7426,6 +8239,85 @@
 			(project "truecolors_driver"
 				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
 					(reference "H4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 62.23 133.35 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9467e88e-8cf5-43fe-8344-d8e8e26489fe")
+		(property "Reference" "#PWR048"
+			(at 62.23 139.7 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 62.23 138.43 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 62.23 133.35 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 62.23 133.35 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 62.23 133.35 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "eed9952c-26e4-40d0-9715-de7e369ea1e7")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
+					(reference "#PWR048")
 					(unit 1)
 				)
 			)
@@ -8950,6 +9842,82 @@
 			(project "truecolors_driver"
 				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
 					(reference "R27")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint")
+		(at 64.77 130.81 270)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "f259519e-51f3-4a68-96ab-7431cc5ae08c")
+		(property "Reference" "TP9"
+			(at 68.326 135.636 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 68.326 133.096 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "TestPoint:TestPoint_Pad_D2.0mm"
+			(at 64.77 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 64.77 135.89 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "test point"
+			(at 64.77 130.81 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9fe26fc2-bd87-447b-861f-29552fb85cd6")
+		)
+		(instances
+			(project "truecolors_driver"
+				(path "/5ee6f65d-ffa4-4e70-aae0-693484c61116"
+					(reference "TP9")
 					(unit 1)
 				)
 			)

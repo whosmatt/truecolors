@@ -1,3 +1,4 @@
 *.lck
 fp-info-cache
 fp-lib-table
+.kicad-push
