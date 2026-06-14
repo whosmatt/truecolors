@@ -63,9 +63,9 @@ CFG2/CFG3). Lasers are held off by their EN pulldowns until firmware drives them
 | IO0 / BOOT | GPIO0 | 27 | boot strap / button | SW1 + 10k (R16) pull-up to 3.3 V |
 | TX / RX | GPIO43/44 | 37/36 | UART0 console | CN1 programming header |
 | USB D-/D+ | GPIO19/20 | 13/14 | USB-Serial-JTAG | USB-C DM/DP |
-
-GPIO5 (pin 5) is free (was reserved for a discrete PGOOD line that was dropped in
-favor of I²C-only monitoring).
+| MIC_CLK | GPIO12 | 20 | I²S PDM CLK | no series R (short trace); → MIC1 CLK |
+| MIC_DATA | GPIO13 | 21 | I²S PDM DATA RX | no series R (short trace); ← MIC1 DATA |
+| NTC_ADC | GPIO10 | 18 | ADC1_CH9 | laser module NTC sense via divider (below) |
 
 ## Subsystems
 
@@ -115,6 +115,44 @@ run on **+5 V** (validated: smooth control, starts at ~1% duty).
 - This is the only **measured** rail voltage; the CH224A reports negotiated gear
   and current capability but not actual VBUS, so this divider is not redundant.
 
+### Microphone — MSM261DGT003 PDM MEMS (MIC1)
+
+- **MSM261DGT003**: omnidirectional, top-ported, 4×2×1.1 mm LGA, VDD = 3.3 V
+  (1.6–3.6 V range; 670 µA typical in standard mode).
+- **MIC_CLK (GPIO12)** → CLK; **MIC_DATA (GPIO13)** ← DATA. No series resistors
+  (traces < 5 mm; ESD diodes also omitted for this enclosed prototype).
+- **L/R (pin 6) = GND** → left-channel / Mic(Low): mic asserts DATA on CLK falling
+  edge, host latches on rising edge. Matches ESP-IDF I²S PDM-RX default.
+- **VDD decoupling**: 100 nF + 10 µF ceramic (C41, C42) immediately at pin 1.
+- **Clock**: standard performance mode requires 1.1–4.0 MHz. Use ~3.072 MHz
+  (48 kHz × 64); drive from ESP32-S3 I²S peripheral in PDM-RX mode.
+- Mode is set by clock frequency alone — sleep ≤ 50 kHz, low-power 150–900 kHz,
+  standard 1.1–4.0 MHz. No control register.
+- **Top-ported package**: acoustic port faces away from PCB
+
+### Laser module NTC — temperature monitoring
+
+- **10 kΩ NTC, B = 3950**, mounted on the Numb12 laser module (nominal operating
+  temperature 45 °C).
+- Read on **ADC1_CH9 (GPIO10, module pin 18)** — ADC1 only (ADC2 unusable with
+  Wi-Fi active). GPIO10 is the last free ADC1 pin; sits adjacent to MIC_CLK/DATA.
+- **Divider**: 10 kΩ pullup to 3.3 V (near ESP32) / NTC lower leg to GND.
+  Midpoint ≈ 1.0 V at 45 °C, well within 12 dB attenuation range.
+- **Filter cap**: 100 nF across NTC at the board-edge connector (NTC cable entry),
+  not at the ESP32. Filters cable-induced noise at the source. No second cap at the
+  ESP32 end — without series impedance between them the two caps would simply be in
+  parallel, losing the entry-point filtering benefit.
+- Measurement range: −14 °C to +114 °C; resolution ~0.03 °C/LSB at 45 °C.
+- ADC config: same as VIN_ADC — 12 dB attenuation, eFuse calibration, oversample.
+- Temperature conversion (B-value equation):
+  ```c
+  float r_ntc  = 10000.0f * v_adc / (3.3f - v_adc);
+  float temp_k = 3950.0f / (logf(r_ntc / 10000.0f) + 3950.0f / 298.15f);
+  float temp_c = temp_k - 273.15f;
+  ```
+- **Safety interlock**: add NTC in-range check to the laser-enable gate alongside
+  PD handshake and VIN ADC checks (see safety invariant 2).
+
 ### USB-C PD sink — CH224A (I²C-only)
 
 - Negotiates **20 V** from the USB-C source. CFG1 = 120 kΩ → GND selects 20 V and
@@ -140,7 +178,8 @@ run on **+5 V** (validated: smooth control, starts at ~1% duty).
    updates. See [`timer-strategy.md`](timer-strategy.md).
 2. **Lasers off until power is confirmed:** before enabling MCPWM laser outputs,
    confirm CH224A PD handshake (0x09 bit3) + sufficient current (0x50) + ADC rail
-   in range. The 10k EN pulldowns hold lasers off until then.
+   in range + NTC temperature in range. The 10k EN pulldowns hold lasers off until
+   then; re-check NTC periodically and disable on over-temperature.
 3. **All ESP32-facing pull-ups go to 3.3 V**, never 5 V/20 V (not 5 V tolerant).
 4. Keep total laser power within the CH224A-reported current budget (0x50 ×50 mA
    at 20 V).
