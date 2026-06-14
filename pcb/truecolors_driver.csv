@@ -9,6 +9,7 @@
 "D1,D2,D3","SBR8U60P5-13","https://lcsc.com/product-detail/Diodes-General-Purpose_DIODES_SBR8U60P5-13_SBR8U60P5-13_C154726.html","Library:POWERDI-5_L5.4-W4.0-LS6.5-RD-thermal","3","","","C154726"
 "L1,L2,L3","APH1265T220M","","easyeda2kicad:IND-SMD_L13.5-W12.8_APH1265T","3","","","C5349635"
 "L4","4.7uH","https://www.lcsc.com/datasheet/C5349668.pdf","EasyEDA:IND-SMD_L4.4-W4.2","1","","","C5349668"
+"LED1","WS2812B-B","https://lcsc.com/product-detail/Light-Emitting-Diodes-LED_5050-RGBIntegrated-Light-4Pin_C114586.html","EasyEDA:LED-SMD_4P-L5.0-W5.0-BL_TC5050RGB","1","","","C114586"
 "MIC1","MSM261DGT003","https://www.lcsc.com/datasheet/C48227730.pdf","EasyEDA:MIC-SMD_6P-L4.0-W2.0_LMD4020T261-OC3","1","","","C48227730"
 "Q1,Q2,Q3","AOD413A(UMW)","","Library:TO-252-3_L6.6-W6.1-P4.57-LS9.9-BR-CW-thermal","3","","","C19100585"
 "Q4","BSS138","https://www.onsemi.com/pub/Collateral/BSS138-D.PDF","Package_TO_SOT_SMD:SOT-23","1","","","C52895"
