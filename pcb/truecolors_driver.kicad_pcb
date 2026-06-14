@@ -98,7 +98,6 @@
 			(dielectric_constraints no)
 		)
 		(pad_to_mask_clearance 0.05)
-		(solder_mask_min_width 0.1)
 		(allow_soldermask_bridges_in_footprints yes)
 		(tenting
 			(front yes)
@@ -3041,7 +3040,7 @@
 		)
 		(property "Value" "G+"
 			(at 0 2.25 90)
-			(layer "F.Fab")
+			(layer "F.SilkS")
 			(uuid "ca43faa8-0eba-49f9-9247-9e551164fcdc")
 			(effects
 				(font
@@ -5581,7 +5580,7 @@
 		)
 		(property "Value" "NTC-"
 			(at 0 2.25 90)
-			(layer "F.Fab")
+			(layer "F.SilkS")
 			(uuid "7eb4da98-8f60-4a74-9c2b-8e0b303ff577")
 			(effects
 				(font
@@ -5960,7 +5959,7 @@
 		)
 		(property "Value" "GND"
 			(at 0 2.25 90)
-			(layer "F.Fab")
+			(layer "F.SilkS")
 			(uuid "18fa9c4b-3ff1-418f-b018-5bf29f94c0df")
 			(effects
 				(font
@@ -8841,7 +8840,7 @@
 		)
 		(property "Value" "GND"
 			(at 0 2.25 90)
-			(layer "F.Fab")
+			(layer "F.SilkS")
 			(uuid "0a7d8ce3-6df2-4a45-8ea3-cd0939941644")
 			(effects
 				(font
@@ -9393,7 +9392,7 @@
 		)
 		(property "Value" "B+"
 			(at 0 2.25 90)
-			(layer "F.Fab")
+			(layer "F.SilkS")
 			(uuid "a26d25ba-5865-4b00-ae67-4ceab270799c")
 			(effects
 				(font
@@ -13281,7 +13280,7 @@
 		)
 		(property "Value" "GND"
 			(at 0 2.25 90)
-			(layer "F.Fab")
+			(layer "F.SilkS")
 			(uuid "6d45d497-978b-4a46-a385-53b388b08e0b")
 			(effects
 				(font
@@ -14422,7 +14421,7 @@
 		)
 		(property "Value" "R+"
 			(at 0 2.25 90)
-			(layer "F.Fab")
+			(layer "F.SilkS")
 			(uuid "5c766c83-18ea-4249-ba67-99ce77e8e7d3")
 			(effects
 				(font
@@ -17351,7 +17350,7 @@
 		)
 		(property "Value" "NTC+"
 			(at 0 2.25 90)
-			(layer "F.Fab")
+			(layer "F.SilkS")
 			(uuid "026ff928-103d-4346-b53e-25f6a024a0eb")
 			(effects
 				(font
