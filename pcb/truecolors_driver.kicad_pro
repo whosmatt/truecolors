@@ -140,17 +140,17 @@
         "min_copper_edge_clearance": 0.5,
         "min_groove_width": 0.0,
         "min_hole_clearance": 0.25,
-        "min_hole_to_hole": 0.25,
+        "min_hole_to_hole": 0.3,
         "min_microvia_diameter": 0.2,
         "min_microvia_drill": 0.1,
         "min_resolved_spokes": 2,
         "min_silk_clearance": 0.0,
         "min_text_height": 0.8,
         "min_text_thickness": 0.08,
-        "min_through_hole_diameter": 0.3,
+        "min_through_hole_diameter": 0.25,
         "min_track_width": 0.15,
         "min_via_annular_width": 0.1,
-        "min_via_diameter": 0.5,
+        "min_via_diameter": 0.25,
         "solder_mask_to_copper_clearance": 0.0,
         "use_height_for_length_calcs": true
       },
@@ -251,7 +251,7 @@
           "drill": 0.3
         }
       ],
-      "zones_allow_external_fillets": false
+      "zones_allow_external_fillets": true
     },
     "ipc2581": {
       "bom_rev": "",
@@ -733,7 +733,7 @@
         "uuid": "5ee6f65d-ffa4-4e70-aae0-693484c61116"
       }
     ],
-    "used_designators": "R17-26,#PWR25-42,Q4,CN1-2,U1,U8,C34-41",
+    "used_designators": "U8,C41-43,#PWR43-46,R27-28,TP1-8",
     "variants": []
   },
   "sheets": [
