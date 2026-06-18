@@ -14,6 +14,9 @@ CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
 # --- HTTP server: WebSocket support (realtime transport) -----------------
 CONFIG_HTTPD_WS_SUPPORT=y
 
+# --- lwIP: enough sockets for the WS client pool plus httpd internals ----
+CONFIG_LWIP_MAX_SOCKETS=16
+
 # --- FreeRTOS ------------------------------------------------------------
 # 1 kHz tick so the render task and animation engine get fine-grained delays.
 CONFIG_FREERTOS_HZ=1000

@@ -3,3 +3,7 @@ dependencies:
     version: ">=5.3"
   # WS2812B status LED (RMT backend).
   espressif/led_strip: "^3.0.0"
+  # mDNS for truecolors.local
+  espressif/mdns: "^1.4.0"
+  # JSON for the WebSocket protocol
+  espressif/cjson: "^1.7.0"

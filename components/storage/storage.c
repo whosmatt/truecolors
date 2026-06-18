@@ -110,3 +110,32 @@ esp_err_t storage_restore_scene(void)
 
     return appstate_apply_patch(APP_SRC_STORAGE_RESTORE, &patch);
 }
+
+esp_err_t storage_save_wifi(const char *ssid, const char *pass)
+{
+    esp_err_t err = nvs_set_str(s_nvs, NVS_KEY_WIFI_SSID, ssid ? ssid : "");
+    if (err == ESP_OK) {
+        err = nvs_set_str(s_nvs, NVS_KEY_WIFI_PASS, pass ? pass : "");
+    }
+    if (err == ESP_OK) {
+        err = nvs_commit(s_nvs);
+    }
+    return err;
+}
+
+bool storage_load_wifi(char *ssid, size_t ssid_len, char *pass, size_t pass_len)
+{
+    if (nvs_get_str(s_nvs, NVS_KEY_WIFI_SSID, ssid, &ssid_len) != ESP_OK) {
+        return false;
+    }
+    if (nvs_get_str(s_nvs, NVS_KEY_WIFI_PASS, pass, &pass_len) != ESP_OK) {
+        pass[0] = '\0';
+    }
+    return ssid[0] != '\0';
+}
+
+void storage_clear_all(void)
+{
+    nvs_erase_all(s_nvs);
+    nvs_commit(s_nvs);
+}
