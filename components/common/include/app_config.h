@@ -26,6 +26,8 @@
 #define FAN_START_DUTY       0.01f      // ~1% duty already spins the fan
 #define STALL_DUTY           0.40f      // PID duty above which RPM==0 means stall
 #define STALL_DEBOUNCE_S     3.0f       // sustained-stall debounce before latching
+#define FAN_KP               0.04f
+#define FAN_KI               0.015f
 
 // ---------------------------------------------------------------------------
 // Safety thresholds
@@ -33,6 +35,10 @@
 #define T_LIMIT_C            55.0f      // overtemp latching fault threshold
 #define VIN_NOMINAL_V        20.0f
 #define VIN_WARN_V           17.0f      // below this -> "vin_low" warning (no shutdown)
+#define LASER_REQUESTED_A    2.5f       // worst-case low-Vrail laser current budget
+#define NTC_V_OPEN           3.25f      // above this the NTC reads open
+#define NTC_V_SHORT          0.05f      // below this the NTC reads shorted
+#define BTN_DEBOUNCE_MS      60
 
 // ---------------------------------------------------------------------------
 // Sensing / ADC

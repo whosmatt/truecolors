@@ -9,7 +9,6 @@
 #include "effects.h"
 #include "audio.h"
 #include "sysmgr.h"
-#include "status_led.h"
 #include "wifi_mgr.h"
 #include "server.h"
 
@@ -40,8 +39,6 @@ void app_main(void)
 
     // 5. System manager + status LED + safety gate.
     ESP_ERROR_CHECK(sysmgr_init());
-    ESP_ERROR_CHECK(status_led_init());
-    status_led_set_state(LED_BOOT);
 
     // 6. Wi-Fi (STA -> AP fallback) + mDNS/hostname.
     ESP_ERROR_CHECK(wifi_start());
