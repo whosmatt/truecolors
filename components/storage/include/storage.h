@@ -1,4 +1,4 @@
-// storage.h STUB
+// storage.h
 
 #pragma once
 
@@ -8,10 +8,10 @@
 extern "C" {
 #endif
 
-// Init NVS and register the debounced persist subscriber.
+// Open NVS and create the debounced scene-persist timer.
 esp_err_t storage_init(void);
 
-// Restore the persisted scene into appstate via STORAGE_RESTORE patch.
+// Subscribe for scene changes and apply any persisted scene.
 esp_err_t storage_restore_scene(void);
 
 #ifdef __cplusplus

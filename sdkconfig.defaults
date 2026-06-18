@@ -2,7 +2,7 @@
 
 # --- Flash & partition table ---------------------------------------------
 # Board has 16 MB physically, but we target an 8 MB image so it stays portable
-# across both the 8 MB (N8R8) and 16 MB parts. See firmware-architecture.md.
+# across both the 8 MB and 16 MB parts.
 CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
 CONFIG_PARTITION_TABLE_CUSTOM=y
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"

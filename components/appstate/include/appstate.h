@@ -1,23 +1,19 @@
-// appstate.h STUB
-//
-// Holds ONLY persistent/user scene state (no live telemetry — that lives in
-// sysmgr). Continuous values are float 0..1 so the pipeline never quantizes
-// color before the final tick mapping in laser_set. One mutex; one writer
-// (appstate_apply_patch, added in implementation step 2).
+// appstate.h
+// Central scene state. One mutex, one writer via appstate_apply_patch.
 #pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
 #include "esp_err.h"
-#include "app_events.h"   // app_src_t
+#include "app_events.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define EFFECT_PARAM_MAX 8   // per-effect param arena (floats)
+#define EFFECT_PARAM_MAX 8
 
-// Bits for app_state_changed_evt_t.changed_mask.
+// Bits for app_patch_t.mask and app_state_changed_evt_t.changed_mask.
 typedef enum {
     STATE_F_POWER      = (1 << 0),
     STATE_F_BRIGHTNESS = (1 << 1),
@@ -31,21 +27,37 @@ typedef enum {
 
 typedef struct {
     bool     power;
-    float    brightness;              // 0..1
-    float    stretch;                 // 0..1
+    float    brightness;
+    float    stretch;
     uint16_t effect_id;
-    float    color[3];                // rgb 0..1 (device-native)
-    float    speed;                   // 0..1
-    float    audio_sens;              // 0..1
-    float    params[EFFECT_PARAM_MAX];// active effect's params
-    uint32_t seq;                     // monotonic version counter
+    float    color[3];
+    float    speed;
+    float    audio_sens;
+    float    params[EFFECT_PARAM_MAX];
+    uint32_t seq;
 } app_state_t;
 
-// Initialize the model + its mutex with sane defaults. (Stub in step 1.)
+// A partial update. Only fields whose bit is set in mask are applied.
+typedef struct {
+    uint32_t mask;
+    bool     power;
+    float    brightness;
+    float    stretch;
+    uint16_t effect_id;
+    float    color[3];
+    float    speed;
+    float    audio_sens;
+    float    params[EFFECT_PARAM_MAX];
+} app_patch_t;
+
 esp_err_t appstate_init(void);
 
-// Copy the current scene out under the lock (render task does this per frame).
+// Copy the current scene out under the lock.
 void appstate_get(app_state_t *out);
+
+// Validate, clamp and apply a patch, then post EVT_STATE_CHANGED if anything
+// actually changed. The only writer of scene state.
+esp_err_t appstate_apply_patch(app_src_t src, const app_patch_t *patch);
 
 #ifdef __cplusplus
 }
