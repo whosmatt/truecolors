@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "laser.c"
+    SRCS "laser.c" "laser_math.c"
     INCLUDE_DIRS "include"
-    REQUIRES common
+    REQUIRES common esp_driver_mcpwm
 )
