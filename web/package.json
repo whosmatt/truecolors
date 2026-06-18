@@ -1,0 +1,23 @@
+{
+  "name": "truecolors-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "TrueColors RGB laser mood light — embedded web UI",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/gzip.mjs",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "5.0.3",
+    "@tsconfig/svelte": "5.0.4",
+    "@types/node": "22.10.5",
+    "svelte": "5.19.0",
+    "svelte-check": "4.1.4",
+    "typescript": "5.7.3",
+    "vite": "6.0.7",
+    "vite-plugin-singlefile": "2.1.0"
+  }
+}
