@@ -1,7 +1,7 @@
 # ESP32-S3-WROOM-1 (N8R8) target defaults.
 
 # --- Octal PSRAM (8 MB) --------------------------------------------------
-# Octal PSRAM consumes GPIO35/36/37 — do not use those as I/O.
+# Octal PSRAM consumes GPIO35/36/37, do not use those as I/O.
 CONFIG_SPIRAM=y
 CONFIG_SPIRAM_MODE_OCT=y
 CONFIG_SPIRAM_SPEED_80M=y

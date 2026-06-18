@@ -10,7 +10,7 @@ extern "C" {
 // Init I2C/ADC/PCNT/LEDC/status-LED and the safety gate.
 esp_err_t sysmgr_init(void);
 
-// Start the sysmgr_monitor task. Started from app_main in step 5.
+// Start the sysmgr_monitor task.
 esp_err_t sysmgr_start(void);
 
 #ifdef __cplusplus

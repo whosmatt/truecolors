@@ -8,10 +8,10 @@
 extern "C" {
 #endif
 
-// Start Wi-Fi (STA, falling back to AP provisioning) + mDNS. (Stub in step 1.)
+// Start Wi-Fi in STA mode, falling back to AP provisioning, plus mDNS.
 esp_err_t wifi_start(void);
 
-// Enter AP / provisioning mode (button press or WS command).
+// Enter AP / provisioning mode.
 esp_err_t wifi_enter_ap(void);
 
 #ifdef __cplusplus

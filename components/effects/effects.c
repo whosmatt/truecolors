@@ -12,6 +12,6 @@ esp_err_t effects_init(void)
 
 esp_err_t effects_start_render(void)
 {
-    ESP_LOGI(TAG, "effects render task (stub — not started)");
+    ESP_LOGI(TAG, "effects render task (stub)");
     return ESP_OK;
 }

@@ -12,6 +12,6 @@ esp_err_t sysmgr_init(void)
 
 esp_err_t sysmgr_start(void)
 {
-    ESP_LOGI(TAG, "sysmgr monitor task (stub — not started)");
+    ESP_LOGI(TAG, "sysmgr monitor task (stub)");
     return ESP_OK;
 }

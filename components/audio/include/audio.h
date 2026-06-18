@@ -14,7 +14,7 @@ typedef struct {
     float beat;    // 0..1 transient/beat envelope
 } audio_features_t;
 
-// Initialize I2S PDM RX and the audio task. (Stub in step 1.)
+// Initialize I2S PDM RX and the audio task.
 esp_err_t audio_init(void);
 
 // Copy the latest features snapshot (lock-free single-writer).

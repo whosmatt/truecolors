@@ -8,7 +8,6 @@
 extern "C" {
 #endif
 
-// Logical LED states (see the status-LED table in firmware-architecture.md).
 typedef enum {
     LED_BOOT = 0,            // white  · slow breathe
     LED_AP_PROVISION,        // blue   · breathe (~1 Hz)
@@ -20,7 +19,7 @@ typedef enum {
     LED_STATE_COUNT,
 } led_state_t;
 
-// Init the led_strip (RMT backend) and start the animation task. (Real in step 1.)
+// Init the led_strip and start the animation task.
 esp_err_t status_led_init(void);
 
 // Set the currently displayed state. Animation restarts cleanly on change.

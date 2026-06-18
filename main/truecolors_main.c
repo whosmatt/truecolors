@@ -39,7 +39,6 @@ void app_main(void)
     ESP_ERROR_CHECK(audio_init());
 
     // 5. System manager + status LED + safety gate.
-    //    (status_led_init() folds into sysmgr_init() once sysmgr is real, step 5.)
     ESP_ERROR_CHECK(sysmgr_init());
     ESP_ERROR_CHECK(status_led_init());
     status_led_set_state(LED_BOOT);

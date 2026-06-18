@@ -21,7 +21,7 @@ esp_err_t app_bus_init(void)
     const esp_event_loop_args_t args = {
         .queue_size = 32,
         .task_name = "app_event_loop",
-        .task_priority = 8,            // "med" — above idle, below render
+        .task_priority = 8,            // above idle, below render
         .task_stack_size = 4096,
         .task_core_id = 0,             // co-located with wifi/httpd on core 0
     };
