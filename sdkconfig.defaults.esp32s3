@@ -1,0 +1,16 @@
+# ESP32-S3-WROOM-1 (N8R8) target defaults.
+
+# --- Octal PSRAM (8 MB) --------------------------------------------------
+# Octal PSRAM consumes GPIO35/36/37 — do not use those as I/O.
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+# Boot even if PSRAM is absent (e.g. under QEMU) instead of aborting.
+CONFIG_SPIRAM_IGNORE_NOTFOUND=y
+
+# --- CPU -----------------------------------------------------------------
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+
+# --- Flash mode (octal-capable part; QIO/80 MHz is safe and portable) ----
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y

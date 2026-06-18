@@ -1,0 +1,17 @@
+# ESP-IDF tooling (partition_table parser, shell scripts) chokes on CRLF.
+# Force LF on everything the build pipeline reads, regardless of host OS.
+*.csv   text eol=lf
+*.sh    text eol=lf
+*.c     text eol=lf
+*.h     text eol=lf
+*.cmake text eol=lf
+CMakeLists.txt text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+
+# Web sources
+*.ts    text eol=lf
+*.js    text eol=lf
+*.svelte text eol=lf
+*.json  text eol=lf
+*.html  text eol=lf
