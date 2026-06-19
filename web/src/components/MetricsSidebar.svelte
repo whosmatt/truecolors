@@ -3,6 +3,14 @@
 
   const m = $derived(store.metrics);
 
+  const connTitle = $derived(
+    store.conn === 'open'
+      ? 'Connected'
+      : store.conn === 'connecting'
+        ? 'Connecting…'
+        : 'Offline',
+  );
+
   // Map a metric to the warn/err flags that affect it, for highlighting.
   const FLAG_METRIC: Record<string, string> = {
     vin_low: 'vin',
@@ -61,7 +69,16 @@
 </script>
 
 <div class="card metrics">
-  <div class="card-title">Telemetry</div>
+  <div class="metrics-head">
+    <div class="card-title" style="margin:0">Telemetry</div>
+    <span
+      class="conn"
+      data-state={store.conn}
+      title={connTitle}
+      aria-label={connTitle}
+      role="status"
+    ></span>
+  </div>
 
   {#if !m}
     <p class="empty">No telemetry yet…</p>
@@ -92,6 +109,40 @@
 </div>
 
 <style>
+  .metrics-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .conn {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    flex: 0 0 auto;
+  }
+  .conn[data-state='open'] {
+    background: var(--good);
+    box-shadow: 0 0 9px var(--good);
+  }
+  .conn[data-state='connecting'] {
+    background: var(--warn);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .conn[data-state='closed'] {
+    background: var(--err);
+    box-shadow: 0 0 9px var(--err);
+  }
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
   .rows {
     display: flex;
     flex-direction: column;
