@@ -42,7 +42,7 @@
   </main>
 
   <footer class="foot">
-    truecolors · ESP32-S3 RGB Laser · {store.net.hostname || 'truecolors'}
+    whosmatt · truecolors
   </footer>
 </div>
 
