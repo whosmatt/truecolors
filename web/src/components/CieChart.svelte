@@ -25,6 +25,22 @@
   const triB = xyToSvg(PRIMARIES.b, SIZE);
   const triPath = `${triR.x.toFixed(1)},${triR.y.toFixed(1)} ${triG.x.toFixed(1)},${triG.y.toFixed(1)} ${triB.x.toFixed(1)},${triB.y.toFixed(1)}`;
 
+  // Reference gamuts for comparison, drawn as thin gray outlines.
+  const refGamuts = [
+    { name: 'sRGB', r: { x: 0.64, y: 0.33 }, g: { x: 0.3, y: 0.6 }, b: { x: 0.15, y: 0.06 } },
+    // { name: 'P3', r: { x: 0.68, y: 0.32 }, g: { x: 0.265, y: 0.69 }, b: { x: 0.15, y: 0.06 } },
+  ].map((gm) => {
+    const R = xyToSvg(gm.r, SIZE);
+    const G = xyToSvg(gm.g, SIZE);
+    const B = xyToSvg(gm.b, SIZE);
+    return {
+      name: gm.name,
+      points: `${R.x.toFixed(1)},${R.y.toFixed(1)} ${G.x.toFixed(1)},${G.y.toFixed(1)} ${B.x.toFixed(1)},${B.y.toFixed(1)}`,
+      lx: G.x - 4,
+      ly: G.y - 5,
+    };
+  });
+
   // The dot position is derived from the shared RGB via the forward map, so
   // external RGB edits (sliders) move it. Dragging writes RGB via the inverse.
   const dotXy = $derived(rgbToXy(store.rgb));
@@ -214,6 +230,12 @@
       {/each}
     </g>
 
+    <!-- Reference gamuts (sRGB, P3) -->
+    {#each refGamuts as g (g.name)}
+      <polygon class="ref" points={g.points} />
+      <text class="ref-label" x={g.lx} y={g.ly} text-anchor="end">{g.name}</text>
+    {/each}
+
     <!-- Device gamut triangle -->
     <polygon
       points={triPath}
@@ -290,6 +312,17 @@
     font-size: 8.5px;
     font-family: var(--mono);
     fill: rgba(255, 255, 255, 0.6);
+  }
+  .ref {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.5);
+    stroke-width: 0.8;
+    stroke-linejoin: round;
+  }
+  .ref-label {
+    font-size: 8.5px;
+    font-family: var(--mono);
+    fill: rgba(0, 0, 0, 0.5);
   }
   .dot {
     transition:
