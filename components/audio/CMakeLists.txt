@@ -1,5 +1,6 @@
 idf_component_register(
     SRCS "audio.c"
     INCLUDE_DIRS "include"
-    REQUIRES common esp_timer
+    REQUIRES common
+    PRIV_REQUIRES esp_driver_i2s
 )
