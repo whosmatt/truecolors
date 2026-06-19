@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "TrueColors RGB laser mood light — embedded web UI",
+  "description": "truecolors RGB laser mood light embedded web UI",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/gzip.mjs",

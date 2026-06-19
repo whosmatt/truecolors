@@ -99,7 +99,7 @@ static void mdns_start(void)
         return;
     }
     mdns_hostname_set(DEVICE_HOSTNAME);
-    mdns_instance_name_set("TrueColors");
+    mdns_instance_name_set("truecolors");
     mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
 }
 

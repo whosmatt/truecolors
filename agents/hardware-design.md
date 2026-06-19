@@ -1,4 +1,4 @@
-# TrueColors — Hardware Design Reference
+# truecolors — Hardware Design Reference
 
 Reference for firmware development. Describes the board, power tree, and every
 ESP32 connection. Authoritative source is [`pcb/truecolors_driver.kicad_sch`](../pcb/truecolors_driver.kicad_sch);

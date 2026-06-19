@@ -7,7 +7,7 @@
   <div class="brand">
     <div class="logo" aria-hidden="true"></div>
     <div class="title">
-      <h1>TrueColors</h1>
+      <h1>truecolors</h1>
       <span class="sub">RGB Laser Mood Light</span>
     </div>
   </div>

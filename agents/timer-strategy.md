@@ -1,4 +1,4 @@
-# TrueColors — Timer / Peripheral Strategy
+# truecolors — Timer / Peripheral Strategy
 
 Firmware reference for how the ESP32-S3 hardware peripherals generate all timed
 signals. Goal: do everything in hardware, no software-bit-banged PWM. Pin/net

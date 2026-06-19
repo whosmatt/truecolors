@@ -1,4 +1,4 @@
-// Color science for the TrueColors laser device.
+// Color science
 //
 // All RGB values here are *device-native* normalized floats 0..1, representing
 // the relative drive of each laser. Chromaticity is in CIE 1931 xy. Brightness

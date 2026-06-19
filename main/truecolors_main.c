@@ -16,7 +16,7 @@ static const char *TAG = "main";
 
 void app_main(void)
 {
-    ESP_LOGI(TAG, "TrueColors boot");
+    ESP_LOGI(TAG, "truecolors boot");
 
     // 1. NVS init + scene staging
     esp_err_t nerr = nvs_flash_init();
