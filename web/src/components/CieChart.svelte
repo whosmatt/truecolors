@@ -286,6 +286,8 @@
     height: auto;
     aspect-ratio: 1 / 1;
     touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
     background: var(--bg-elev-1, #14141b);
     border-radius: var(--radius-sm);
     cursor: crosshair;
