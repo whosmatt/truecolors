@@ -240,8 +240,8 @@
     <polygon
       points={triPath}
       fill="none"
-      stroke="rgba(255,255,255,0.8)"
-      stroke-width="1.4"
+      stroke="rgb(0, 0, 0, 0.6)"
+      stroke-width="1.2"
       stroke-linejoin="round"
     />
     {#each [triR, triG, triB] as v, i (i)}
