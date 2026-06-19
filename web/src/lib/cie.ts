@@ -74,23 +74,44 @@ export const SPECTRAL_LOCUS: XY[] = [
 // x=0.733; pad a little so it doesn't touch the SVG edges.
 export const XY_DOMAIN = { xMin: 0, xMax: 0.75, yMin: 0, yMax: 0.85 };
 
-// Map a chromaticity (x,y) to SVG coordinates within a [0,size] viewbox.
+// Inner plot insets (viewbox units) reserving a gutter for axis tick labels.
+export const CHART_MARGIN = { left: 34, right: 12, top: 12, bottom: 30 };
+
+// Map a chromaticity (x,y) to SVG coordinates within the inset plot area.
 // y is flipped because SVG's origin is top-left.
 export function xyToSvg(p: XY, size: number): XY {
   const { xMin, xMax, yMin, yMax } = XY_DOMAIN;
+  const { left, right, top, bottom } = CHART_MARGIN;
+  const w = size - left - right;
+  const h = size - top - bottom;
   return {
-    x: ((p.x - xMin) / (xMax - xMin)) * size,
-    y: size - ((p.y - yMin) / (yMax - yMin)) * size,
+    x: left + ((p.x - xMin) / (xMax - xMin)) * w,
+    y: top + h - ((p.y - yMin) / (yMax - yMin)) * h,
   };
 }
 
 // Inverse of xyToSvg: SVG coordinates back to a chromaticity (x,y).
 export function svgToXy(p: XY, size: number): XY {
   const { xMin, xMax, yMin, yMax } = XY_DOMAIN;
+  const { left, right, top, bottom } = CHART_MARGIN;
+  const w = size - left - right;
+  const h = size - top - bottom;
   return {
-    x: xMin + (p.x / size) * (xMax - xMin),
-    y: yMin + ((size - p.y) / size) * (yMax - yMin),
+    x: xMin + ((p.x - left) / w) * (xMax - xMin),
+    y: yMin + ((top + h - p.y) / h) * (yMax - yMin),
   };
+}
+
+// A few spectral-locus points to label with their wavelength (nm).
+export interface LocusLabel {
+  nm: number;
+  p: XY;
+}
+export function locusLabels(): LocusLabel[] {
+  const nms = [460, 480, 500, 520, 540, 560, 580, 600, 620, 700];
+  return nms
+    .map((nm) => ({ nm, p: SPECTRAL_LOCUS[Math.round((nm - 405) / 5)] }))
+    .filter((l): l is LocusLabel => l.p !== undefined);
 }
 
 // SVG polygon points string for the spectral-locus horseshoe (closed by the

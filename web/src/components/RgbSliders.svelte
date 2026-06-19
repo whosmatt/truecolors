@@ -17,21 +17,21 @@
       label="Red"
       value={rgb.r}
       accent="#ff5161"
-      trackFill="linear-gradient(90deg, #ff5161, var(--bg-elev-2))"
+      trackFill="linear-gradient(90deg, var(--bg-elev-2), #ff5161)"
       oninput={(v) => setRgb({ ...rgb, r: v })}
     />
     <Slider
       label="Green"
       value={rgb.g}
       accent="#3ad37a"
-      trackFill="linear-gradient(90deg, #3ad37a, var(--bg-elev-2))"
+      trackFill="linear-gradient(90deg, var(--bg-elev-2), #3ad37a)"
       oninput={(v) => setRgb({ ...rgb, g: v })}
     />
     <Slider
       label="Blue"
       value={rgb.b}
       accent="#5b8bff"
-      trackFill="linear-gradient(90deg, #5b8bff, var(--bg-elev-2))"
+      trackFill="linear-gradient(90deg, var(--bg-elev-2), #5b8bff)"
       oninput={(v) => setRgb({ ...rgb, b: v })}
     />
   </div>

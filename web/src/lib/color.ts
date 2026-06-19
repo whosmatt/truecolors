@@ -85,10 +85,12 @@ export function xyToRgb(p: XY): RGB {
   wr /= wsum;
   wg /= wsum;
   wb /= wsum;
-  // Undo the luminous weighting to get relative drive per channel.
-  let r = wr / k.r;
-  let g = wg / k.g;
-  let b = wb / k.b;
+  // A primary's barycentric weight in xy equals its share of X+Y+Z = Y/y, so
+  // recover Y_c = w_c * y_c, then drive = Y_c / k_c. This is the exact inverse
+  // of the forward map (rgbToXy reprojects Y_c/y_c), so the dot tracks clicks.
+  let r = (wr * PRIMARIES.r.y) / k.r;
+  let g = (wg * PRIMARIES.g.y) / k.g;
+  let b = (wb * PRIMARIES.b.y) / k.b;
   const peak = Math.max(r, g, b);
   if (peak <= 0) return { r: 1, g: 1, b: 1 };
   r /= peak;

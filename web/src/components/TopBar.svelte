@@ -67,6 +67,7 @@
     align-items: center;
     gap: 13px;
     flex: 0 0 auto;
+    order: 1;
   }
   .logo {
     width: 38px;
@@ -99,6 +100,7 @@
     gap: 20px;
     flex: 1 1 360px;
     min-width: 260px;
+    order: 2;
   }
   .g-slider {
     flex: 1 1 130px;
@@ -139,6 +141,9 @@
     align-items: center;
     gap: 8px;
     flex: 0 0 auto;
+    order: 3;
+    /* Reserve room for the widest label so changing it never reflows globals. */
+    min-width: 112px;
     font-size: 0.82rem;
     color: var(--text-dim);
   }
@@ -169,9 +174,16 @@
       opacity: 1;
     }
   }
-  @media (max-width: 560px) {
-    .status-text {
-      display: none;
+  @media (max-width: 720px) {
+    /* Status rides next to the logo; globals drop to their own full row. */
+    .status {
+      order: 2;
+      margin-left: auto;
+      min-width: 0;
+    }
+    .globals {
+      order: 3;
+      flex: 1 1 100%;
     }
   }
 </style>
