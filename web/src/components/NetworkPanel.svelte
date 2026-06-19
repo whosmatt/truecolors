@@ -10,7 +10,28 @@
 
   let selectedSsid = $state('');
   let password = $state('');
-  let confirmReset = $state(false);
+
+  // Confirmation modal: each admin action opens it with its own copy + handler.
+  interface Confirm {
+    title: string;
+    body: string;
+    label: string;
+    danger?: boolean;
+    run: () => void;
+  }
+  let pending = $state<Confirm | null>(null);
+
+  function cancel() {
+    pending = null;
+  }
+  function confirmAction() {
+    const p = pending;
+    pending = null;
+    p?.run();
+  }
+  function onKey(e: KeyboardEvent) {
+    if (e.key === 'Escape') cancel();
+  }
 
   const modeLabel = $derived(
     {
@@ -38,15 +59,31 @@
     password = '';
   }
 
-  function doFactoryReset() {
-    if (!confirmReset) {
-      confirmReset = true;
-      return;
-    }
-    factoryReset();
-    confirmReset = false;
-  }
+  const askAp = () =>
+    (pending = {
+      title: 'Switch to AP mode',
+      body: 'The device leaves your network and broadcasts its own Wi-Fi for setup. It reconnects to the saved network on the next reboot.',
+      label: 'Switch to AP',
+      run: wifiAp,
+    });
+  const askReboot = () =>
+    (pending = {
+      title: 'Reboot device',
+      body: 'The device restarts and will be unavailable for a few seconds.',
+      label: 'Reboot',
+      run: reboot,
+    });
+  const askFactoryReset = () =>
+    (pending = {
+      title: 'Factory reset',
+      body: 'Erases saved Wi-Fi credentials and the saved scene, then reboots into AP mode. This cannot be undone.',
+      label: 'Erase & reset',
+      danger: true,
+      run: factoryReset,
+    });
 </script>
+
+<svelte:window onkeydown={onKey} />
 
 <div class="card">
   <div class="card-title">Network</div>
@@ -119,17 +156,39 @@
   </div>
 
   <div class="admin">
-    <button class="btn" onclick={wifiAp}>AP Mode</button>
-    <button class="btn" onclick={reboot}>Reboot</button>
-    <button
-      class="btn btn-danger"
-      onclick={doFactoryReset}
-      onpointerleave={() => (confirmReset = false)}
-    >
-      {confirmReset ? 'Confirm reset?' : 'Factory Reset'}
-    </button>
+    <button class="btn" onclick={askAp}>AP Mode</button>
+    <button class="btn" onclick={askReboot}>Reboot</button>
+    <button class="btn btn-danger" onclick={askFactoryReset}>Factory Reset</button>
   </div>
 </div>
+
+{#if pending}
+  <!-- Backdrop click is a mouse convenience; Esc and the Cancel button give
+       keyboard users an equivalent path. -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <div class="modal-overlay" role="presentation" onclick={cancel}>
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label={pending.title}
+      onclick={(e) => e.stopPropagation()}
+    >
+      <h3>{pending.title}</h3>
+      <p>{pending.body}</p>
+      <div class="modal-actions">
+        <button class="btn" onclick={cancel}>Cancel</button>
+        <button
+          class="btn {pending.danger ? 'btn-danger' : 'btn-primary'}"
+          onclick={confirmAction}
+        >
+          {pending.label}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .info {
@@ -269,5 +328,40 @@
   }
   .admin .btn {
     flex: 1 1 auto;
+  }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+  }
+  .modal {
+    width: 100%;
+    max-width: 380px;
+    background: var(--bg-elev-1, #16161f);
+    border: 1px solid var(--border-solid, rgba(255, 255, 255, 0.12));
+    border-radius: var(--radius, 14px);
+    padding: 22px;
+    box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+  }
+  .modal h3 {
+    margin: 0 0 10px;
+    font-size: 1.02rem;
+  }
+  .modal p {
+    margin: 0 0 20px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-dim);
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
   }
 </style>
