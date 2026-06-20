@@ -1,16 +1,13 @@
 <script lang="ts">
   import { store, setRgb } from '../lib/state.svelte';
-  import { rgbToCss } from '../lib/color';
   import Slider from './Slider.svelte';
 
   const rgb = $derived(store.rgb);
-  const swatch = $derived(rgbToCss(rgb));
 </script>
 
 <div class="card">
   <div class="head">
     <div class="card-title" style="margin:0">RGB</div>
-    <span class="swatch" style="background:{swatch}"></span>
   </div>
   <div class="sliders">
     <Slider
@@ -43,13 +40,6 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 14px;
-  }
-  .swatch {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 14px -3px currentColor;
   }
   .sliders {
     display: flex;

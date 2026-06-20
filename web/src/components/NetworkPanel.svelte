@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { slide } from 'svelte/transition';
   import { store } from '../lib/state.svelte';
   import {
     wifiScan,
@@ -10,8 +11,9 @@
 
   let selectedSsid = $state('');
   let password = $state('');
+  let showSettings = $state(false); // collapsible settings
 
-  // Confirmation modal: each admin action opens it with its own copy + handler.
+  // confirmation modal for sensitive actions
   interface Confirm {
     title: string;
     body: string;
@@ -59,24 +61,38 @@
     password = '';
   }
 
+  function forgetNetwork() {
+    // Same as connect but with empty credentials
+    wifiProvision('', '');
+    selectedSsid = '';
+    password = '';
+  }
+
   const askAp = () =>
     (pending = {
       title: 'Switch to AP mode',
-      body: 'The device leaves your network and broadcasts its own Wi-Fi for setup. It reconnects to the saved network on the next reboot.',
+      body: 'The device will switch to temporary AP mode. If you want persistent AP mode, use \'Forget network\' instead.',
       label: 'Switch to AP',
       run: wifiAp,
+    });
+  const askForget = () =>
+    (pending = {
+      title: 'Forget network',
+      body: 'The device will disconnect and enter AP mode.',
+      label: 'Forget network',
+      run: forgetNetwork,
     });
   const askReboot = () =>
     (pending = {
       title: 'Reboot device',
-      body: 'The device restarts and will be unavailable for a few seconds.',
+      body: 'Do you want to reboot the device?',
       label: 'Reboot',
       run: reboot,
     });
   const askFactoryReset = () =>
     (pending = {
       title: 'Factory reset',
-      body: 'Erases saved Wi-Fi credentials and the saved scene, then reboots into AP mode. This cannot be undone.',
+      body: 'Clear NVS and restore default settings?',
       label: 'Erase & reset',
       danger: true,
       run: factoryReset,
@@ -108,58 +124,94 @@
     </div>
   </div>
 
-  <div class="scan-head">
-    <span class="sub-title">Available Networks</span>
-    <button class="btn" onclick={wifiScan} disabled={store.scanning}>
-      {store.scanning ? 'Scanning…' : 'Scan'}
-    </button>
-  </div>
+  <button
+    class="settings-toggle"
+    onclick={() => (showSettings = !showSettings)}
+    aria-expanded={showSettings}
+  >
+    <span class="sub-title">Settings</span>
+    <svg
+      class="chev"
+      class:open={showSettings}
+      viewBox="0 0 16 16"
+      width="14"
+      height="14"
+      aria-hidden="true"
+    >
+      <path
+        d="M4 6l4 4 4-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  </button>
 
-  {#if store.aps.length > 0}
-    <div class="ap-list">
-      {#each store.aps as ap (ap.ssid + ap.rssi)}
-        <button
-          class="ap"
-          class:sel={selectedSsid === ap.ssid}
-          onclick={() => (selectedSsid = ap.ssid)}
-        >
-          <span class="ap-name">{ap.ssid}</span>
-          <span class="ap-meta">
-            <span class="auth">{authLabel(ap.auth)}</span>
-            <span class="bars" aria-label="{ap.rssi} dBm">
-              {#each [1, 2, 3, 4] as b (b)}
-                <i class:on={b <= bars(ap.rssi)}></i>
-              {/each}
-            </span>
-          </span>
+  {#if showSettings}
+    <div class="settings" transition:slide={{ duration: 200 }}>
+      <div class="scan-head">
+        <span class="sub-title">Available Networks</span>
+        <button class="btn" onclick={wifiScan} disabled={store.scanning}>
+          {store.scanning ? 'Scanning…' : 'Scan'}
         </button>
-      {/each}
+      </div>
+
+      {#if store.aps.length > 0}
+        <div class="ap-list">
+          {#each store.aps as ap (ap.ssid + ap.rssi)}
+            <button
+              class="ap"
+              class:sel={selectedSsid === ap.ssid}
+              onclick={() => (selectedSsid = ap.ssid)}
+            >
+              <span class="ap-name">{ap.ssid}</span>
+              <span class="ap-meta">
+                <span class="auth">{authLabel(ap.auth)}</span>
+                <span class="bars" aria-label="{ap.rssi} dBm">
+                  {#each [1, 2, 3, 4] as b (b)}
+                    <i class:on={b <= bars(ap.rssi)}></i>
+                  {/each}
+                </span>
+              </span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+
+      <div class="provision">
+        <input
+          type="text"
+          placeholder="SSID"
+          bind:value={selectedSsid}
+          autocomplete="off"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          bind:value={password}
+          autocomplete="off"
+        />
+        <button
+          class="btn btn-primary"
+          onclick={provision}
+          disabled={!selectedSsid}
+        >
+          Connect
+        </button>
+      </div>
+
+      <div class="admin">
+        <button class="btn" onclick={askAp}>AP Mode</button>
+        <button class="btn" onclick={askForget}>Forget Network</button>
+        <button class="btn" onclick={askReboot}>Reboot</button>
+        <button class="btn btn-danger" onclick={askFactoryReset}>
+          Factory Reset
+        </button>
+      </div>
     </div>
   {/if}
-
-  <div class="provision">
-    <input
-      type="text"
-      placeholder="SSID"
-      bind:value={selectedSsid}
-      autocomplete="off"
-    />
-    <input
-      type="password"
-      placeholder="Password"
-      bind:value={password}
-      autocomplete="off"
-    />
-    <button class="btn btn-primary" onclick={provision} disabled={!selectedSsid}>
-      Connect
-    </button>
-  </div>
-
-  <div class="admin">
-    <button class="btn" onclick={askAp}>AP Mode</button>
-    <button class="btn" onclick={askReboot}>Reboot</button>
-    <button class="btn btn-danger" onclick={askFactoryReset}>Factory Reset</button>
-  </div>
 </div>
 
 {#if pending}
@@ -328,6 +380,31 @@
   }
   .admin .btn {
     flex: 1 1 auto;
+  }
+  /* Settings collapse toggle */
+  .settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 0 2px;
+    border: none;
+    border-top: 1px solid var(--border-solid);
+    background: none;
+    color: var(--text-dim);
+    transition: color 0.12s ease;
+  }
+  .settings-toggle:hover {
+    color: var(--text);
+  }
+  .chev {
+    transition: transform 0.18s ease;
+  }
+  .chev.open {
+    transform: rotate(180deg);
+  }
+  .settings {
+    margin-top: 14px;
   }
   .modal-overlay {
     position: fixed;

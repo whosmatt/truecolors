@@ -40,19 +40,7 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(
-      1200px 600px at 80% -10%,
-      rgba(124, 92, 255, 0.12),
-      transparent 60%
-    ),
-    radial-gradient(
-      900px 500px at -10% 110%,
-      rgba(33, 212, 196, 0.1),
-      transparent 55%
-    ),
-    var(--bg);
-  background-attachment: fixed;
+  background: var(--bg);
   min-height: 100vh;
 }
 

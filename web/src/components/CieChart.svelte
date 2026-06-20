@@ -154,7 +154,7 @@
 </script>
 
 <div class="card chart-card">
-  <div class="card-title">Color · CIE 1931</div>
+  <div class="card-title">CIE 1931</div>
   <svg
     bind:this={svgEl}
     class="chart"

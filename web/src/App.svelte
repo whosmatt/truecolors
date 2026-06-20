@@ -3,6 +3,7 @@
   import { connect, disconnect } from './lib/ws';
   import { store } from './lib/state.svelte';
   import TopBar from './components/TopBar.svelte';
+  import Controls from './components/Controls.svelte';
   import CieChart from './components/CieChart.svelte';
   import RgbSliders from './components/RgbSliders.svelte';
   import HsvSliders from './components/HsvSliders.svelte';
@@ -19,9 +20,9 @@
   const dim = $derived(!store.scene.power);
 </script>
 
-<div class="app">
-  <TopBar />
+<TopBar />
 
+<div class="app">
   <main class="grid">
     <section class="col col-color" class:dim>
       <CieChart />
@@ -31,8 +32,11 @@
       </div>
     </section>
 
-    <section class="col col-mid" class:dim>
-      <EffectPanel />
+    <section class="col col-mid">
+      <Controls />
+      <div class:dim>
+        <EffectPanel />
+      </div>
     </section>
 
     <aside class="col col-side">
@@ -50,7 +54,7 @@
   .app {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 18px;
+    padding: 0 18px 18px;
     display: flex;
     flex-direction: column;
     gap: 18px;
@@ -102,7 +106,7 @@
   }
   @media (max-width: 720px) {
     .app {
-      padding: 12px;
+      padding: 0 12px 12px;
       gap: 14px;
     }
     .grid {
