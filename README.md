@@ -54,7 +54,7 @@ No gap was configured since the common cathode constraint is a thermal one, not 
 
 A heatpipe based server CPU cooler is used in conjunction with a Honeywell PTM7950 phase change thermal pad to keep the laser module cool.
 
-A fine-adjustable 4-pin PWM server fan allows silent cooling with fine temperature control. This is important because the red laser diode has a derating both above and below 45°C. The fan is PID controlled via the NTC thermistor located on the laser module.  
+A fine-adjustable 4-pin PWM server fan allows silent cooling with fine temperature control. This is important because the red laser diode array has a derating both above and below 45°C. The fan is PID controlled via the NTC thermistor located on the laser module.  
 The tach signal is fed back to the MCU for fault monitoring. 
 
 ### Audio
@@ -65,3 +65,14 @@ A MSM261DGT003 PDM MEMS microphone is included for planned audio reactive effect
 
 The Web UI is based on Svelte 5 and vite, and served as a gzipped static bundle. It is baked into the app partition via CMake's `target_add_binary_data`.  
 A websocket endpoint is used to sync the UI state with the firmware, and events are propagated to other connected clients, making the UI multi-user capable.
+
+## Development Environment & Build Instructions
+
+The official Espressif dev container is used and should automatically be detected in VS Code. Build via the status bar or command palette.
+
+### Flashing & Debugging
+
+Access to USB devices from the dev container is a little tricky. 
+Refer to the [Espressif documentation](https://docs.espressif.com/projects/vscode-esp-idf-extension/en/latest/additionalfeatures/docker-container.html) for (partially out of date) instructions.  
+WSL2 distros commonly don't have USB drivers loaded.  
+Run `echo -e "cp210x\nch341\ncdc_acm" | sudo tee /etc/modules-load.d/esp.conf` inside your WSL2 distro and restart WSL2. Since docker for windows uses the WSL2 kernel, USB devices that appear in your WSL2 distros will also appear in any docker containers running in privileged mode (default for this dev container).
