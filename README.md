@@ -75,4 +75,4 @@ The official Espressif dev container is used and should automatically be detecte
 Access to USB devices from the dev container is a little tricky. 
 Refer to the [Espressif documentation](https://docs.espressif.com/projects/vscode-esp-idf-extension/en/latest/additionalfeatures/docker-container.html) for (partially out of date) instructions.  
 WSL2 distros commonly don't have USB drivers loaded.  
-Run `echo -e "cp210x\nch341\ncdc_acm" | sudo tee /etc/modules-load.d/esp.conf` inside your WSL2 distro and restart WSL2. Since docker for windows uses the WSL2 kernel, USB devices that appear in your WSL2 distros will also appear in any docker containers running in privileged mode (default for this dev container).
+Run `echo -e "cp210x\nch341\ncdc_acm" | sudo tee /etc/modules-load.d/esp.conf` inside your WSL2 distro and restart WSL2. Since docker for windows uses the WSL2 kernel, USB devices that appear in your WSL2 distros will also appear in any docker containers running in privileged mode (default for this dev container). Make sure WSL2 is running and has the modules loaded before starting the dev container, this part is a bit flaky.
