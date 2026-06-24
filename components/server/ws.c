@@ -13,6 +13,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "esp_system.h"
+#include "esp_log.h"
+
+static const char *TAG = "ws";
 
 #define ALL_FIELDS (STATE_F_POWER | STATE_F_BRIGHTNESS | STATE_F_STRETCH | \
                     STATE_F_EFFECT | STATE_F_COLOR | STATE_F_SPEED |       \
@@ -87,7 +90,12 @@ static void broadcast(const char *json)
         c->hd = s_server;
         c->fd = s_fds[i];
         c->json = strdup(json);
-        if (!c->json || httpd_queue_work(s_server, async_send, c) != ESP_OK) {
+        esp_err_t qerr = ESP_OK;
+        if (!c->json || (qerr = httpd_queue_work(s_server, async_send, c)) != ESP_OK) {
+            if (c->json) {
+                ESP_LOGW(TAG, "httpd_queue_work fd=%d failed: %s", c->fd,
+                         esp_err_to_name(qerr));
+            }
             free(c->json);
             free(c);
         }
@@ -349,6 +357,13 @@ static esp_err_t ws_handler(httpd_req_t *req)
         }
         return ESP_OK;
     }
+
+    // Track the client here too (idempotent): the GET-handshake branch above is
+    // the intended add point, but every client sends get_snapshot right after
+    // open, so adding on the first data frame guarantees it lands in s_fds[]
+    // even if the handshake add was missed — otherwise broadcasts (live patches
+    // + 1 Hz metrics) silently reach no one.
+    add_client(httpd_req_to_sockfd(req));
 
     httpd_ws_frame_t frame = { .type = HTTPD_WS_TYPE_TEXT };
     if (httpd_ws_recv_frame(req, &frame, 0) != ESP_OK) {
