@@ -49,7 +49,7 @@
           {
             key: 'mcuTemp',
             label: 'MCU Temp',
-            val: `${m.mcuTemp.toFixed(1)} °C`,
+            val: `${m.mcuTemp.toFixed(0)} °C`,
           },
           { key: 'fanRpm', label: 'Fan Speed', val: `${m.fanRpm} rpm` },
           {

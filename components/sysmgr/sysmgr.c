@@ -182,7 +182,7 @@ static void adc_init(void)
 
 static void tsens_init(void)
 {
-    temperature_sensor_config_t cfg = TEMPERATURE_SENSOR_CONFIG_DEFAULT(-10, 100);
+    temperature_sensor_config_t cfg = TEMPERATURE_SENSOR_CONFIG_DEFAULT(-10, 80);
     if (temperature_sensor_install(&cfg, &s_tsens) == ESP_OK) {
         temperature_sensor_enable(s_tsens);
     } else {
