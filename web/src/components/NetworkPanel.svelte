@@ -7,6 +7,7 @@
     wifiAp,
     reboot,
     factoryReset,
+    otaUpdate,
   } from '../lib/ws';
 
   let selectedSsid = $state('');
@@ -97,6 +98,48 @@
       danger: true,
       run: factoryReset,
     });
+
+  // ---- Firmware (OTA) update ----
+  let otaFile = $state<File | null>(null);
+  // null = idle; 0..1 = uploading; 'done' / 'error' once finished.
+  let otaProgress = $state<number | 'done' | 'error' | null>(null);
+  let otaError = $state('');
+  const otaBusy = $derived(typeof otaProgress === 'number');
+
+  function onOtaPick(e: Event) {
+    const input = e.target as HTMLInputElement;
+    otaFile = input.files?.[0] ?? null;
+    otaProgress = null;
+    otaError = '';
+  }
+
+  function runOta() {
+    if (!otaFile) return;
+    otaProgress = 0;
+    otaError = '';
+    otaUpdate(otaFile, {
+      onProgress: (f) => (otaProgress = f),
+      onDone: () => {
+        otaProgress = 'done';
+        setTimeout(() => location.reload(), 3000);
+      },
+      onError: (msg) => {
+        otaProgress = 'error';
+        otaError = msg;
+      },
+    });
+  }
+
+  const askOta = () => {
+    if (!otaFile) return;
+    pending = {
+      title: 'Flash firmware',
+      body: `Upload "${otaFile.name}" (${(otaFile.size / 1024).toFixed(0)} KB)?`,
+      label: 'Flash & reboot',
+      danger: true,
+      run: runOta,
+    };
+  };
 </script>
 
 <svelte:window onkeydown={onKey} />
@@ -107,9 +150,7 @@
   <div class="info">
     <div class="info-row">
       <span class="k">Mode</span>
-      <span class="v"
-        ><span class="mode-dot" data-mode={store.net.mode}></span>{modeLabel}</span
-      >
+      <span class="v">{modeLabel}</span>
     </div>
     <div class="info-row">
       <span class="k">SSID</span><span class="v">{store.net.ssid || '—'}</span>
@@ -210,6 +251,36 @@
           Factory Reset
         </button>
       </div>
+
+      <div class="ota">
+        <span class="sub-title">Firmware Update</span>
+        <div class="ota-pick">
+          <label class="btn file-btn">
+            {otaFile ? otaFile.name : 'Choose .bin…'}
+            <input
+              type="file"
+              accept=".bin,application/octet-stream"
+              onchange={onOtaPick}
+            />
+          </label>
+          <button
+            class="btn btn-primary"
+            onclick={askOta}
+            disabled={!otaFile || otaBusy}
+          >
+            Flash
+          </button>
+        </div>
+
+        {#if typeof otaProgress === 'number'}
+          <div class="ota-bar"><div class="ota-fill" style="width:{Math.round(otaProgress * 100)}%"></div></div>
+          <span class="ota-status">Uploading… {Math.round(otaProgress * 100)}%</span>
+        {:else if otaProgress === 'done'}
+          <span class="ota-status ok">Upload complete, rebooting…</span>
+        {:else if otaProgress === 'error'}
+          <span class="ota-status bad">Update failed: {otaError}</span>
+        {/if}
+      </div>
     </div>
   {/if}
 </div>
@@ -266,23 +337,6 @@
   .mono {
     font-family: var(--mono);
     font-size: 0.82rem;
-  }
-  .mode-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--text-faint);
-  }
-  .mode-dot[data-mode='sta'] {
-    background: var(--good);
-    box-shadow: 0 0 8px var(--good);
-  }
-  .mode-dot[data-mode='ap'] {
-    background: var(--accent-2);
-    box-shadow: 0 0 8px var(--accent-2);
-  }
-  .mode-dot[data-mode='connecting'] {
-    background: var(--warn);
   }
   .scan-head {
     display: flex;
@@ -380,6 +434,54 @@
   }
   .admin .btn {
     flex: 1 1 auto;
+  }
+  /* OTA firmware update */
+  .ota {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-solid);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ota-pick {
+    display: flex;
+    gap: 8px;
+  }
+  .file-btn {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    cursor: pointer;
+  }
+  .file-btn input {
+    display: none;
+  }
+  .ota-pick .btn-primary {
+    flex: 0 0 auto;
+  }
+  .ota-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--bg-elev-2);
+    overflow: hidden;
+  }
+  .ota-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.15s ease;
+  }
+  .ota-status {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .ota-status.ok {
+    color: var(--good);
+  }
+  .ota-status.bad {
+    color: var(--err);
   }
   /* Settings collapse toggle */
   .settings-toggle {

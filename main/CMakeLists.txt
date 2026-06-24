@@ -12,4 +12,5 @@ idf_component_register(
         wifi
         server
         nvs_flash
+        app_update
 )

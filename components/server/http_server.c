@@ -56,7 +56,7 @@ static esp_err_t ota_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    char buf[2048];
+    char buf[1024];
     int remaining = req->content_len;
     while (remaining > 0) {
         int got = httpd_req_recv(req, buf, remaining < (int)sizeof(buf) ? remaining : (int)sizeof(buf));
@@ -88,6 +88,9 @@ static esp_err_t ota_handler(httpd_req_t *req)
 esp_err_t server_start(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    // esp_ota_end() verifies the image (SHA256 + esp_image logging) on the
+    // httpd task stack; the 4 KB default overflows during OTA finalize.
+    config.stack_size = 8192;
     config.max_open_sockets = WS_MAX_CLIENTS;
     config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;

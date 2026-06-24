@@ -232,3 +232,28 @@ export function reboot(): void {
 export function factoryReset(): void {
   rawSend({ type: 'factory_reset' });
 }
+
+// ---- OTA firmware update ---------------------------------------------------
+// The one non-WS path: stream the raw .bin to POST /api/ota. We use XHR (not
+// fetch) for upload progress. The device replies "ok" then reboots, so onDone
+// fires just before the socket drops.
+export interface OtaHandlers {
+  onProgress?: (frac: number) => void;
+  onDone?: () => void;
+  onError?: (msg: string) => void;
+}
+
+export function otaUpdate(file: Blob, h: OtaHandlers = {}): () => void {
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/ota');
+  xhr.upload.onprogress = (e) => {
+    if (e.lengthComputable) h.onProgress?.(e.loaded / e.total);
+  };
+  xhr.onload = () => {
+    if (xhr.status >= 200 && xhr.status < 300) h.onDone?.();
+    else h.onError?.(`HTTP ${xhr.status}: ${xhr.responseText || 'upload failed'}`);
+  };
+  xhr.onerror = () => h.onError?.('network error during upload');
+  xhr.send(file);
+  return () => xhr.abort();
+}

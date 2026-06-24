@@ -1,5 +1,6 @@
 // truecolors_main.c STUB
 #include "esp_log.h"
+#include "esp_ota_ops.h"
 #include "nvs_flash.h"
 
 #include "app_events.h"
@@ -52,6 +53,12 @@ void app_main(void)
     // 9. Start periodic tasks (render / monitor / audio).
     ESP_ERROR_CHECK(effects_start_render());
     ESP_ERROR_CHECK(sysmgr_start());
+
+    // Basic OTA safety, we don't check more than basic bringup for now
+    esp_err_t verr = esp_ota_mark_app_valid_cancel_rollback();
+    if (verr != ESP_OK) {
+        ESP_LOGW(TAG, "mark app valid failed: %s", esp_err_to_name(verr));
+    }
 
     ESP_LOGI(TAG, "boot success");
 }
