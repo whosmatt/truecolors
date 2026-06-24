@@ -3,6 +3,8 @@
 
 # truecolors
 
+This project captures a lot of embedded approaches I have picked up over the years and serves as my main ESP-IDF reference template for new projects that involve an embedded web UI w/ provisioning and OTA. 
+
 Wide color gamut RGB Laser Mood Light  
 
 I designed this light after growing fascinated with wide color gamut (110% BT.2020) rgb laser projectors. The colors are more vibrant and saturated than anything else. Even the best OLED screens look orange in comparison to the deep red produced by the almost monochromatic lasers.  
@@ -75,4 +77,4 @@ The official Espressif dev container is used and should automatically be detecte
 Access to USB devices from the dev container is a little tricky. 
 Refer to the [Espressif documentation](https://docs.espressif.com/projects/vscode-esp-idf-extension/en/latest/additionalfeatures/docker-container.html) for (partially out of date) instructions.  
 WSL2 distros commonly don't have USB drivers loaded.  
-Run `echo -e "cp210x\nch341\ncdc_acm" | sudo tee /etc/modules-load.d/esp.conf` inside your WSL2 distro and restart WSL2. Since docker for windows uses the WSL2 kernel, USB devices that appear in your WSL2 distros will also appear in any docker containers running in privileged mode (default for this dev container). Make sure WSL2 is running and has the modules loaded before starting the dev container, this part is a bit flaky.
+Run `echo -e "cp210x\nch341\ncdc_acm" | sudo tee /etc/modules-load.d/esp.conf` inside your WSL2 distro and restart WSL2. The dev container is set up to get access to all ttyACM and ttyUSB class devices. Always make sure WSL2 is running before starting the dev container, as wsl is responsible for loading the kernel modules. 
