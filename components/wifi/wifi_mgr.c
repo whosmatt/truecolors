@@ -66,13 +66,12 @@ static void start_sta(const char *ssid, const char *pass)
     strncpy(s_state.ssid, ssid, sizeof(s_state.ssid) - 1);
     s_state.ip[0] = '\0';
     publish_state();
+    esp_wifi_connect();
 }
 
 static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data)
 {
-    if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
-    } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
+    if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
         if (s_state.mode == WIFI_MODE_AP_PROVISION) {
             return;
         }
