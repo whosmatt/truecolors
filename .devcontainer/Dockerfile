@@ -5,7 +5,7 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV IS_SANDBOX=1
 
-RUN apt-get update -y && apt-get install udev libssl-dev dfu-util usbutils -y
+RUN apt-get update -y && apt-get install libssl-dev dfu-util usbutils -y
 
 RUN echo "source /opt/esp/idf/export.sh > /dev/null 2>&1" >> ~/.bashrc
 

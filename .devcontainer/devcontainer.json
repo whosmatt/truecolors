@@ -19,6 +19,9 @@
 			]
 		}
 	},
-	"runArgs": ["--privileged"],
-	"postStartCommand": "/usr/lib/systemd/systemd-udevd --daemon && udevadm trigger"
+	"runArgs": [
+		"--device-cgroup-rule=c 166:* rmw",
+		"--device-cgroup-rule=c 188:* rmw",
+		"-v", "/dev:/dev"
+	]
 }
