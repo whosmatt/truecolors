@@ -11,6 +11,9 @@
 #include "esp_mac.h"
 #include "mdns.h"
 #include "esp_log.h"
+#include "lwip/inet.h"
+#include "dhcpserver/dhcpserver.h"
+#include "dns_server.h"
 
 static const char *TAG = "wifi";
 
@@ -24,6 +27,24 @@ static app_wifi_evt_t s_state = { .mode = WIFI_MODE_BOOT, .hostname = DEVICE_HOS
 static void publish_state(void)
 {
     app_bus_post(EVT_WIFI_STATE, &s_state, sizeof(s_state), 0);
+}
+
+// Make the SoftAP DHCP server hand out our own address as the DNS server, so
+// clients send their connectivity-probe lookups to us (where the hijack DNS
+// answers everything with 192.168.4.1). Without this, clients get no DNS and
+// the captive-portal prompt never appears.
+static void configure_ap_dns(void)
+{
+    esp_netif_dns_info_t dns = {0};
+    dns.ip.type = ESP_IPADDR_TYPE_V4;
+    dns.ip.u_addr.ip4.addr = ipaddr_addr("192.168.4.1");
+
+    esp_netif_dhcps_stop(s_ap_netif);  // options can only change while stopped
+    esp_netif_set_dns_info(s_ap_netif, ESP_NETIF_DNS_MAIN, &dns);
+    dhcps_offer_t offer_dns = OFFER_DNS;   // advertise ourselves as DNS server
+    esp_netif_dhcps_option(s_ap_netif, ESP_NETIF_OP_SET,
+                           ESP_NETIF_DOMAIN_NAME_SERVER, &offer_dns, sizeof(offer_dns));
+    esp_netif_dhcps_start(s_ap_netif);
 }
 
 static void start_ap(void)
@@ -44,6 +65,9 @@ static void start_ap(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap));
     ESP_ERROR_CHECK(esp_wifi_start());
 
+    configure_ap_dns();   // hand out our IP as DNS for the captive portal
+    dns_server_start();   // hijack lookups -> 192.168.4.1
+
     s_state.mode = WIFI_MODE_AP_PROVISION;
     strncpy(s_state.ssid, ssid, sizeof(s_state.ssid) - 1);
     strcpy(s_state.ip, "192.168.4.1");
@@ -60,6 +84,8 @@ static void start_sta(const char *ssid, const char *pass)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta));
     ESP_ERROR_CHECK(esp_wifi_start());
+
+    dns_server_stop();  // leave captive-portal mode
 
     s_retry = 0;
     s_state.mode = WIFI_MODE_CONNECTING;

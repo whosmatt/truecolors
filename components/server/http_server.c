@@ -3,6 +3,7 @@
 #include "ws_internal.h"
 #include "web_assets.h"
 #include "app_config.h"
+#include "wifi_mgr.h"
 
 #include <string.h>
 #include "esp_http_server.h"
@@ -26,6 +27,19 @@ static void on_socket_close(httpd_handle_t hd, int sockfd)
 
 static esp_err_t spa_handler(httpd_req_t *req)
 {
+    // Captive portal in AP mode
+    app_wifi_evt_t net;
+    wifi_get_state(&net);
+    if (net.mode == WIFI_MODE_AP_PROVISION) {
+        char host[64] = {0};
+        if (httpd_req_get_hdr_value_str(req, "Host", host, sizeof(host)) != ESP_OK ||
+            strncmp(host, "192.168.4.1", 11) != 0) {
+            httpd_resp_set_status(req, "302 Found");
+            httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+            return httpd_resp_send(req, NULL, 0);
+        }
+    }
+
     char inm[80];
     if (httpd_req_get_hdr_value_str(req, "If-None-Match", inm, sizeof(inm)) == ESP_OK &&
         strcmp(inm, WEB_INDEX_ETAG) == 0) {
