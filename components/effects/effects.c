@@ -11,6 +11,7 @@
 #include "freertos/task.h"
 #include "esp_timer.h"
 #include "esp_log.h"
+#include "esp_random.h"
 
 static const char *TAG = "effects";
 
@@ -32,6 +33,30 @@ static float apply_gamma(float x)
     if (x <= 0.0f) return 0.0f;
     if (x >= 1.0f) return 1.0f;
     return powf(x, GAMMA);
+}
+
+// h,s,v in [0,1]; h wraps.
+static void hsv2rgb(float h, float s, float v, float out[3])
+{
+    h = (h - floorf(h)) * 6.0f;
+    int i = (int)h;
+    float f = h - i;
+    float p = v * (1.0f - s);
+    float q = v * (1.0f - f * s);
+    float u = v * (1.0f - (1.0f - f) * s);
+    switch (i % 6) {
+        case 0:  out[0] = v; out[1] = u; out[2] = p; break;
+        case 1:  out[0] = q; out[1] = v; out[2] = p; break;
+        case 2:  out[0] = p; out[1] = v; out[2] = u; break;
+        case 3:  out[0] = p; out[1] = q; out[2] = v; break;
+        case 4:  out[0] = u; out[1] = p; out[2] = v; break;
+        default: out[0] = v; out[1] = p; out[2] = q; break;
+    }
+}
+
+static float rand01(void)
+{
+    return (float)esp_random() / (float)UINT32_MAX;
 }
 
 // ---- effects ----
@@ -69,6 +94,61 @@ static void audio_render(const effect_ctx_t *ctx, float out[3])
     }
 }
 
+// Full hue cycle, ignores the set color.
+static void rainbow_render(const effect_ctx_t *ctx, float out[3])
+{
+    float hue = ctx->speed * 0.1f * ctx->t;
+    hsv2rgb(hue, 1.0f, 1.0f, out);
+}
+
+static const effect_param_def_t rainbow_window_params[] = {
+    { "window", 0.0f, 1.0f, 0.25f },
+    { "center", 0.0f, 1.0f, 0.5f },
+};
+
+// Hue fades back and forth across a window of the wheel.
+static void rainbow_window_render(const effect_ctx_t *ctx, float out[3])
+{
+    float window = ctx->params[0];
+    float center = ctx->params[1];
+    float sweep = 0.5f * (1.0f - cosf(TWO_PI * ctx->speed * 0.1f * ctx->t));
+    float hue = center + window * (sweep - 0.5f);
+    hsv2rgb(hue, 1.0f, 1.0f, out);
+}
+
+typedef struct {
+    float remaining;   // seconds left in the current pulse
+    float color[3];
+} discombobulate_state_t;
+
+static void discombobulate_pick(discombobulate_state_t *s)
+{
+    static const float palette[4][3] = {
+        {1, 0, 0}, {0, 1, 1}, {0, 0, 1}, {0, 0, 0},  // red, cyan, blue, off
+    };
+    float freq = 7.0f + rand01() * 8.0f;   // 7-15 Hz
+    s->remaining = 0.5f / freq;            // square-wave half-cycle
+    int idx = (int)(rand01() * 4.0f);
+    if (idx > 3) idx = 3;
+    memcpy(s->color, palette[idx], sizeof(s->color));
+}
+
+static void discombobulate_init(void *state)
+{
+    discombobulate_pick(state);
+}
+
+// Randomized strobe through red/cyan/blue/off.
+static void discombobulate_render(const effect_ctx_t *ctx, float out[3])
+{
+    discombobulate_state_t *s = ctx->state;
+    s->remaining -= ctx->dt;
+    if (s->remaining <= 0.0f) {
+        discombobulate_pick(s);
+    }
+    memcpy(out, s->color, sizeof(s->color));
+}
+
 static const effect_desc_t s_registry[] = {
     {
         .id = "solid", .display_name = "Solid",
@@ -87,6 +167,26 @@ static const effect_desc_t s_registry[] = {
         .global_mask = GLOBAL_COLOR | GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_AUDIO_SENS,
         .params = audio_params, .n_params = 1,
         .render = audio_render,
+    },
+    {
+        .id = "rainbow", .display_name = "Rainbow",
+        .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_SPEED,
+        .params = NULL, .n_params = 0,
+        .render = rainbow_render,
+    },
+    {
+        .id = "rainbow_window", .display_name = "Rainbow Window",
+        .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_SPEED,
+        .params = rainbow_window_params, .n_params = 2,
+        .render = rainbow_window_render,
+    },
+    {
+        .id = "discombobulate", .display_name = "Discombobulate",
+        .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH,
+        .params = NULL, .n_params = 0,
+        .init = discombobulate_init,
+        .render = discombobulate_render,
+        .state_size = sizeof(discombobulate_state_t),
     },
 };
 #define EFFECT_COUNT (sizeof(s_registry) / sizeof(s_registry[0]))
