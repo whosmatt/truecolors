@@ -1,7 +1,8 @@
 {
 	"name": "ESP-IDF QEMU",
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "Dockerfile",
+    	"args": { "DOCKER_TAG": "v6.0.1" }
 	},
 	"features": {
 		"ghcr.io/devcontainers/features/node:1": {

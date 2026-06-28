@@ -26,3 +26,7 @@ CONFIG_LWIP_MAX_SOCKETS=16
 # --- FreeRTOS ------------------------------------------------------------
 # 1 kHz tick so the render task and animation engine get fine-grained delays.
 CONFIG_FREERTOS_HZ=1000
+
+# --- Interrupt watchdog --------------------------------------------------
+# 800ms WDT to give wifi a bit more breathing room
+CONFIG_ESP_INT_WDT_TIMEOUT_MS=800
