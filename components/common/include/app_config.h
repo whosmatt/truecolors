@@ -22,12 +22,13 @@
 #define FAN_TARGET_C         45.0f      // PID setpoint (laser-module NTC)
 #define FAN_PWM_HZ           25000      // 25 kHz, inaudible
 #define FAN_PWM_RES_BITS     10         // LEDC resolution
-#define FAN_PULSES_PER_REV   2          // typical PC fan (confirm on hardware)
-#define FAN_START_DUTY       0.01f      // ~1% duty already spins the fan
+#define FAN_PULSES_PER_REV   2          // confirmed
+#define FAN_START_DUTY       0.01f      // any duty spins the fan, already spinning at 0%
 #define STALL_DUTY           0.40f      // PID duty above which RPM==0 means stall
 #define STALL_DEBOUNCE_S     3.0f       // sustained-stall debounce before latching
-#define FAN_KP               0.04f
-#define FAN_KI               0.015f
+// Tuned from logged limit cycle 2026-07-06
+#define FAN_KP               0.10f
+#define FAN_KI               0.001f
 
 // ---------------------------------------------------------------------------
 // Safety thresholds

@@ -109,14 +109,23 @@ static float read_mcu_temp(void)
 
 static int read_fan_rpm(float dt)
 {
-    int count = 0;
+    static float window_s;
+    static int last_rpm;
     if (!s_pcnt || dt <= 0.0f) {
         return 0;
     }
+    // Accumulate a full second of edges before computing
+    window_s += dt;
+    if (window_s < 1.0f) {
+        return last_rpm;
+    }
+    int count = 0;
     pcnt_unit_get_count(s_pcnt, &count);
     pcnt_unit_clear_count(s_pcnt);
-    float revs = (float)count / FAN_PULSES_PER_REV;
-    return (int)(revs / dt * 60.0f);
+    float revs = (float)count / (2.0f * FAN_PULSES_PER_REV);
+    last_rpm = (int)(revs / window_s * 60.0f);
+    window_s = 0.0f;
+    return last_rpm;
 }
 
 // ---- init helpers ----
@@ -201,8 +210,9 @@ static void pcnt_init(void)
     pcnt_chan_config_t chcfg = { .edge_gpio_num = PIN_FAN_TACH, .level_gpio_num = -1 };
     pcnt_channel_handle_t chan;
     ESP_ERROR_CHECK(pcnt_new_channel(s_pcnt, &chcfg, &chan));
+    // Count both edges: 2 tach pulses/rev -> 4 edges/rev of resolution.
     ESP_ERROR_CHECK(pcnt_channel_set_edge_action(chan,
-        PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD));
+        PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_INCREASE));
 
     ESP_ERROR_CHECK(pcnt_unit_enable(s_pcnt));
     ESP_ERROR_CHECK(pcnt_unit_clear_count(s_pcnt));
