@@ -121,6 +121,16 @@ int main(void)
     check((out.warn_flags & SF_UNDERCURRENT) != 0, "undercurrent warn flag");
     check(!out.latched, "undercurrent is not a fault");
 
+    // No PD: undercurrent check is skipped, full scale runs.
+    safety_init(&st);
+    prime(&st);
+    in = good();
+    in.pd_ok = false;
+    in.pd_current_a = 0.0f;
+    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    check_near(out.safety_scale, 1.0f, 0.001f, "no PD -> full scale (no undercurrent throttle)");
+    check((out.warn_flags & SF_UNDERCURRENT) == 0, "no PD -> no undercurrent flag");
+
     // Undervoltage is a warning only, lasers keep running.
     safety_init(&st);
     prime(&st);

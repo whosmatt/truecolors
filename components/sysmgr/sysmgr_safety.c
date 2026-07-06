@@ -56,7 +56,7 @@ void safety_step(safety_state_t *st, const safety_inputs_t *in,
         scale = 0.0f;
     } else {
         scale = 1.0f;
-        if (requested_a > 0.0f && in->pd_current_a < requested_a) {
+        if (in->pd_ok && requested_a > 0.0f && in->pd_current_a < requested_a) {
             scale = in->pd_current_a / requested_a;
             if (scale < 0.0f) scale = 0.0f;
             if (scale > 1.0f) scale = 1.0f;
