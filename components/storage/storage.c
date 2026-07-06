@@ -11,11 +11,11 @@
 
 static const char *TAG = "storage";
 
-#define SCENE_BLOB_VERSION 1
+// v2: dropped power, the light always boots off.
+#define SCENE_BLOB_VERSION 2
 
 typedef struct {
     uint8_t  version;
-    bool     power;
     float    brightness;
     float    stretch;
     uint16_t effect_id;
@@ -35,7 +35,6 @@ static void persist_now(void *arg)
 
     scene_blob_t blob = {
         .version = SCENE_BLOB_VERSION,
-        .power = st.power,
         .brightness = st.brightness,
         .stretch = st.stretch,
         .effect_id = st.effect_id,
@@ -58,6 +57,10 @@ static void on_state_changed(void *arg, esp_event_base_t base, int32_t id, void 
 {
     const app_state_changed_evt_t *evt = data;
     if (evt && evt->src == APP_SRC_STORAGE_RESTORE) {
+        return;
+    }
+    // Power is not persisted, so a pure on/off toggle skips the flash write.
+    if (evt && (evt->changed_mask & ~STATE_F_POWER) == 0) {
         return;
     }
     esp_timer_stop(s_persist_timer);
@@ -95,10 +98,9 @@ esp_err_t storage_restore_scene(void)
     }
 
     app_patch_t patch = {
-        .mask = STATE_F_POWER | STATE_F_BRIGHTNESS | STATE_F_STRETCH |
+        .mask = STATE_F_BRIGHTNESS | STATE_F_STRETCH |
                 STATE_F_EFFECT | STATE_F_COLOR | STATE_F_SPEED |
                 STATE_F_AUDIO_SENS | STATE_F_PARAMS,
-        .power = blob.power,
         .brightness = blob.brightness,
         .stretch = blob.stretch,
         .effect_id = blob.effect_id,
