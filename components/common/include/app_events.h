@@ -33,7 +33,7 @@ typedef enum {
 typedef enum {
     FLAG_VIN_LOW     = (1 << 0),  // "vin_low"      (warning)
     FLAG_UNDERCURRENT= (1 << 1),  // "undercurrent" (warning/limit)
-    FLAG_PD_LOST     = (1 << 2),  // "pd_lost"      (error, recoverable)
+    FLAG_PD_LOST     = (1 << 2),  // "pd_lost"      (warning)
     FLAG_OVERTEMP    = (1 << 3),  // "overtemp"     (error, latching)
     FLAG_FAN_STALL   = (1 << 4),  // "fan_stall"    (error, latching)
 } app_flag_t;

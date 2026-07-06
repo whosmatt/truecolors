@@ -40,17 +40,18 @@ void safety_step(safety_state_t *st, const safety_inputs_t *in,
     }
     bool latched = st->overtemp_latched || st->fanstall_latched;
 
-    bool conditions_ok = in->pd_ok && in->ntc_valid && in->ntc_temp_c < T_LIMIT_C;
+    bool conditions_ok = in->ntc_valid && in->ntc_temp_c < T_LIMIT_C;
     if (conditions_ok) {
         st->boot_gate_cleared = true;
+    }
+
+    if (!in->pd_ok) {
+        warn |= SF_PD_LOST;
     }
 
     float scale;
     if (latched) {
         scale = 0.0f;
-    } else if (!in->pd_ok) {
-        scale = 0.0f;
-        err |= SF_PD_LOST;
     } else if (!st->boot_gate_cleared) {
         scale = 0.0f;
     } else {

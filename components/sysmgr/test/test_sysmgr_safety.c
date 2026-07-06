@@ -62,7 +62,8 @@ int main(void)
     in = good();
     in.pd_ok = false;
     safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
-    check_near(out.safety_scale, 0.0f, 0.001f, "boot: no PD -> scale 0");
+    check_near(out.safety_scale, 1.0f, 0.001f, "boot: no PD -> still runs");
+    check((out.warn_flags & SF_PD_LOST) != 0, "boot: no PD -> warn flag");
 
     in = good();
     safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
@@ -129,17 +130,17 @@ int main(void)
     check((out.warn_flags & SF_VIN_LOW) != 0, "undervoltage warn flag");
     check_near(out.safety_scale, 1.0f, 0.001f, "undervoltage keeps running");
 
-    // PD lost is recoverable: scale returns when PD comes back.
+    // PD lost is a warning: output continues, flag clears when PD comes back.
     safety_init(&st);
     prime(&st);
     in = good();
     in.pd_ok = false;
     safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
-    check_near(out.safety_scale, 0.0f, 0.001f, "PD lost -> scale 0");
-    check((out.err_flags & SF_PD_LOST) && !out.latched, "PD lost err, not latched");
+    check_near(out.safety_scale, 1.0f, 0.001f, "PD lost -> still runs");
+    check((out.warn_flags & SF_PD_LOST) && !out.latched, "PD lost warn, not latched");
     in = good();
     safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
-    check_near(out.safety_scale, 1.0f, 0.001f, "PD restored -> auto-recovers");
+    check_near(out.safety_scale, 1.0f, 0.001f, "PD restored -> warn clears");
 
     printf("\n%d checks, %d failures\n", g_checks, g_fail);
     return g_fail ? 1 : 0;
