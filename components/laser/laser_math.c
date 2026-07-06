@@ -11,7 +11,8 @@ static float clamp01(float v)
     return v;
 }
 
-void laser_compute_widths(const float rgb[3], float stretch, laser_widths_t *out)
+void laser_compute_widths(const float rgb[3], float stretch, bool keepalive,
+                          laser_widths_t *out)
 {
     const float T = (float)TC_PERIOD_TICKS;
     const float gap = (float)GAP_TICKS;
@@ -45,8 +46,9 @@ void laser_compute_widths(const float rgb[3], float stretch, laser_widths_t *out
     }
 
     // Brightness floor: a zero channel stays off, a sub-floor channel snaps up.
+    // With keepalive, zero channels pulse MIN_ON too instead of turning off.
     for (int c = 0; c < 3; c++) {
-        if (on[c] > 0 && on[c] < MIN_ON_TICKS) {
+        if ((on[c] > 0 || keepalive) && on[c] < MIN_ON_TICKS) {
             on[c] = MIN_ON_TICKS;
         }
     }

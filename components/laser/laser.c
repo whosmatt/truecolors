@@ -65,11 +65,11 @@ esp_err_t laser_init(void)
     return ESP_OK;
 }
 
-void laser_set(float r, float g, float b, float stretch)
+void laser_set(float r, float g, float b, float stretch, bool keepalive)
 {
     float rgb[3] = { r, g, b };
     laser_widths_t w;
-    laser_compute_widths(rgb, stretch, &w);
+    laser_compute_widths(rgb, stretch, keepalive, &w);
 
     xSemaphoreTake(s_mux, portMAX_DELAY);
 

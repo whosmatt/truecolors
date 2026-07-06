@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "esp_err.h"
@@ -49,6 +50,8 @@ typedef struct {
     void (*init)(void *state);
     void (*render)(const effect_ctx_t *ctx, float out_rgb[3]);
     size_t state_size;
+    bool keepalive;   // strobes from black: floor dark channels at MIN_ON so
+                      // the drivers restart instantly instead of fading in
 } effect_desc_t;
 
 esp_err_t effects_init(void);

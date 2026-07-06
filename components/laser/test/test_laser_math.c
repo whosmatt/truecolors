@@ -38,7 +38,15 @@ static laser_widths_t compute(float r, float g, float b, float s)
 {
     float rgb[3] = {r, g, b};
     laser_widths_t w;
-    laser_compute_widths(rgb, s, &w);
+    laser_compute_widths(rgb, s, false, &w);
+    return w;
+}
+
+static laser_widths_t compute_ka(float r, float g, float b, float s)
+{
+    float rgb[3] = {r, g, b};
+    laser_widths_t w;
+    laser_compute_widths(rgb, s, true, &w);
     return w;
 }
 
@@ -136,6 +144,29 @@ int main(void)
     // Clamp out-of-range input.
     w = compute(2.0f, -1.0f, 0.5f, 2.0f);
     check_invariants(&w, "out-of-range clamp");
+
+    // Keepalive: dark channels idle at the MIN_ON floor instead of turning
+    // off, so the driver bias never decays into low-power shutdown.
+    w = compute_ka(0.0f, 0.0f, 0.0f, 0.0f);
+    check(w.on[0] == (int32_t)MIN_ON_TICKS && w.on[1] == (int32_t)MIN_ON_TICKS &&
+          w.on[2] == (int32_t)MIN_ON_TICKS, "keepalive black: all at MIN_ON");
+    check_invariants(&w, "keepalive black");
+
+    w = compute_ka(1.0f, 0.0f, 0.0f, 0.0f);
+    check_near(duty(&w, 0), 0.3333f, 0.01f, "keepalive red = 33%");
+    check(w.on[1] == (int32_t)MIN_ON_TICKS && w.on[2] == (int32_t)MIN_ON_TICKS,
+          "keepalive red: dark G,B at MIN_ON");
+    check_invariants(&w, "keepalive red");
+
+    // Keepalive under full stretch: refit shrinks the floor but every channel
+    // keeps pulsing, and nothing may occupy the whole period.
+    w = compute_ka(1.0f, 0.0f, 0.0f, 1.0f);
+    check(w.on[1] > 0 && w.on[2] > 0, "keepalive red s1: G,B still pulse");
+    check_invariants(&w, "keepalive red s1");
+
+    w = compute_ka(1.0f, 1.0f, 0.0f, 1.0f);
+    check(w.on[2] > 0, "keepalive R+G s1: B still pulses");
+    check_invariants(&w, "keepalive R+G s1");
 
     // Crossfade corner regression: two hot channels with stretch past 1/4
     // engage dynamic packing, which used to pack the last pulse out to the

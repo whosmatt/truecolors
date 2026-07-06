@@ -167,6 +167,7 @@ static const effect_desc_t s_registry[] = {
         .global_mask = GLOBAL_COLOR | GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_AUDIO_SENS,
         .params = audio_params, .n_params = 1,
         .render = audio_render,
+        .keepalive = true,
     },
     {
         .id = "rainbow", .display_name = "Rainbow",
@@ -187,6 +188,7 @@ static const effect_desc_t s_registry[] = {
         .init = discombobulate_init,
         .render = discombobulate_render,
         .state_size = sizeof(discombobulate_state_t),
+        .keepalive = true,
     },
 };
 #define EFFECT_COUNT (sizeof(s_registry) / sizeof(s_registry[0]))
@@ -283,11 +285,14 @@ static void render_task(void *arg)
 
         float bri_lin = apply_gamma(st.brightness);
         float scale = (st.power && !s_latched) ? s_safety_scale : 0.0f;
+        // Keepalive only while the light is actually running: the power
+        // switch, safety latch, boot gate and brightness zero stay true black.
+        bool keepalive = eff->keepalive && scale > 0.0f && st.brightness > 0.0f;
         float out[3];
         for (int c = 0; c < 3; c++) {
             out[c] = apply_gamma(clamp01(rgb[c])) * bri_lin * scale;
         }
-        laser_set(out[0], out[1], out[2], st.stretch);
+        laser_set(out[0], out[1], out[2], st.stretch, keepalive);
 
         vTaskDelayUntil(&wake, period);
     }
