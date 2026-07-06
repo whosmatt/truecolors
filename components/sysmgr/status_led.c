@@ -14,7 +14,7 @@ static const char *TAG = "status_led";
 
 #define LED_PI            3.14159265358979f
 #define STATUS_LED_MAX    0.55f   // master scale
-#define BREATHE_FLOOR     0.04f   // apple style minimum for low breathe state
+#define BREATHE_FLOOR     0.25f   // apple style minimum for low breathe state
 
 typedef enum { PAT_SOLID, PAT_BREATHE, PAT_PULSE, PAT_HEARTBEAT } led_pattern_t;
 
@@ -29,7 +29,7 @@ static const led_anim_t k_states[LED_STATE_COUNT] = {
     [LED_BOOT]              = {255, 255, 255, PAT_BREATHE, 3.0f},
     [LED_AP_PROVISION]      = {  0,  60, 255, PAT_BREATHE, 1.0f},
     [LED_CONNECTING]        = {  0,  60, 255, PAT_BREATHE, 0.5f},
-    [LED_CONNECTED_IDLE]    = {  0, 110,  20, PAT_BREATHE, 4.0f},
+    [LED_CONNECTED_IDLE]    = {  0,  60,  10, PAT_BREATHE, 4.0f},
     [LED_CONNECTED_RUNNING] = {  0,  10,   1, PAT_SOLID,   1.0f},
     [LED_WARNING]           = {255, 110,   0, PAT_PULSE,   1.5f},
     [LED_ERROR]             = {255,   0,   0, PAT_PULSE,   0.8f},
