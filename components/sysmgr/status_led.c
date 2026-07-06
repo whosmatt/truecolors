@@ -29,8 +29,8 @@ static const led_anim_t k_states[LED_STATE_COUNT] = {
     [LED_BOOT]              = {255, 255, 255, PAT_BREATHE, 3.0f},
     [LED_AP_PROVISION]      = {  0,  60, 255, PAT_BREATHE, 1.0f},
     [LED_CONNECTING]        = {  0,  60, 255, PAT_BREATHE, 0.5f},
-    [LED_CONNECTED_IDLE]    = {  0, 110,  20, PAT_SOLID,   1.0f},
-    [LED_CONNECTED_RUNNING] = {  0, 150,  30, PAT_BREATHE, 4.0f},
+    [LED_CONNECTED_IDLE]    = {  0, 110,  20, PAT_BREATHE, 4.0f},
+    [LED_CONNECTED_RUNNING] = {  0,  10,   1, PAT_SOLID,   1.0f},
     [LED_WARNING]           = {255, 110,   0, PAT_PULSE,   1.5f},
     [LED_ERROR]             = {255,   0,   0, PAT_PULSE,   0.8f},
 };
