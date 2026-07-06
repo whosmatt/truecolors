@@ -42,14 +42,16 @@ static laser_widths_t compute(float r, float g, float b, float s)
     return w;
 }
 
-// Sum of on-times must never exceed the period, and active pulses must be
-// packed back-to-back without overlap.
+// Sum of on-times must never exceed the period, active pulses must be packed
+// back-to-back without overlap, and every compare must stay at or below
+// period-1: the up-counter never reaches the period tick, so a clear compare
+// there never fires and the channel latches on.
 static void check_invariants(const laser_widths_t *w, const char *ctx)
 {
     char buf[128];
     int32_t sum = w->on[0] + w->on[1] + w->on[2];
-    snprintf(buf, sizeof buf, "%s: sum on <= period", ctx);
-    check(sum <= w->period, buf);
+    snprintf(buf, sizeof buf, "%s: sum on < period", ctx);
+    check(sum < w->period, buf);
 
     int32_t expect = 0;
     for (int c = 0; c < 3; c++) {
@@ -58,14 +60,14 @@ static void check_invariants(const laser_widths_t *w, const char *ctx)
             check(w->cmpa[c] == expect, buf);
             snprintf(buf, sizeof buf, "%s: cmpb[%d] = cmpa+on", ctx, c);
             check(w->cmpb[c] == expect + w->on[c], buf);
+            snprintf(buf, sizeof buf, "%s: cmpb[%d] reachable", ctx, c);
+            check(w->cmpb[c] <= w->period - 1, buf);
             expect += w->on[c] + GAP_TICKS;
         } else {
             snprintf(buf, sizeof buf, "%s: off channel %d zero width", ctx, c);
             check(w->cmpa[c] == 0 && w->cmpb[c] == 0, buf);
         }
     }
-    snprintf(buf, sizeof buf, "%s: last pulse ends within period", ctx);
-    check(expect <= w->period, buf);
 }
 
 int main(void)
@@ -134,6 +136,27 @@ int main(void)
     // Clamp out-of-range input.
     w = compute(2.0f, -1.0f, 0.5f, 2.0f);
     check_invariants(&w, "out-of-range clamp");
+
+    // Crossfade corner regression: two hot channels with stretch past 1/4
+    // engage dynamic packing, which used to pack the last pulse out to the
+    // period tick and latch the channel on (rainbow flash at the 50/50 mark).
+    w = compute(1.0f, 0.974f, 0.0f, 0.26f);
+    check_invariants(&w, "corner s0.26");
+
+    // Sweep crossfades across the stretch range, two- and three-channel.
+    for (int si = 0; si <= 20; si++) {
+        float s = si / 20.0f;
+        for (int fi = 0; fi <= 100; fi++) {
+            float f = fi / 100.0f;
+            char ctx[48];
+            snprintf(ctx, sizeof ctx, "sweep s%.2f f%.2f 2ch", s, f);
+            w = compute(1.0f, f, 0.0f, s);
+            check_invariants(&w, ctx);
+            snprintf(ctx, sizeof ctx, "sweep s%.2f f%.2f 3ch", s, f);
+            w = compute(f, 0.5f, 1.0f, s);
+            check_invariants(&w, ctx);
+        }
+    }
 
     printf("\n%d checks, %d failures\n", g_checks, g_fail);
     return g_fail ? 1 : 0;

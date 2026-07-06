@@ -80,17 +80,20 @@ void laser_set(float r, float g, float b, float stretch)
     }
 
     // Drive off channels low first, then release partials, then force a full
-    // channel high. A full channel only exists when the others are off, so the
-    // high force never coincides with another active output.
+    // channel high. The math reserves the wrap tick, so period-1 is the widest
+    // pulse it emits: treat it as fully on and drive DC rather than chopping a
+    // one-tick notch into the enable. A full channel only exists when the
+    // others are off, so the high force never coincides with another active
+    // output.
     for (int c = 0; c < 3; c++) {
         if (w.on[c] <= 0) {
             mcpwm_generator_set_force_level(s_gen[c], 0, true);
-        } else if (w.on[c] < w.period) {
+        } else if (w.on[c] < w.period - 1) {
             mcpwm_generator_set_force_level(s_gen[c], -1, true);
         }
     }
     for (int c = 0; c < 3; c++) {
-        if (w.on[c] >= w.period) {
+        if (w.on[c] >= w.period - 1) {
             mcpwm_generator_set_force_level(s_gen[c], 1, true);
         }
     }

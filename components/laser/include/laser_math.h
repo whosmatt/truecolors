@@ -16,7 +16,9 @@ typedef struct {
 } laser_widths_t;
 
 // Map linear rgb (0..1) and stretch (0..1) to sequentially packed, budget-safe
-// per-channel widths. Guarantees the sum of on-times never exceeds the period.
+// per-channel widths. The MCPWM up-counter counts [0, period-1], so every
+// compare is kept at or below period-1; a width of period-1 means fully on
+// (laser.c drives it DC instead of leaving a one-tick notch).
 void laser_compute_widths(const float rgb[3], float stretch, laser_widths_t *out);
 
 #ifdef __cplusplus

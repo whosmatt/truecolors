@@ -15,7 +15,9 @@ void laser_compute_widths(const float rgb[3], float stretch, laser_widths_t *out
 {
     const float T = (float)TC_PERIOD_TICKS;
     const float gap = (float)GAP_TICKS;
-    const float t_avail = T - 3.0f * gap;
+    // The up-counter tops out at period-1, a compare at the period tick never
+    // fires. Reserve the wrap tick so every clear compare stays reachable.
+    const float t_avail = T - 3.0f * gap - 1.0f;
     const float slot = t_avail / 3.0f;
     const float s = clamp01(stretch);
 
