@@ -118,35 +118,34 @@ static void rainbow_window_render(const effect_ctx_t *ctx, float out[3])
 
 typedef struct {
     float remaining;   // seconds left in the current pulse
-    float color[3];
+    bool blue;         // current half-cycle, toggles red <-> blue
 } discombobulate_state_t;
 
-static void discombobulate_pick(discombobulate_state_t *s)
+static const effect_param_def_t discombobulate_params[] = {
+    { "speed", 0.0f, 1.0f, 1.0f },
+    { "ratio", 0.0f, 1.0f, 0.5f },
+};
+
+static void discombobulate_pick(discombobulate_state_t *s, float speed, float ratio)
 {
-    static const float palette[4][3] = {
-        {1, 0, 0}, {0, 1, 1}, {0, 0, 1}, {0, 0, 0},  // red, cyan, blue, off
-    };
-    float freq = 7.0f + rand01() * 8.0f;   // 7-15 Hz
-    s->remaining = 0.5f / freq;            // square-wave half-cycle
-    int idx = (int)(rand01() * 4.0f);
-    if (idx > 3) idx = 3;
-    memcpy(s->color, palette[idx], sizeof(s->color));
+    float freq = 7.0f + speed * (8.0f + rand01() * 10.0f);
+    s->blue = !s->blue;
+    s->remaining += (s->blue ? (1.0f - ratio) : ratio) / freq;
 }
 
-static void discombobulate_init(void *state)
-{
-    discombobulate_pick(state);
-}
-
-// Randomized strobe through red/cyan/blue/off.
+// Red/blue alternating strobe.
 static void discombobulate_render(const effect_ctx_t *ctx, float out[3])
 {
     discombobulate_state_t *s = ctx->state;
+    float speed = clamp01(ctx->params[0]);
+    float ratio = clamp01(ctx->params[1]);
     s->remaining -= ctx->dt;
-    if (s->remaining <= 0.0f) {
-        discombobulate_pick(s);
+    while (s->remaining <= 0.0f) {
+        discombobulate_pick(s, speed, ratio);
     }
-    memcpy(out, s->color, sizeof(s->color));
+    out[0] = s->blue ? 0.0f : 1.0f;
+    out[1] = 0.0f;
+    out[2] = s->blue ? 1.0f : 0.0f;
 }
 
 static const effect_desc_t s_registry[] = {
@@ -184,8 +183,7 @@ static const effect_desc_t s_registry[] = {
     {
         .id = "discombobulate", .display_name = "Discombobulate",
         .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH,
-        .params = NULL, .n_params = 0,
-        .init = discombobulate_init,
+        .params = discombobulate_params, .n_params = 2,
         .render = discombobulate_render,
         .state_size = sizeof(discombobulate_state_t),
         .keepalive = true,
