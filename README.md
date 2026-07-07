@@ -63,6 +63,8 @@ The tach signal is fed back to the MCU for fault monitoring.
 
 A MSM261DGT003 PDM MEMS microphone is included for planned audio reactive effects. Connected to the ESP32's I2S peripheral in PDM mode.
 
+A short recording was analyzed for coil whine cancellation: A single comb filter at the MCPWM frequency as well as a ~48db/oct 4kHz lowpass provided good results and leaves plenty of signal for audio reactive effects.
+
 ## Web UI
 
 The Web UI is based on Svelte 5 and vite, and served as a gzipped static bundle. It is baked into the app partition via CMake's `target_add_binary_data`.  
