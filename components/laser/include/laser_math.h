@@ -21,8 +21,9 @@ typedef struct {
 // compare is kept at or below period-1; a width of period-1 means fully on
 // (laser.c drives it DC instead of leaving a one-tick notch).
 // keepalive floors zero channels at MIN_ON_TICKS instead of turning them off.
+// period_ticks is the runtime adjustable MCPWM period
 void laser_compute_widths(const float rgb[3], float stretch, bool keepalive,
-                          laser_widths_t *out);
+                          int32_t period_ticks, laser_widths_t *out);
 
 #ifdef __cplusplus
 }

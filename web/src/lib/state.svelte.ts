@@ -92,6 +92,7 @@ class Store {
   effects = $state<EffectDef[]>([]);
   net = $state<NetInfo>({ mode: 'boot', ssid: '', hostname: '', ip: '' });
   metrics = $state<Metrics | null>(null);
+  pwmHz = $state(120);
   aps = $state<AccessPoint[]>([]);
   scanning = $state(false);
   lastError = $state<{ code: number; msg: string } | null>(null);
@@ -114,11 +115,13 @@ class Store {
     scene: Scene;
     effects: EffectDef[];
     net: NetInfo;
+    pwmHz?: number;
   }): void {
     this.seq = msg.seq;
     this.scene = { ...emptyScene(), ...msg.scene };
     this.effects = msg.effects ?? [];
     this.net = msg.net ?? this.net;
+    this.pwmHz = msg.pwmHz ?? this.pwmHz;
   }
 
   applyPatch(seq: number, set: ScenePatch): void {

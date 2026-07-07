@@ -8,6 +8,7 @@
     reboot,
     factoryReset,
     otaUpdate,
+    setPwmHz,
   } from '../lib/ws';
 
   let selectedSsid = $state('');
@@ -130,6 +131,10 @@
     });
   }
 
+  function onPwmChange(e: Event) {
+    setPwmHz(Number((e.currentTarget as HTMLSelectElement).value));
+  }
+
   const askOta = () => {
     if (!otaFile) return;
     pending = {
@@ -250,6 +255,15 @@
         <button class="btn btn-danger" onclick={askFactoryReset}>
           Factory Reset
         </button>
+      </div>
+
+      <div class="pwm">
+        <span class="sub-title">Laser PWM</span>
+        <select value={String(store.pwmHz)} onchange={onPwmChange}>
+          <option value="120">120 Hz</option>
+          <option value="240">240 Hz</option>
+          <option value="480">480 Hz</option>
+        </select>
       </div>
 
       <div class="ota">
@@ -434,6 +448,23 @@
   }
   .admin .btn {
     flex: 1 1 auto;
+  }
+  .pwm {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-solid);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .pwm select {
+    background: var(--bg-elev-2);
+    color: var(--text);
+    border: 1px solid var(--border-solid);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-size: 0.85rem;
   }
   /* OTA firmware update */
   .ota {

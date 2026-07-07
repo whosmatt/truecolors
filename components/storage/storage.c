@@ -113,6 +113,19 @@ esp_err_t storage_restore_scene(void)
     return appstate_apply_patch(APP_SRC_STORAGE_RESTORE, &patch);
 }
 
+esp_err_t storage_save_pwm_hz(uint32_t hz)
+{
+    esp_err_t err = nvs_set_u32(s_nvs, NVS_KEY_PWM_HZ, hz);
+    return err == ESP_OK ? nvs_commit(s_nvs) : err;
+}
+
+uint32_t storage_load_pwm_hz(void)
+{
+    uint32_t hz = TC_PWM_HZ;
+    nvs_get_u32(s_nvs, NVS_KEY_PWM_HZ, &hz);
+    return hz;
+}
+
 esp_err_t storage_save_wifi(const char *ssid, const char *pass)
 {
     esp_err_t err = nvs_set_str(s_nvs, NVS_KEY_WIFI_SSID, ssid ? ssid : "");

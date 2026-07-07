@@ -4,6 +4,7 @@
 #include "effects.h"
 #include "wifi_mgr.h"
 #include "storage.h"
+#include "laser.h"
 #include "app_config.h"
 #include "app_events.h"
 
@@ -198,7 +199,18 @@ static char *build_snapshot(void)
     }
 
     cJSON_AddItemToObject(root, "net", net_obj());
+    cJSON_AddNumberToObject(root, "pwmHz", laser_get_pwm_hz());
 
+    char *out = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    return out;
+}
+
+static char *build_pwm_hz(void)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "type", "pwm_hz");
+    cJSON_AddNumberToObject(root, "hz", laser_get_pwm_hz());
     char *out = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
     return out;
@@ -340,6 +352,14 @@ static void handle_message(httpd_req_t *req, const char *data)
         } else if (strcmp(t, "factory_reset") == 0) {
             storage_clear_all();
             esp_restart();
+        } else if (strcmp(t, "set_pwm_hz") == 0) {
+            cJSON *hz = cJSON_GetObjectItem(root, "hz");
+            if (cJSON_IsNumber(hz) &&
+                laser_set_pwm_hz((uint32_t)hz->valuedouble) == ESP_OK) {
+                storage_save_pwm_hz((uint32_t)hz->valuedouble);
+                char *json = build_pwm_hz();
+                if (json) { broadcast(json); free(json); }
+            }
         }
     }
     cJSON_Delete(root);

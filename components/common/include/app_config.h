@@ -5,14 +5,16 @@
 // ---------------------------------------------------------------------------
 // Laser PWM / drive (MCPWM)
 // ---------------------------------------------------------------------------
-#define TC_PWM_HZ            480        // RGB cycle frequency, start 480 Hz (tune)
-#define MCPWM_CLK_HZ         10000000   // 10 MHz group clock -> 0.1 us/tick
+#define TC_PWM_HZ            120        // default RGB cycle frequency, quiet; runtime-adjustable
+#define MCPWM_CLK_HZ         5000000    // 5 MHz group clock -> 0.2 us/tick; the
+                                        // 16-bit period register then reaches
+                                        // down to ~80 Hz (120 Hz = 41666 ticks)
 #define GAP_US               0          // guard gap: settled at 0 (not an H-bridge)
 #define MIN_ON_US            8          // LM3409 settle floor, 5-10 us (tune on scope)
 #define GAMMA                2.2f       // float gamma exponent (calibratable)
 
 // Derived tick budget (period in MCPWM ticks).
-#define TC_PERIOD_TICKS      (MCPWM_CLK_HZ / TC_PWM_HZ)            // 480 Hz -> 20833
+#define TC_PERIOD_TICKS      (MCPWM_CLK_HZ / TC_PWM_HZ)            // 120 Hz -> 41666
 #define GAP_TICKS            ((GAP_US * (MCPWM_CLK_HZ / 1000000))) // 0
 #define MIN_ON_TICKS         (MIN_ON_US * (MCPWM_CLK_HZ / 1000000))
 
@@ -96,4 +98,5 @@
 #define NVS_KEY_WIFI_SSID    "wifi_ssid"
 #define NVS_KEY_WIFI_PASS    "wifi_pass"
 #define NVS_KEY_HOSTNAME     "hostname"
+#define NVS_KEY_PWM_HZ       "pwm_hz"
 #define PERSIST_DEBOUNCE_MS  2000           // coalesce scene writes to flash

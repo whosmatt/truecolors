@@ -35,6 +35,7 @@ void app_main(void)
 
     // 4. Laser (MCPWM, widths 0, generators LOW), effects registry, audio (I2S).
     ESP_ERROR_CHECK(laser_init());
+    laser_set_pwm_hz(storage_load_pwm_hz());
     ESP_ERROR_CHECK(effects_init());
     ESP_ERROR_CHECK(audio_init());
 

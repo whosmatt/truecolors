@@ -12,9 +12,9 @@ static float clamp01(float v)
 }
 
 void laser_compute_widths(const float rgb[3], float stretch, bool keepalive,
-                          laser_widths_t *out)
+                          int32_t period_ticks, laser_widths_t *out)
 {
-    const float T = (float)TC_PERIOD_TICKS;
+    const float T = (float)period_ticks;
     const float gap = (float)GAP_TICKS;
     // The up-counter tops out at period-1, a compare at the period tick never
     // fires. Reserve the wrap tick so every clear compare stays reachable.

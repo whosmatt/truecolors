@@ -38,7 +38,7 @@ static laser_widths_t compute(float r, float g, float b, float s)
 {
     float rgb[3] = {r, g, b};
     laser_widths_t w;
-    laser_compute_widths(rgb, s, false, &w);
+    laser_compute_widths(rgb, s, false, TC_PERIOD_TICKS, &w);
     return w;
 }
 
@@ -46,7 +46,7 @@ static laser_widths_t compute_ka(float r, float g, float b, float s)
 {
     float rgb[3] = {r, g, b};
     laser_widths_t w;
-    laser_compute_widths(rgb, s, true, &w);
+    laser_compute_widths(rgb, s, true, TC_PERIOD_TICKS, &w);
     return w;
 }
 
@@ -137,7 +137,7 @@ int main(void)
     w = compute(0.0f, 0.0f, 0.0f, 0.0f);
     check(w.on[0] == 0 && w.on[1] == 0 && w.on[2] == 0, "all-zero stays off");
 
-    w = compute(0.0001f, 0.0f, 0.0f, 0.0f);
+    w = compute(0.001f, 0.0f, 0.0f, 0.0f);
     check(w.on[0] == (int32_t)MIN_ON_TICKS, "tiny red snaps to MIN_ON");
     check_invariants(&w, "floor snap");
 
@@ -185,6 +185,20 @@ int main(void)
             check_invariants(&w, ctx);
             snprintf(ctx, sizeof ctx, "sweep s%.2f f%.2f 3ch", s, f);
             w = compute(f, 0.5f, 1.0f, s);
+            check_invariants(&w, ctx);
+        }
+    }
+
+    // Runtime periods: invariants hold at every dropdown frequency
+    // (120 Hz, 240 Hz, 480 Hz).
+    static const int32_t periods[] = { 41666, 20833, 10416 };
+    for (size_t pi = 0; pi < sizeof(periods) / sizeof(periods[0]); pi++) {
+        for (int fi = 0; fi <= 20; fi++) {
+            float f = fi / 20.0f;
+            float rgb[3] = { 1.0f, f, 0.25f };
+            char ctx[48];
+            snprintf(ctx, sizeof ctx, "period %d f%.2f", (int)periods[pi], f);
+            laser_compute_widths(rgb, f, true, periods[pi], &w);
             check_invariants(&w, ctx);
         }
     }

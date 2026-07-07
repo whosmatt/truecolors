@@ -73,6 +73,11 @@ interface SnapshotMsg {
   scene: Scene;
   effects: EffectDef[];
   net: NetInfo;
+  pwmHz?: number;
+}
+interface PwmHzMsg {
+  type: 'pwm_hz';
+  hz: number;
 }
 interface PatchMsg {
   type: 'patch';
@@ -103,6 +108,7 @@ type ServerMsg =
   | NetMsg
   | MetricsMsg
   | WifiListMsg
+  | PwmHzMsg
   | ErrorMsg;
 
 function handleMessage(raw: string): void {
@@ -149,6 +155,9 @@ function handleMessage(raw: string): void {
     case 'wifi_list':
       store.aps = msg.aps ?? [];
       store.scanning = false;
+      break;
+    case 'pwm_hz':
+      store.pwmHz = msg.hz;
       break;
     case 'error':
       store.lastError = { code: msg.code, msg: msg.msg };
@@ -232,6 +241,9 @@ export function wifiAp(): void {
 }
 export function reboot(): void {
   rawSend({ type: 'reboot' });
+}
+export function setPwmHz(hz: number): void {
+  rawSend({ type: 'set_pwm_hz', hz });
 }
 export function factoryReset(): void {
   rawSend({ type: 'factory_reset' });
