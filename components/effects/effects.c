@@ -86,9 +86,16 @@ static const effect_param_def_t audio_params[] = {
     { "band", 0.0f, 2.0f, 0.0f },
 };
 
+// Band slider crossfades bass -> broadband -> treble.
 static void audio_render(const effect_ctx_t *ctx, float out[3])
 {
-    float level = clamp01(ctx->audio.level * ctx->audio_sens * 2.0f);
+    float b = ctx->params[0];
+    if (b < 0.0f) b = 0.0f;
+    if (b > 2.0f) b = 2.0f;
+    int lo = b < 1.0f ? 0 : 1;
+    float f = b - lo;
+    float lvl = ctx->audio.bands[lo] * (1.0f - f) + ctx->audio.bands[lo + 1] * f;
+    float level = clamp01(lvl * ctx->audio_sens * 2.0f);
     for (int c = 0; c < 3; c++) {
         out[c] = ctx->color[c] * level;
     }

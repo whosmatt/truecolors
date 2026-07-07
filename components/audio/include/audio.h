@@ -1,5 +1,5 @@
 // audio.h
-// TODO I2S PDM RX -> ring buffer -> features snapshot for audio-reactive effects
+// I2S PDM RX -> block RMS -> AGC-normalized features snapshot
 #pragma once
 
 #include "esp_err.h"
@@ -10,8 +10,9 @@ extern "C" {
 
 // Snapshot of audio features, single-writer (audio task) / read per frame.
 typedef struct {
-    float level;   // 0..1 broadband level
-    float beat;    // 0..1 transient/beat envelope
+    float level;     // 0..1 AGC-normalized broadband level (== bands[1])
+    float bands[3];  // 0..1 AGC-normalized bass / broadband / treble
+    float beat;      // 0..1 transient/beat envelope
 } audio_features_t;
 
 // Initialize I2S PDM RX and the audio task.
