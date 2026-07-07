@@ -74,7 +74,7 @@ int main(void)
     safety_init(&st);
     prime(&st);
     in = good();
-    in.ntc_temp_c = 56.0f;
+    in.ntc_temp_c = 51.0f;
     safety_step(&st, &in,0.1f, &out);
     check_near(out.safety_scale, 0.0f, 0.001f, "overtemp -> scale 0");
     check((out.err_flags & SF_OVERTEMP) != 0, "overtemp flag set");

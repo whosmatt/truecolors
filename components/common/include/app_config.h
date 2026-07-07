@@ -37,7 +37,7 @@
 // ---------------------------------------------------------------------------
 // Safety thresholds
 // ---------------------------------------------------------------------------
-#define T_LIMIT_C            55.0f      // overtemp latching fault threshold
+#define T_LIMIT_C            50.0f      // overtemp latching fault threshold
 #define VIN_NOMINAL_V        20.0f
 #define VIN_WARN_V           17.0f      // below this -> "vin_low" warning (no shutdown)
 // Current draw vs supply, measured 2026-07-07: 2.4 A @ 12 V,
