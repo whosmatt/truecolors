@@ -2,6 +2,7 @@
 // I2S PDM RX -> block RMS -> AGC-normalized features snapshot
 #pragma once
 
+#include <stdint.h>
 #include "esp_err.h"
 
 #ifdef __cplusplus
@@ -20,6 +21,9 @@ esp_err_t audio_init(void);
 
 // Copy the latest features snapshot (lock-free single-writer).
 void audio_get_features(audio_features_t *out);
+
+// Align the coil-whine comb to the laser PWM frequency. Call on PWM change.
+void audio_set_notch_hz(uint32_t hz);
 
 #ifdef __cplusplus
 }

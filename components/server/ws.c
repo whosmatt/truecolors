@@ -5,6 +5,7 @@
 #include "wifi_mgr.h"
 #include "storage.h"
 #include "laser.h"
+#include "audio.h"
 #include "app_config.h"
 #include "app_events.h"
 
@@ -357,6 +358,7 @@ static void handle_message(httpd_req_t *req, const char *data)
             if (cJSON_IsNumber(hz) &&
                 laser_set_pwm_hz((uint32_t)hz->valuedouble) == ESP_OK) {
                 storage_save_pwm_hz((uint32_t)hz->valuedouble);
+                audio_set_notch_hz(laser_get_pwm_hz());
                 char *json = build_pwm_hz();
                 if (json) { broadcast(json); free(json); }
             }
