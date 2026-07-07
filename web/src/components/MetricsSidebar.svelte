@@ -102,8 +102,6 @@
           <span class="badge badge-warn">{FLAG_LABEL[f] ?? f}</span>
         {/each}
       </div>
-    {:else}
-      <div class="flags ok"><span class="badge badge-ok">All systems nominal</span></div>
     {/if}
   {/if}
 </div>
@@ -203,11 +201,6 @@
     background: rgba(245, 166, 35, 0.16);
     color: var(--warn);
     border-color: rgba(245, 166, 35, 0.45);
-  }
-  .badge-ok {
-    background: rgba(46, 204, 113, 0.12);
-    color: var(--good);
-    border-color: rgba(46, 204, 113, 0.35);
   }
   .empty {
     color: var(--text-faint);
