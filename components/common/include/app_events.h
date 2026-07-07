@@ -44,6 +44,7 @@ typedef struct {
     uint32_t seq;            // monotonic state version after this change
     uint32_t changed_mask;   // bitmask of fields touched (see appstate.h)
     app_src_t src;
+    uint32_t origin;         // originating client's echo tag, 0 = none
 } app_state_changed_evt_t;
 
 // EVT_METRICS_UPDATED payload (1 Hz). Physical units; never persisted.

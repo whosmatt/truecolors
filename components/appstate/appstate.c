@@ -113,7 +113,8 @@ esp_err_t appstate_apply_patch(app_src_t src, const app_patch_t *patch)
     xSemaphoreGive(s_lock);
 
     if (changed) {
-        app_state_changed_evt_t evt = { .seq = seq, .changed_mask = changed, .src = src };
+        app_state_changed_evt_t evt = { .seq = seq, .changed_mask = changed, .src = src,
+                                        .origin = patch->origin };
         esp_err_t err = app_bus_post(EVT_STATE_CHANGED, &evt, sizeof(evt), 0);
         if (err != ESP_OK) {
             ESP_LOGW(TAG, "post EVT_STATE_CHANGED failed: %s", esp_err_to_name(err));

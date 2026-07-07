@@ -15,9 +15,11 @@ import {
 const MIN_BACKOFF = 500;
 const MAX_BACKOFF = 8000;
 
-// Outgoing patch throttle (~50 Hz) — coalesce rapid slider edits into one
-// patch per tick while still sending only changed fields.
+// Outgoing patch throttle (~50 Hz)
 const SEND_INTERVAL_MS = 20;
+
+// Per-session echo tag
+const CID = ((Math.random() * 0xffffffff) >>> 0) || 1;
 
 let socket: WebSocket | null = null;
 let backoff = MIN_BACKOFF;
@@ -38,7 +40,7 @@ function flushPatch(): void {
   if (!pendingPatch) return;
   const set = pendingPatch;
   pendingPatch = null;
-  rawSend({ type: 'patch', set });
+  rawSend({ type: 'patch', set, cid: CID });
 }
 
 function rawSend(msg: unknown): boolean {
@@ -76,6 +78,7 @@ interface PatchMsg {
   type: 'patch';
   seq: number;
   src: number;
+  origin?: number;
   set: ScenePatch;
 }
 interface NetMsg extends NetInfo {
@@ -114,10 +117,11 @@ function handleMessage(raw: string): void {
       store.applySnapshot(msg);
       break;
     case 'patch': {
-      // Seq must advance by exactly 1; a gap means we missed a patch — apply
+      // Seq must advance by exactly 1; a gap means we missed a patch, apply
       // what we got, then request a fresh snapshot to resync.
       const gap = store.seq !== 0 && msg.seq !== store.seq + 1;
-      store.applyPatch(msg.seq, msg.set);
+      // Our own echo: local state is already ahead of it
+      store.applyPatch(msg.seq, msg.origin === CID ? {} : msg.set);
       if (gap) requestSnapshot();
       break;
     }

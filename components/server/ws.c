@@ -204,7 +204,7 @@ static char *build_snapshot(void)
     return out;
 }
 
-static char *build_patch(uint32_t mask, uint32_t seq, app_src_t src)
+static char *build_patch(uint32_t mask, uint32_t seq, app_src_t src, uint32_t origin)
 {
     app_state_t st;
     appstate_get(&st);
@@ -212,6 +212,7 @@ static char *build_patch(uint32_t mask, uint32_t seq, app_src_t src)
     cJSON_AddStringToObject(root, "type", "patch");
     cJSON_AddNumberToObject(root, "seq", seq);
     cJSON_AddNumberToObject(root, "src", src);
+    cJSON_AddNumberToObject(root, "origin", origin);
     cJSON *set = cJSON_AddObjectToObject(root, "set");
     add_scene_fields(set, &st, mask, effect_nparams(st.effect_id));
     char *out = cJSON_PrintUnformatted(root);
@@ -248,9 +249,9 @@ static char *build_metrics(const app_metrics_evt_t *m)
 
 // ---- inbound message handling ----
 
-static void apply_set(cJSON *set)
+static void apply_set(cJSON *set, uint32_t origin)
 {
-    app_patch_t p = {0};
+    app_patch_t p = { .origin = origin };
     cJSON *v;
 
     if ((v = cJSON_GetObjectItem(set, "power"))) { p.mask |= STATE_F_POWER; p.power = cJSON_IsTrue(v); }
@@ -317,8 +318,9 @@ static void handle_message(httpd_req_t *req, const char *data)
         const char *t = type->valuestring;
         if (strcmp(t, "patch") == 0) {
             cJSON *set = cJSON_GetObjectItem(root, "set");
+            cJSON *cid = cJSON_GetObjectItem(root, "cid");
             if (set) {
-                apply_set(set);
+                apply_set(set, cJSON_IsNumber(cid) ? (uint32_t)cid->valuedouble : 0);
             }
         } else if (strcmp(t, "get_snapshot") == 0) {
             char *snap = build_snapshot();
@@ -389,7 +391,7 @@ static esp_err_t ws_handler(httpd_req_t *req)
 static void on_state_changed(void *arg, esp_event_base_t base, int32_t id, void *data)
 {
     const app_state_changed_evt_t *e = data;
-    char *json = build_patch(e->changed_mask, e->seq, e->src);
+    char *json = build_patch(e->changed_mask, e->seq, e->src, e->origin);
     if (json) { broadcast(json); free(json); }
 }
 

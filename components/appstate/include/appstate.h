@@ -38,8 +38,11 @@ typedef struct {
 } app_state_t;
 
 // A partial update. Only fields whose bit is set in mask are applied.
+// origin is an opaque tag from the originating client (0 = none), carried
+// into EVT_STATE_CHANGED so that client can recognize and skip its own echo.
 typedef struct {
     uint32_t mask;
+    uint32_t origin;
     bool     power;
     float    brightness;
     float    stretch;

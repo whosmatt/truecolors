@@ -138,11 +138,11 @@ class Store {
 export const store = new Store();
 
 // ---- Patch helpers (write path) --------------------------------------------
-// We send only changed fields. The device echoes a patch back (including our
-// own edits) which updates local state — that echo is the single update path,
-// so dragging a slider sends patches but local state only moves on the echo
-// returning. To keep the UI responsive while dragging, we optimistically apply
-// locally too; the echo then confirms/clamps.
+// We send only changed fields and apply them locally right away for
+// responsiveness. The device broadcasts every applied patch tagged with the
+// originator's cid; the ws layer skips the fields of our own echoes (local
+// state is already ahead of them) and applies everyone else's, so all clients
+// converge on the device's authoritative state without echo jitter.
 
 export function patchScene(set: ScenePatch): void {
   // Optimistic local apply for responsiveness; echo will reconcile.
