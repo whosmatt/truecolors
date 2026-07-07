@@ -48,7 +48,7 @@ static void prime(safety_state_t *st)
 {
     safety_inputs_t g = good();
     safety_output_t o;
-    safety_step(st, &g, LASER_REQUESTED_A, 0.1f, &o);
+    safety_step(st, &g, 0.1f, &o);
 }
 
 int main(void)
@@ -61,12 +61,12 @@ int main(void)
     safety_init(&st);
     in = good();
     in.pd_ok = false;
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check_near(out.safety_scale, 1.0f, 0.001f, "boot: no PD -> still runs");
     check((out.warn_flags & SF_PD_LOST) != 0, "boot: no PD -> warn flag");
 
     in = good();
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check_near(out.safety_scale, 1.0f, 0.001f, "boot cleared -> scale 1");
     check(out.warn_flags == 0 && out.err_flags == 0, "nominal: no flags");
 
@@ -75,12 +75,12 @@ int main(void)
     prime(&st);
     in = good();
     in.ntc_temp_c = 56.0f;
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check_near(out.safety_scale, 0.0f, 0.001f, "overtemp -> scale 0");
     check((out.err_flags & SF_OVERTEMP) != 0, "overtemp flag set");
     check(out.latched, "overtemp latched");
     in = good();
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check_near(out.safety_scale, 0.0f, 0.001f, "overtemp does not auto-recover");
     check(out.latched, "overtemp stays latched");
 
@@ -88,7 +88,7 @@ int main(void)
     safety_init(&st);
     in = good();
     in.ntc_valid = false;
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check(out.latched && (out.err_flags & SF_OVERTEMP), "NTC invalid -> latched overtemp");
 
     // Fan stall: needs the debounce window before latching.
@@ -97,9 +97,9 @@ int main(void)
     in = good();
     in.fan_duty = 0.6f;
     in.fan_rpm = 0;
-    safety_step(&st, &in, LASER_REQUESTED_A, STALL_DEBOUNCE_S * 0.5f, &out);
+    safety_step(&st, &in,STALL_DEBOUNCE_S * 0.5f, &out);
     check(!out.latched, "short stall not yet latched");
-    safety_step(&st, &in, LASER_REQUESTED_A, STALL_DEBOUNCE_S, &out);
+    safety_step(&st, &in,STALL_DEBOUNCE_S, &out);
     check(out.latched && (out.err_flags & SF_FAN_STALL), "sustained stall -> latched");
 
     // Stall timer resets when the fan is not commanded hard.
@@ -108,18 +108,27 @@ int main(void)
     in = good();
     in.fan_duty = 0.1f;
     in.fan_rpm = 0;
-    safety_step(&st, &in, LASER_REQUESTED_A, STALL_DEBOUNCE_S * 2.0f, &out);
+    safety_step(&st, &in,STALL_DEBOUNCE_S * 2.0f, &out);
     check(!out.latched, "rpm 0 below stall duty is not a stall");
 
-    // Insufficient current limits proportionally.
+    // Undercurrent is a warning only, output keeps running at full scale.
     safety_init(&st);
     prime(&st);
     in = good();
     in.pd_current_a = 1.0f;
-    safety_step(&st, &in, 2.5f, 0.1f, &out);
-    check_near(out.safety_scale, 0.4f, 0.001f, "undercurrent -> scale budget/requested");
+    safety_step(&st, &in, 0.1f, &out);
+    check_near(out.safety_scale, 1.0f, 0.001f, "undercurrent keeps full scale");
     check((out.warn_flags & SF_UNDERCURRENT) != 0, "undercurrent warn flag");
     check(!out.latched, "undercurrent is not a fault");
+
+    // The requirement follows vin: 2.25 A is enough at 20 V, not at 12 V.
+    in = good();
+    in.pd_current_a = 2.25f;
+    safety_step(&st, &in, 0.1f, &out);
+    check((out.warn_flags & SF_UNDERCURRENT) == 0, "2.25 A ok at 20 V");
+    in.vin_v = 12.0f;
+    safety_step(&st, &in, 0.1f, &out);
+    check((out.warn_flags & SF_UNDERCURRENT) != 0, "2.25 A undercurrent at 12 V");
 
     // No PD: undercurrent check is skipped, full scale runs.
     safety_init(&st);
@@ -127,7 +136,7 @@ int main(void)
     in = good();
     in.pd_ok = false;
     in.pd_current_a = 0.0f;
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check_near(out.safety_scale, 1.0f, 0.001f, "no PD -> full scale (no undercurrent throttle)");
     check((out.warn_flags & SF_UNDERCURRENT) == 0, "no PD -> no undercurrent flag");
 
@@ -136,7 +145,7 @@ int main(void)
     prime(&st);
     in = good();
     in.vin_v = 16.0f;
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check((out.warn_flags & SF_VIN_LOW) != 0, "undervoltage warn flag");
     check_near(out.safety_scale, 1.0f, 0.001f, "undervoltage keeps running");
 
@@ -145,11 +154,11 @@ int main(void)
     prime(&st);
     in = good();
     in.pd_ok = false;
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check_near(out.safety_scale, 1.0f, 0.001f, "PD lost -> still runs");
     check((out.warn_flags & SF_PD_LOST) && !out.latched, "PD lost warn, not latched");
     in = good();
-    safety_step(&st, &in, LASER_REQUESTED_A, 0.1f, &out);
+    safety_step(&st, &in,0.1f, &out);
     check_near(out.safety_scale, 1.0f, 0.001f, "PD restored -> warn clears");
 
     printf("\n%d checks, %d failures\n", g_checks, g_fail);

@@ -40,7 +40,11 @@
 #define T_LIMIT_C            55.0f      // overtemp latching fault threshold
 #define VIN_NOMINAL_V        20.0f
 #define VIN_WARN_V           17.0f      // below this -> "vin_low" warning (no shutdown)
-#define LASER_REQUESTED_A    2.5f       // worst-case low-Vrail laser current budget
+// Current draw vs supply, measured 2026-07-07: 2.4 A @ 12 V,
+// 2.1 A @ 15 V, 1.55 A @ 20 V (beautifully linear).
+#define LASER_A_INTERCEPT    3.68f
+#define LASER_A_PER_VOLT     -0.106f
+#define LASER_A_MARGIN       0.2f
 #define NTC_V_OPEN           3.25f      // above this the NTC reads open
 #define NTC_V_SHORT          0.05f      // below this the NTC reads shorted
 #define BTN_DEBOUNCE_MS      60

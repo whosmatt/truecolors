@@ -42,9 +42,9 @@ typedef struct {
 
 void safety_init(safety_state_t *st);
 
-// Advance the machine by dt seconds. requested_a is the laser current budget.
+// Advance the machine by dt seconds.
 void safety_step(safety_state_t *st, const safety_inputs_t *in,
-                 float requested_a, float dt, safety_output_t *out);
+                 float dt, safety_output_t *out);
 
 #ifdef __cplusplus
 }

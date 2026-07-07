@@ -314,7 +314,7 @@ static void monitor_task(void *arg)
             .vin_v = vin,
         };
         safety_output_t out;
-        safety_step(&s_safety, &in, LASER_REQUESTED_A, dt, &out);
+        safety_step(&s_safety, &in, dt, &out);
 
         if (out.err_flags) {
             laser_emergency_off();

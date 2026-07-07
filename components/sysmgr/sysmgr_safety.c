@@ -11,7 +11,7 @@ void safety_init(safety_state_t *st)
 }
 
 void safety_step(safety_state_t *st, const safety_inputs_t *in,
-                 float requested_a, float dt, safety_output_t *out)
+                 float dt, safety_output_t *out)
 {
     uint32_t warn = 0;
     uint32_t err = 0;
@@ -50,18 +50,16 @@ void safety_step(safety_state_t *st, const safety_inputs_t *in,
     }
 
     float scale;
-    if (latched) {
-        scale = 0.0f;
-    } else if (!st->boot_gate_cleared) {
+    if (latched || !st->boot_gate_cleared) {
         scale = 0.0f;
     } else {
         scale = 1.0f;
-        if (in->pd_ok && requested_a > 0.0f && in->pd_current_a < requested_a) {
-            scale = in->pd_current_a / requested_a;
-            if (scale < 0.0f) scale = 0.0f;
-            if (scale > 1.0f) scale = 1.0f;
-            warn |= SF_UNDERCURRENT;
-        }
+    }
+
+    // Warning only, we rely on the PD source to restart in an overcurrent condition, sending the light back to its default OFF state. 
+    float required_a = LASER_A_INTERCEPT + LASER_A_PER_VOLT * in->vin_v + LASER_A_MARGIN;
+    if (in->pd_ok && in->pd_current_a < required_a) {
+        warn |= SF_UNDERCURRENT;
     }
 
     if (in->vin_v < VIN_WARN_V) {
