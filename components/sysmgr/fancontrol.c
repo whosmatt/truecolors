@@ -43,14 +43,17 @@ float fancontrol_update(float temp_c, float dt)
     float err = temp_c - FAN_TARGET_C;
     float unclamped = FAN_KP * err + FAN_KI * (s_integ + err * dt);
 
-    float duty = unclamped;
-    if (duty < 0.0f) duty = 0.0f;
-    if (duty > 1.0f) duty = 1.0f;
+    float u = unclamped;
+    if (u < 0.0f) u = 0.0f;
+    if (u > 1.0f) u = 1.0f;
 
     // Integrate only when not saturated.
-    if (duty == unclamped) {
+    if (u == unclamped) {
         s_integ += err * dt;
     }
+
+    // Linearize fan response
+    float duty = u > 0.0f ? FAN_KNEE_DUTY + u * (1.0f - FAN_KNEE_DUTY) : 0.0f;
 
     uint32_t reg = (uint32_t)(duty * FAN_DUTY_MAX);
     ledc_set_duty(LEDC_FAN_MODE, LEDC_FAN_CHANNEL, reg);
