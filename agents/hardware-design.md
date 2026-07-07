@@ -81,17 +81,30 @@ CFG2/CFG3). Lasers are held off by their EN pulldowns until firmware drives them
   the GPIO is Hi-Z (reset / flashing / before firmware init).
 - The LM3409 dims by gating EN; each rising edge restarts the converter, which
   needs settle time. This sets a **dimming floor** (shortest useful on-time ≈
-  converter settle time) and argues for a **low** PWM/cycle frequency — see the
-  timing doc for the rationale.
+  converter settle time, `MIN_ON_US` = 8 µs) and argues for a **low** PWM/cycle
+  frequency — see the timing doc for the rationale.
+- **Low-power shutdown (measured, datasheet §8.4.1):** a sustained EN low lets
+  the VCC bias rail (regulated ~6.2 V below VIN, held by a 1 µF cap) decay past
+  UVLO into 110 µA shutdown; the next enable pays a soft restart visible as a
+  fade-in. Short PWM-dimming lows keep the support circuitry alive (§8.3.6);
+  tens-of-ms dark states do not. EN is a single Schmitt input (rising ≤1.74 V,
+  falling ≥0.5 V) — there is **no intermediate "standby" drive level**, so the
+  fix is temporal: firmware floors dark channels at MIN_ON pulses for effects
+  that strobe from black (`keepalive` flag).
 
 ### Fan — 4-wire (5-pin) PC fan, run on 5 V via low-side PWM
 
 Connector **CN2 = Molex 47053-1000** fan header. The fan is a 12 V 4-wire PC fan
-run on **+5 V** (validated: smooth control, starts at ~1% duty).
+run on **+5 V** (validated: smooth control).
 
 - **CN2 pin 1** = GND, **pin 2** = +5 V, **pin 3** = TACH, **pin 4** = PWM control.
 - The fan's PWM input does **not** meet Intel logic levels — measured idle ≈
-  **1.58 V** on 5 V supply (≈3.3 V on 12 V). Pulling it to GND stops the fan.
+  **1.58 V** on 5 V supply (≈3.3 V on 12 V).
+- **Measured transfer (2026-07-07): the fan never fully stops.** Holding the
+  PWM line at GND leaves a ~84 rpm min-speed floor (vendor behavior); response
+  is dead until a **19% duty knee**, then linear `rpm ≈ 1875·duty − 250` to
+  1621 rpm at 100%, no hysteresis. Firmware remaps the PID output onto
+  `[knee, 1]` accordingly.
 - **Control = low-side switch via BSS138 (Q4):**
   - Gate ← FAN_PWM (GPIO6), with **R26 pull-up to 3.3 V** (boot disabled).
   - Source → GND.
@@ -102,8 +115,9 @@ run on **+5 V** (validated: smooth control, starts at ~1% duty).
   speed (see timing doc).
 - **Boot behavior:** while GPIO6 is Hi-Z, R26 pulls the gate HIGH → FET on →
   fan PWM line held LOW → **fan disabled at boot** until firmware takes over.
-- **TACH (CN2 pin 3):** open-collector, ~2 pulses/rev, pulled up to 3.3 V (R25
-  10k). Valid because the fan supply is constant 5 V (not chopped). Read with PCNT.
+- **TACH (CN2 pin 3):** open-collector, 2 pulses/rev (confirmed), pulled up to
+  3.3 V (R25 10k). Valid because the fan supply is constant 5 V (not chopped).
+  Read with PCNT, both edges over a 1 s window (15 rpm resolution).
 - The fan's 5th pin (presence-detect to GND) is **not used**.
 
 ### 20 V rail measurement — ADC
@@ -192,5 +206,8 @@ run on **+5 V** (validated: smooth control, starts at ~1% duty).
    in range + NTC temperature in range. The 10k EN pulldowns hold lasers off until
    then; re-check NTC periodically and disable on over-temperature.
 3. **All ESP32-facing pull-ups go to 3.3 V**, never 5 V/20 V (not 5 V tolerant).
-4. Keep total laser power within the CH224A-reported current budget (0x50 ×50 mA
-   at 20 V).
+4. Supply current budget: compare the CH224A-reported budget (0x50 × 50 mA)
+   against the measured draw model `I(V) ≈ 3.68 − 0.106·V` + 0.2 A margin
+   (2.4 A @ 12 V, 2.1 A @ 15 V, 1.55 A @ 20 V). A short budget raises the
+   undercurrent **warning only** — no brightness limiting; an actual overdraw
+   trips the PD supply, and the light recovers to its default-off boot state.

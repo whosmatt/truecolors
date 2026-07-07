@@ -55,28 +55,39 @@ Outputs are **active-high, NOT inverted** (LM3409 EN: high = laser on).
 - One timer period = one full R→G→B sequence, so **PWM frequency = RGB cycle
   frequency** (the two collapse into a single waveform — do NOT stack a second
   higher-frequency PWM on top; for a buck driver that only adds settling losses).
-- **Default 240–480 Hz.** Above flicker fusion for a static mood light, and low
-  enough that each color's single pulse is long, giving the LM3409 buck time to
-  settle and reach regulation. Lower frequency = better buck behavior + more
-  dimming range; higher = more motion robustness (not needed for a static light).
-- Make it a `#define` / config value; start at 480 Hz and tune.
+- **Runtime-adjustable: 120 / 240 / 480 Hz** (settings dropdown → WS
+  `set_pwm_hz` → NVS `pwm_hz`), default **120 Hz** — quietest coil whine, still
+  above flicker fusion for a static light. Lower frequency = better buck
+  behavior, more dimming range, quieter; higher = more motion robustness.
+- Frequency changes are glitch-free while running: the period and all six
+  comparators shadow-load on the same TEZ (`update_period_on_empty`), and
+  `laser_set_pwm_hz()` orders the writes so a TEZ landing mid-update never
+  leaves a compare beyond the counter range (growing period → period first,
+  shrinking → comparators first).
 
 ### Resolution
 
-Run the MCPWM group clock at e.g. **10 MHz** (0.1 µs/tick). At 240 Hz the period
-is ~41,667 ticks (~15 bits) — far more brightness resolution than needed.
+The MCPWM group clock runs at **5 MHz** (0.2 µs/tick): the period register is
+**16-bit** (max 65,535 ticks), and 120 Hz needs 41,666 — a 10 MHz clock cannot
+reach below ~153 Hz. At 480 Hz the period is still 10,416 ticks (~13 bits),
+far more brightness resolution than needed.
+
+### Wrap-tick reservation (learned the hard way)
+
+The up-counter counts `[0, period−1]`; a compare value equal to the period tick
+is accepted by the driver but **never fires** — the clear action is lost and the
+channel latches ON at 100% duty, overlapping its neighbors (observed as bright
+flashes at crossfade corners with stretch > 25%). The width math therefore
+reserves the last tick so every clear compare stays reachable; a width of
+period−1 means "fully on" and laser.c drives it as a DC force level instead of
+chopping a one-tick notch into EN.
 
 ### Guard interval (`gap`)
 
-Inserted between colors so the previous LM3409's output current (inductor +
-output cap tail) fully decays before the next color's buck turns on — extra
-insurance for the common cathode and against transient overlap.
-
-- Start ~**10–50 µs**; tune by scoping each color's actual current fall time.
-- Cost is tiny: at 240 Hz, 3 × 20 µs = 60 µs ≈ 1.4% of the period, so a single
-  color still reaches ~98–99% ("effectively 100%").
-- Only the gaps adjacent to *active* pulses matter; if a color is 0 you may omit
-  its surrounding gap to reclaim time (optional optimization).
+Settled at **0**. The common-cathode constraint is thermal, not electrical —
+these are three independent bucks, not an H-bridge, so there is no
+shoot-through path and back-to-back pulses are fine. The gap stays plumbed
+through `laser_math.c` should it ever be needed.
 
 ### Atomic, glitch-free updates (critical)
 
@@ -103,6 +114,17 @@ TEZ mechanism; do not update operators one at a time without sync.
 > that is exactly step 3 with scaling only on overflow — a dim scene leaves the
 > bright color at its requested width, a maxed-out white scene shares the period.
 
+### Width floors and the LM3409 keepalive
+
+- A nonzero width below **MIN_ON** (8 µs LM3409 settle floor) snaps up to it.
+- **LM3409 low-power shutdown (measured):** a sustained EN low lets the IC's
+  VCC bias cap decay below UVLO into 110 µA shutdown; the next enable pays a
+  soft restart that shows as a visible fade-in. Normal PWM-dimming lows (≤ one
+  period) never trigger it, but tens-of-ms dark states do. Effects that strobe
+  from black (discombobulate, audio) set a `keepalive` flag: commanded-dark
+  channels then idle at MIN_ON pulses to keep the bias awake. The power switch,
+  safety latch, boot gate and brightness-zero still drop to true black.
+
 ### Optional power/thermal cap
 
 Σduty ≤ 100% already guarantees at most one laser on at a time (cathode safe). A
@@ -117,8 +139,13 @@ within the CH224A current budget (0x50) and array thermal limits.
   through the fan's internal commutation so no stutter), on **GPIO6**.
 - Hardware is a **low-side BSS138** (gate-driven): GPIO HIGH → FET on → fan PWM
   line LOW → fan OFF. So **set `ledc_channel_config_t.flags.output_invert = 1`**.
-  With invert, the **LEDC duty register maps directly to fan speed**
-  (duty 0 = stop, duty max = full). Verified: ~1% duty already spins the fan.
+  With invert, the **LEDC duty register maps directly to fan speed**.
+- **Measured transfer curve (2026-07-07):** the fan never fully stops — ~84 rpm
+  floor at 0% duty (vendor min-speed behavior; PWM line verified held low),
+  dead until a **19% knee**, then linear `rpm ≈ 1875·duty − 250` up to 1621 rpm
+  at 100%, no hysteresis. The PID output is treated as *cooling demand* and
+  remapped onto `[FAN_KNEE_DUTY, 1]` so the loop sees a linear plant
+  (see `fancontrol.c`).
 - Resolution: a few hundred steps is plenty; e.g. 10-bit at 25 kHz.
 - **Boot behavior:** before LEDC init, GPIO6 is Hi-Z, R26 pulls the gate HIGH →
   FET on → fan line held LOW → **fan disabled at boot**. Initialize LEDC at any
@@ -127,8 +154,10 @@ within the CH224A current budget (0x50) and array thermal limits.
 ## 3. Fan tach — PCNT
 
 - **PCNT** unit counting edges on **GPIO7** (FAN_TACH, pulled to 3.3 V).
-- RPM = `(pulses / pulses_per_rev) / Δt × 60`, with `pulses_per_rev = 2` (typical
-  PC fan; confirm). Sample over a fixed window (e.g. 1 s) or use a glitch filter.
+- `pulses_per_rev = 2` (confirmed on hardware). Count **both edges**
+  (4 edges/rev) and integrate a full **1 s window** before computing: at a
+  100 ms poll a single pulse is worth 300 rpm of quantization, while the
+  both-edge 1 s window resolves 15 rpm — needed to see the ~84 rpm idle floor.
 - Valid because the fan supply is constant 5 V (not chopped) — tach references a
   stable ground.
 
@@ -147,8 +176,11 @@ within the CH224A current budget (0x50) and array thermal limits.
 - Startup gate sequence before enabling lasers:
   1. (20 V already requested by the CFG1 strap.)
   2. Poll **0x09** until bit3 (PD) = 1 → handshake good.
-  3. Read **0x50** → max current = value × 50 mA; verify it covers planned laser
-     power at 20 V.
+  3. Read **0x50** → max current = value × 50 mA; compare against the measured
+     draw model `I(V) = 3.68 − 0.106·V` + 0.2 A margin (2.4 A @ 12 V …
+     1.55 A @ 20 V). A short budget is a **warning only** — no brightness
+     limiting; an actual overdraw trips the supply, and the light recovers to
+     its default-off boot state.
   4. Confirm ADC rail in range.
   5. Then start MCPWM laser outputs.
 - Re-poll 0x09 / 0x50 periodically at runtime. There is **no hardware PG
@@ -165,10 +197,15 @@ within the CH224A current budget (0x50) and array thermal limits.
 4. MCPWM timer + 3 operators, TEZ-synced compare updates, start with all widths 0.
 5. Begin the brightness control loop (gamma → widths → normalize → sync-load).
 
+## Resolved on hardware
+
+- CH224A I²C address: firmware probes 0x22 then 0x23 at init.
+- Fan `pulses_per_rev` = 2, confirmed; full transfer curve measured (see §2).
+- Guard `gap` = 0 — thermal constraint, not electrical.
+- Laser cycle frequency: runtime dropdown 120/240/480 Hz, default 120 Hz
+  (coil whine); MCPWM group clock 5 MHz to fit 120 Hz in the 16-bit period.
+- LM3409 low-power shutdown on sustained EN low → `keepalive` width floor.
+
 ## Open items to confirm on hardware
 
-- CH224A I²C address: **0x22 vs 0x23**.
-- Fan `pulses_per_rev` for RPM math.
-- Guard `gap` value — scope per-color current fall time on the LM3409 outputs.
-- Laser cycle frequency final value (start 480 Hz) and the practical low-end
-  dimming floor set by the LM3409 settle time.
+- MIN_ON_US (LM3409 settle floor) — 8 µs assumed, verify on scope.
