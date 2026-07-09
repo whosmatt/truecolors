@@ -148,6 +148,8 @@ function handleMessage(raw: string): void {
         fanDuty: msg.fanDuty,
         pdCurrent: msg.pdCurrent,
         pdOk: msg.pdOk,
+        audioDb: msg.audioDb ?? 0,
+        bpm: msg.bpm ?? 0,
         warn: msg.warn ?? [],
         err: msg.err ?? [],
       });

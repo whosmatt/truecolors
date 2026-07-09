@@ -8,6 +8,7 @@
 #include "app_events.h"
 #include "appstate.h"
 #include "laser.h"
+#include "audio.h"
 #include "wifi_mgr.h"
 
 #include <math.h>
@@ -340,6 +341,8 @@ static void monitor_task(void *arg)
 
         if (now - last_publish >= 1000000) {
             last_publish = now;
+            audio_features_t af;
+            audio_get_features(&af);
             app_metrics_evt_t m = {
                 .vin = vin,
                 .laser_temp = laser_temp,
@@ -348,6 +351,8 @@ static void monitor_task(void *arg)
                 .fan_duty = fan_duty,
                 .pd_current = pd_current,
                 .pd_ok = pd_ok,
+                .audio_db = af.spl_db,
+                .bpm = af.bpm,
                 .warn_flags = out.warn_flags,
                 .err_flags = out.err_flags,
             };

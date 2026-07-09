@@ -63,6 +63,12 @@
             val: `${m.pdCurrent.toFixed(2)} A`,
           },
           { key: 'pdOk', label: 'PD Status', val: m.pdOk ? 'OK' : 'Fault' },
+          {
+            key: 'audioDb',
+            label: 'Sound Level',
+            val: `${m.audioDb.toFixed(0)} dB`,
+          },
+          { key: 'bpm', label: 'BPM', val: m.bpm > 0 ? m.bpm.toFixed(0) : '—' },
         ]
       : [],
   );

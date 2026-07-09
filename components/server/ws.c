@@ -253,6 +253,8 @@ static char *build_metrics(const app_metrics_evt_t *m)
     cJSON_AddNumberToObject(root, "fanDuty", m->fan_duty);
     cJSON_AddNumberToObject(root, "pdCurrent", m->pd_current);
     cJSON_AddBoolToObject(root, "pdOk", m->pd_ok);
+    cJSON_AddNumberToObject(root, "audioDb", m->audio_db);
+    cJSON_AddNumberToObject(root, "bpm", m->bpm);
     add_flag_strings(cJSON_AddArrayToObject(root, "warn"), m->warn_flags);
     add_flag_strings(cJSON_AddArrayToObject(root, "err"), m->err_flags);
     char *out = cJSON_PrintUnformatted(root);

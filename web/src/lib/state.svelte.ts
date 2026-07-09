@@ -55,6 +55,8 @@ export interface Metrics {
   fanDuty: number;
   pdCurrent: number;
   pdOk: boolean;
+  audioDb: number;
+  bpm: number;
   warn: string[];
   err: string[];
 }

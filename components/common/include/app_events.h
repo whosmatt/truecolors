@@ -56,6 +56,8 @@ typedef struct {
     float fan_duty;          // 0..1
     float pd_current;        // A, CH224A 0x50 budget
     bool  pd_ok;             // CH224A 0x09 bit3
+    float audio_db;          // dB SPL, slow-averaged (mic datasheet calibrated)
+    float bpm;               // tempo tracker, 0 while unlocked
     uint32_t warn_flags;     // app_flag_t bits
     uint32_t err_flags;
 } app_metrics_evt_t;

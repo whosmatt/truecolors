@@ -127,6 +127,7 @@ static void breathe_render(const effect_ctx_t *ctx, float out[3])
 typedef struct {
     float env;
     float hue_off;
+    float hue_vis;    // crossfaded follower of hue_off
     float prev_beat;
     float since_step;
 } audio_state_t;
@@ -159,9 +160,16 @@ static void audio_render(const effect_ctx_t *ctx, float out[3])
 
     float col[3] = { ctx->color[0], ctx->color[1], ctx->color[2] };
     if (step > 0.0f) {
+        // Quick crossfade (~30 ms tau) masks the kick-detection latency and
+        // softens the step without blurring it.
+        float dh = s->hue_off - s->hue_vis;
+        dh -= floorf(dh + 0.5f);
+        s->hue_vis += dh * (1.0f - expf(-ctx->dt / 0.03f));
+        s->hue_vis -= floorf(s->hue_vis);
+
         float h, sat, v;
         rgb2hsv(ctx->color, &h, &sat, &v);
-        hsv2rgb(h + s->hue_off, sat, v, col);
+        hsv2rgb(h + s->hue_vis, sat, v, col);
     }
     for (int c = 0; c < 3; c++) {
         out[c] = col[c] * level;

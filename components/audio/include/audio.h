@@ -13,9 +13,13 @@ extern "C" {
 // Levels are raw per-block AGC-normalized values; effects apply their own
 // attack/release shaping.
 typedef struct {
-    float level;     // 0..1 AGC-normalized broadband level
-    float bands[3];  // 0..1 AGC-normalized bass / mid / treble
-    float beat;      // 0..1 transient/beat envelope
+    float level;      // 0..1 AGC-normalized broadband level
+    float bands[3];   // 0..1 AGC-normalized bass / mid / treble
+    float beat;       // 0..1 beat envelope: kick hits, or the locked grid's
+                      // predicted attack-aligned beats
+    float bpm;        // beat-grid tempo, 0 while unlocked
+    uint32_t kicks;   // total detected kicks
+    float spl_db;     // slow-averaged sound level, dB SPL (datasheet calibrated)
 } audio_features_t;
 
 // Initialize I2S PDM RX and the audio task.

@@ -1,5 +1,7 @@
 // audio.c
 #include "audio.h"
+#include "kick.h"
+#include "beatgrid.h"
 #include "board_pins.h"
 #include "app_config.h"
 
@@ -14,9 +16,12 @@ static const char *TAG = "audio";
 
 #define SAMPLE_RATE   48000
 #define BLOCK_SAMPLES 512
-#define AVG_ALPHA     0.05f
 #define BEAT_DECAY    0.85f
-#define BEAT_RATIO    1.5f
+
+// SPL from the datasheet sensitivity: -26 dBFS @ 94 dB SPL, 1 kHz (dBFS is
+// referenced to a full-scale sine, hence the +3.01 rms correction).
+#define MIC_SENS_DBFS (-26.0f)
+#define SPL_TAU_S     1.5f      // slow meter ballistics
 
 // AGC: each band is normalized against its own peak tracker
 #define AGC_RELEASE   0.99852f  // peak halves in ~5 s (per 10.7 ms block)
@@ -26,6 +31,13 @@ static const char *TAG = "audio";
 #define LP_BASS_K     0.026f    // one-pole low-pass, ~200 Hz
 #define LP_TREBLE_K   0.23f     // one-pole low-pass, ~2 kHz; mid = lp2k - lp200,
                                 // treble = s - lp2k (2-4 kHz under the hi-cut)
+
+// Kick sub-bands for the kick detector: one-pole corners at 40 / 80 / 140 /
+// 220 Hz, sub-bands are neighbor differences (fundamental / body / click).
+#define LP_K40        0.00522f
+#define LP_K80        0.01041f
+#define LP_K140       0.01816f
+#define LP_K220       0.02839f
 
 // Coil whine heavily couples into the mic and needs to be filtered out. Analysis shows a combination of clean harmonics of the MCPWM frequency and additional high frequency metallic resonance from the inductor core. 
 // Strategy: The PWM harmonics are precisely and efficently eliminated by a single negative mode comb filter linked to the MCPWM frequency. The high frequencies are removed by a biquad hi-cut at 4kHz 48dB/oct.  
@@ -39,13 +51,18 @@ typedef struct {
 
 static i2s_chan_handle_t s_rx;
 static audio_features_t s_features;
-static float s_avg_energy;
 static float s_beat_env;
 static float s_dc;
 static biquad_t s_hicut[4];
 static float s_lp_bass;
 static float s_lp_treble;
 static float s_peak[4];
+static float s_lp_low[4];
+static float s_kick_prev[3];
+static float s_kick_peak[3];
+static float s_mid_prev;
+static float s_tre_prev;
+static float s_spl_ms;
 static float s_comb[COMB_MAX];
 static volatile int s_comb_n = SAMPLE_RATE / TC_PWM_HZ;
 static int s_comb_i;
@@ -113,10 +130,13 @@ static void audio_task(void *arg)
         }
 
         float sum[4] = { 0.0f, 0.0f, 0.0f, 0.0f };   // bass, mid, treble, broadband
+        float sum_kick[3] = { 0.0f, 0.0f, 0.0f };    // 40-80 / 80-140 / 140-220 Hz
+        float sum_raw = 0.0f;                        // pre-filter, for the SPL meter
         for (int i = 0; i < n; i++) {
             float s = buf[i] / 32768.0f;
             s_dc += DC_K * (s - s_dc);
             s -= s_dc;
+            sum_raw += s * s;
 
             // Comb filter
             float d = s_comb[s_comb_i];
@@ -138,30 +158,74 @@ static void audio_task(void *arg)
             sum[1] += mid * mid;
             sum[2] += hi * hi;
             sum[3] += s * s;
+
+            s_lp_low[0] += LP_K40 * (s - s_lp_low[0]);
+            s_lp_low[1] += LP_K80 * (s - s_lp_low[1]);
+            s_lp_low[2] += LP_K140 * (s - s_lp_low[2]);
+            s_lp_low[3] += LP_K220 * (s - s_lp_low[3]);
+            float k0 = s_lp_low[1] - s_lp_low[0];
+            float k1 = s_lp_low[2] - s_lp_low[1];
+            float k2 = s_lp_low[3] - s_lp_low[2];
+            sum_kick[0] += k0 * k0;
+            sum_kick[1] += k1 * k1;
+            sum_kick[2] += k2 * k2;
         }
 
         // Raw per-block levels; attack/release shaping happens per effect.
+        float brms[4];
         for (int b = 0; b < 4; b++) {
-            float rms = sqrtf(sum[b] / n);
-            s_peak[b] = fmaxf(rms, s_peak[b] * AGC_RELEASE);
-            float lv = clamp01(rms / fmaxf(s_peak[b], AGC_MIN_REF));
+            brms[b] = sqrtf(sum[b] / n);
+            s_peak[b] = fmaxf(brms[b], s_peak[b] * AGC_RELEASE);
+            float lv = clamp01(brms[b] / fmaxf(s_peak[b], AGC_MIN_REF));
             if (b < 3) {
                 s_features.bands[b] = lv;
             } else {
                 s_features.level = lv;
             }
         }
+        float rms = brms[3];
 
-        // Beat: broadband transient over the running average, gated so noise
-        // in a silent room can't ratio-trigger.
-        float rms = sqrtf(sum[3] / n);
-        s_avg_energy = s_avg_energy * (1.0f - AVG_ALPHA) + rms * AVG_ALPHA;
-        if (rms > AGC_MIN_REF && rms > s_avg_energy * BEAT_RATIO) {
+        // Kick detector inputs, each normalized by its own AGC peak and gated
+        // on room silence.
+        kick_in_t ki;
+        for (int b = 0; b < 3; b++) {
+            float krms = sqrtf(sum_kick[b] / n);
+            s_kick_peak[b] = fmaxf(krms, s_kick_peak[b] * AGC_RELEASE);
+            float fl = (krms - s_kick_prev[b]) / fmaxf(s_kick_peak[b], AGC_MIN_REF);
+            s_kick_prev[b] = krms;
+            ki.flux[b] = (fl > 0.0f && rms > AGC_MIN_REF) ? fl : 0.0f;
+            if (b == 0) {
+                ki.fund_rms = krms / fmaxf(s_kick_peak[b], AGC_MIN_REF);
+            }
+        }
+        float mfl = (brms[1] - s_mid_prev) / fmaxf(s_peak[1], AGC_MIN_REF);
+        float tfl = (brms[2] - s_tre_prev) / fmaxf(s_peak[2], AGC_MIN_REF);
+        s_mid_prev = brms[1];
+        s_tre_prev = brms[2];
+        ki.mid_flux = mfl > 0.0f ? mfl : 0.0f;
+        ki.treble_flux = tfl > 0.0f ? tfl : 0.0f;
+
+        // Kick hits feed the beat grid; unlocked it passes them through,
+        // locked it emits predicted attack-aligned beats and suppresses
+        // off-grid detections.
+        kick_out_t ko;
+        kick_block(&ki, &ko);
+        beatgrid_out_t bg;
+        beatgrid_block(ko.hit, &bg);
+        if (bg.beat) {
             s_beat_env = 1.0f;
         }
         // Publish before decaying, so consumers see the full 1.0 peak.
         s_features.beat = s_beat_env;
         s_beat_env *= BEAT_DECAY;
+        s_features.kicks = ko.count;
+        s_features.bpm = bg.bpm;
+
+        // Slow-averaged SPL from the raw (unfiltered) signal.
+        float k = 1.0f - expf(-((float)n / SAMPLE_RATE) / SPL_TAU_S);
+        s_spl_ms += k * (sum_raw / n - s_spl_ms);
+        s_features.spl_db = 94.0f - MIC_SENS_DBFS + 3.01f +
+                            10.0f * log10f(s_spl_ms + 1e-12f);
     }
 }
 
@@ -172,6 +236,8 @@ esp_err_t audio_init(void)
     for (int i = 0; i < 4; i++) {
         biquad_lp_init(&s_hicut[i], HC_FC_HZ, kQ[i]);
     }
+    kick_init();
+    beatgrid_init((float)SAMPLE_RATE / BLOCK_SAMPLES);
 
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
     ESP_ERROR_CHECK(i2s_new_channel(&chan_cfg, NULL, &s_rx));
