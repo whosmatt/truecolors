@@ -11,33 +11,59 @@
 #include <stdint.h>
 #include <string.h>
 
-// guessed parameters, TODO tune with BPM labeled dataset
+// Tuned against drumloops TODO tune against labeled music
 #define HIST         48      // kick timestamps, ~12 s of dense breakbeat
+#ifndef P_MIN
 #define P_MIN        28.0f   // shortest loop: one beat at ~200 bpm
+#endif
+#ifndef P_MAX
 #define P_MAX        750.0f  // longest loop: ~8 s, two slow bars
+#endif
+#ifndef SPAN_MIN
 #define SPAN_MIN     375.0f  // evidence must span >= 4 s of music
-#define MATCH_FRAC   0.8f    // fraction of kicks needing a one-loop partner
+#endif
+#ifndef MATCH_FRAC
+#define MATCH_FRAC   0.75f   // fraction of hits needing a one-loop partner.
+                             // Corpus frontier: 0.85 -> 0 mislocks but many
+                             // no-locks on real mixes; 0.75 -> ~5% mislocks,
+                             // half of them benign 8th-grid, and real music
+                             // self-corrects via the off-grid unlock.
+#endif
+#ifndef MIN_ELIG
 #define MIN_ELIG     4
+#endif
 #define TMPL_MAX     16      // template slots per loop
+#ifndef OFFGRID_LIM
 #define OFFGRID_LIM  6       // consecutive off-pattern kicks before unlock
+#endif
 #define PREDICT_ADV  5.0f    // fire early: confirm delay + flux rise (attack-aligned)
 #define PHASE_PULL   0.4f
 #define PERIOD_I     0.05f   // integral term: converges period bias to zero
                              // (phase-only tracking drifts out of tolerance)
+#ifndef TOL_BASE
+#define TOL_BASE     3.0f    // slot tolerance: TOL_BASE + TOL_SCALE * period
+#endif
+#ifndef TOL_SCALE
+#define TOL_SCALE    0.01f   // corpus: 0.02 lets dense snare/hat anchors match
+                             // random long periods
+#endif
 
 static float s_block_hz;
 static int32_t s_now;
 static int32_t s_hits[HIST];   // most recent first
+static uint8_t s_htype[HIST];  // 1 = kick, 0 = snare
 static int s_nhits;
 static bool s_locked;
 static float s_period;         // loop period P in blocks
 static float s_tmpl[TMPL_MAX]; // slot offsets in [0, P), ascending
+static uint8_t s_tkick[TMPL_MAX]; // slot majority type: 1 = kick slot
 static int s_ntmpl;
 static float s_base;           // current loop start, confirm-time base
 static int s_slot;             // next template slot to fire
 static int s_miss;
 static int s_miss_limit;
 static int s_offgrid_run;
+static int32_t s_last_beat;   // dedupes prediction + detection of one kick
 
 void beatgrid_init(float block_hz)
 {
@@ -54,7 +80,7 @@ void beatgrid_init(float block_hz)
 
 static float tol_of(float p)
 {
-    return 3.0f + 0.02f * p;
+    return TOL_BASE + TOL_SCALE * p;
 }
 
 // How many hits have a partner one loop of p earlier (within tolerance)?
@@ -88,11 +114,13 @@ static int score_period(float p, int *eligible, float *p_refined)
 }
 
 // Cluster hit offsets modulo p into template slots (mean of each cluster,
-// clusters must repeat across loops).
+// clusters must repeat across loops). Each slot carries its majority hit
+// type: kick slots emit beats, snare slots only anchor.
 static int build_template(float p, float anchor)
 {
     float tol = tol_of(p);
     float off[HIST];
+    uint8_t typ[HIST];
     int n = 0;
     for (int i = 0; i < s_nhits; i++) {
         float o = fmodf(anchor - (float)s_hits[i], p);
@@ -103,30 +131,37 @@ static int build_template(float p, float anchor)
         // the modulo boundary (slots sit >= refractory >> tol apart).
         o += tol;
         if (o >= p) o -= p;
+        typ[n] = s_htype[i];
         off[n++] = o;
     }
-    // insertion sort, n <= HIST
+    // insertion sort pairs, n <= HIST
     for (int i = 1; i < n; i++) {
         float v = off[i];
+        uint8_t tv = typ[i];
         int j = i - 1;
         while (j >= 0 && off[j] > v) {
             off[j + 1] = off[j];
+            typ[j + 1] = typ[j];
             j--;
         }
         off[j + 1] = v;
+        typ[j + 1] = tv;
     }
     s_ntmpl = 0;
     int i = 0;
     while (i < n && s_ntmpl < TMPL_MAX) {
         int cnt = 1;
         float acc = off[i];
+        int kv = typ[i];
         while (i + cnt < n && off[i + cnt] - off[i] <= tol) {
             acc += off[i + cnt];
+            kv += typ[i + cnt];
             cnt++;
         }
         if (cnt >= 2) {   // slot must repeat across loops
             float v = acc / (float)cnt - tol;   // undo the rotation
             if (v < 0.0f) v += p;
+            s_tkick[s_ntmpl] = (2 * kv >= cnt);
             s_tmpl[s_ntmpl++] = v;
         }
         i += cnt;
@@ -134,21 +169,31 @@ static int build_template(float p, float anchor)
     // Rotation kept clusters intact but slot order may have wrapped.
     for (int a = 1; a < s_ntmpl; a++) {
         float v = s_tmpl[a];
+        uint8_t tv = s_tkick[a];
         int b = a - 1;
         while (b >= 0 && s_tmpl[b] > v) {
             s_tmpl[b + 1] = s_tmpl[b];
+            s_tkick[b + 1] = s_tkick[b];
             b--;
         }
         s_tmpl[b + 1] = v;
+        s_tkick[b + 1] = tv;
     }
-    // Real kicks can't confirm closer than the detector refractory
+    // Hits of one type can't confirm closer than the detector refractory;
+    // closer slots are drift phantoms — keep the first of each pair.
     int w = 1;
     for (int a = 1; a < s_ntmpl; a++) {
         if (s_tmpl[a] - s_tmpl[w - 1] >= 25.0f) {
+            s_tkick[w] = s_tkick[a];
             s_tmpl[w++] = s_tmpl[a];
+        } else if (s_tkick[a]) {
+            s_tkick[w - 1] = 1;   // merged slot keeps kick precedence
         }
     }
     if (w > 1 && p - s_tmpl[w - 1] + s_tmpl[0] < 25.0f) {
+        if (s_tkick[w - 1]) {
+            s_tkick[0] = 1;
+        }
         w--;   // last slot wraps onto the first
     }
     s_ntmpl = w;
@@ -230,14 +275,17 @@ static bool try_lock(void)
     return false;
 }
 
-void beatgrid_block(bool kick_hit, beatgrid_out_t *out)
+void beatgrid_block(bool kick_hit, bool snare_hit, beatgrid_out_t *out)
 {
     s_now++;
     out->beat = false;
+    bool hit = kick_hit || snare_hit;
 
-    if (kick_hit) {
+    if (hit) {
         memmove(&s_hits[1], &s_hits[0], (HIST - 1) * sizeof(s_hits[0]));
+        memmove(&s_htype[1], &s_htype[0], (HIST - 1) * sizeof(s_htype[0]));
         s_hits[0] = s_now;
+        s_htype[0] = kick_hit ? 1 : 0;
         if (s_nhits < HIST) {
             s_nhits++;
         }
@@ -246,13 +294,25 @@ void beatgrid_block(bool kick_hit, beatgrid_out_t *out)
     if (!s_locked) {
         if (kick_hit) {
             out->beat = true;
+            s_last_beat = s_now;
+        }
+        if (hit) {
             s_locked = try_lock();
         }
         out->bpm = 0.0f;
+        out->period = 0.0f;
         return;
     }
 
-    if (kick_hit) {
+    if (hit) {
+        // Detected kicks always shine through, locked or not: the grid adds
+        // predicted slots and timing, it must not eat fills and variations
+        // (the kick detector's false-positive source — snares — is now
+        // classified away, so suppression buys nothing).
+        if (kick_hit && s_now - s_last_beat > 15) {
+            out->beat = true;
+            s_last_beat = s_now;
+        }
         s_miss = 0;   // kicks are arriving, keep coasting through fills
         // Circular distance to the nearest template slot.
         float rel = fmodf((float)s_now - s_base, s_period);
@@ -283,20 +343,29 @@ void beatgrid_block(bool kick_hit, beatgrid_out_t *out)
             s_locked = false;   // the pattern really changed; keep history
             s_period = 0.0f;
         }
-        // Locked: detections themselves are suppressed, predictions fire.
+        // Off-pattern hits only influence the unlock accounting above.
     }
 
+    // Snare slots anchor the grid but only kick slots emit beats.
     if (s_locked && (float)s_now >= s_base + s_tmpl[s_slot] - PREDICT_ADV) {
-        out->beat = true;
+        if (s_tkick[s_slot] && s_now - s_last_beat > 15) {
+            out->beat = true;
+            s_last_beat = s_now;
+        }
         if (++s_slot >= s_ntmpl) {
             s_slot = 0;
             s_base += s_period;
         }
         if (++s_miss > s_miss_limit) {
-            s_locked = false;   // kickless loops: breakdown or track end
+            s_locked = false;   // hitless loops: breakdown or track end
             s_period = 0.0f;
         }
     }
 
-    out->bpm = s_locked ? 60.0f * s_block_hz * (float)s_ntmpl / s_period : 0.0f;
+    int nkick = 0;
+    for (int k = 0; k < s_ntmpl; k++) {
+        nkick += s_tkick[k];
+    }
+    out->bpm = s_locked ? 60.0f * s_block_hz * (float)nkick / s_period : 0.0f;
+    out->period = s_locked ? s_period : 0.0f;
 }

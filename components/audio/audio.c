@@ -1,6 +1,7 @@
 // audio.c
 #include "audio.h"
 #include "kick.h"
+#include "snare.h"
 #include "beatgrid.h"
 #include "board_pins.h"
 #include "app_config.h"
@@ -205,13 +206,13 @@ static void audio_task(void *arg)
         ki.mid_flux = mfl > 0.0f ? mfl : 0.0f;
         ki.treble_flux = tfl > 0.0f ? tfl : 0.0f;
 
-        // Kick hits feed the beat grid; unlocked it passes them through,
-        // locked it emits predicted attack-aligned beats and suppresses
-        // off-grid detections.
+        // Kick hits are beats, snare hits extra pattern anchors; the beat
+        // grid passes kicks through while unlocked and emits predicted
+        // attack-aligned beats (suppressing off-grid detections) once locked.
         kick_out_t ko;
         kick_block(&ki, &ko);
         beatgrid_out_t bg;
-        beatgrid_block(ko.hit, &bg);
+        beatgrid_block(ko.hit, ko.snare, &bg);
         if (bg.beat) {
             s_beat_env = 1.0f;
         }

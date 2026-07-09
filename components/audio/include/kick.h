@@ -1,5 +1,7 @@
 // kick.h
-// Kick drum detector on the low sub-band fluxes. Pure block-rate math.
+// Onset detector/classifier on the low sub-band fluxes: one state machine
+// anchors each attack and classifies it as kick or snare at confirm time,
+// so both hit types share the same latency. Pure block-rate math.
 #pragma once
 
 #include <stdbool.h>
@@ -13,13 +15,15 @@ extern "C" {
 typedef struct {
     float flux[3];     // kick sub-band fluxes: 40-80 / 80-140 / 140-220 Hz
     float fund_rms;    // 40-80 Hz level, for the post-attack sustain check
-    float mid_flux;    // 200 Hz - 2 kHz, snare body veto
-    float treble_flux; // 2-4 kHz, snare wire veto
+    float mid_flux;    // 200 Hz - 2 kHz
+    float treble_flux; // 2-4 kHz
 } kick_in_t;
 
 typedef struct {
-    bool hit;        // true on the block where a kick is confirmed
-    uint32_t count;  // total kicks since boot (temporary telemetry counter)
+    bool hit;          // kick confirmed this block
+    bool snare;        // snare/clap/rim confirmed this block (never with hit)
+    uint32_t count;    // total kicks since boot
+    uint32_t snares;   // total snare-class hits since boot
 } kick_out_t;
 
 void kick_init(void);

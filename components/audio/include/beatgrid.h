@@ -11,11 +11,14 @@ extern "C" {
 
 typedef struct {
     bool beat;     // fire the effect-facing beat this block
-    float bpm;     // locked grid tempo, 0 while unlocked
+    float bpm;     // locked kick rate (slots/min), 0 while unlocked
+    float period;  // locked loop period in blocks, 0 while unlocked
 } beatgrid_out_t;
 
 void beatgrid_init(float block_hz);
-void beatgrid_block(bool kick_hit, beatgrid_out_t *out);
+// Kick hits are beats; snare hits are additional pattern anchors (they
+// stabilize the grid but only kick-typed slots emit beats).
+void beatgrid_block(bool kick_hit, bool snare_hit, beatgrid_out_t *out);
 
 #ifdef __cplusplus
 }
