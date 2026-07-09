@@ -72,11 +72,14 @@ A websocket endpoint is used to sync the UI state with the firmware, and events 
 
 ## Development Environment & Build Instructions
 
-The official Espressif dev container is used and should automatically be detected in VS Code. Build via the status bar or command palette.
+The official Espressif dev container is used and should automatically be detected in VS Code. Build via the status bar, the command palette or just `idf.py build`.  
+Build contains all stages, including web.  
 
 ### Flashing & Debugging
 
 Access to USB devices from the dev container is a little tricky. 
 Refer to the [Espressif documentation](https://docs.espressif.com/projects/vscode-esp-idf-extension/en/latest/additionalfeatures/docker-container.html) for (partially out of date) instructions.  
 WSL2 distros commonly don't have USB drivers loaded.  
-Run `echo -e "cp210x\nch341\ncdc_acm" | sudo tee /etc/modules-load.d/esp.conf` inside your WSL2 distro and restart WSL2. The dev container is set up to get access to all ttyACM and ttyUSB class devices. Always make sure WSL2 is running before starting the dev container, as wsl is responsible for loading the kernel modules. 
+Run `echo -e "cp210x\nch341\ncdc_acm" | sudo tee /etc/modules-load.d/esp.conf` inside your WSL2 distro and restart WSL2. The dev container is set up to get access to all ttyACM and ttyUSB class devices. Always make sure WSL2 is running before starting the dev container, as wsl is responsible for loading the kernel modules.  
+
+Flashing via OTA: `curl -X POST --data-binary @build/truecolors.bin http://truecolors.local/api/ota`  
