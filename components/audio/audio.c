@@ -21,11 +21,11 @@ static const char *TAG = "audio";
 // AGC: each band is normalized against its own peak tracker
 #define AGC_RELEASE   0.99852f  // peak halves in ~5 s (per 10.7 ms block)
 #define AGC_MIN_REF   0.003f    // ~-50 dBFS, below this the room is silent
-#define ENV_RELEASE   0.08f     // output envelope, ~130 ms release
 #define DC_K          0.00065f  // DC blocker pole, ~5 Hz
 #define HC_FC_HZ      4000.0f   // hi-cut corner, 8th-order Butterworth (48 dB/oct)
 #define LP_BASS_K     0.026f    // one-pole low-pass, ~200 Hz
-#define LP_TREBLE_K   0.23f     // one-pole low-pass, ~2 kHz (treble = 2-4 kHz)
+#define LP_TREBLE_K   0.23f     // one-pole low-pass, ~2 kHz; mid = lp2k - lp200,
+                                // treble = s - lp2k (2-4 kHz under the hi-cut)
 
 // Coil whine heavily couples into the mic and needs to be filtered out. Analysis shows a combination of clean harmonics of the MCPWM frequency and additional high frequency metallic resonance from the inductor core. 
 // Strategy: The PWM harmonics are precisely and efficently eliminated by a single negative mode comb filter linked to the MCPWM frequency. The high frequencies are removed by a biquad hi-cut at 4kHz 48dB/oct.  
@@ -45,8 +45,7 @@ static float s_dc;
 static biquad_t s_hicut[4];
 static float s_lp_bass;
 static float s_lp_treble;
-static float s_peak[3];
-static float s_env[3];
+static float s_peak[4];
 static float s_comb[COMB_MAX];
 static volatile int s_comb_n = SAMPLE_RATE / TC_PWM_HZ;
 static int s_comb_i;
@@ -113,7 +112,7 @@ static void audio_task(void *arg)
             s_comb_i = 0;
         }
 
-        float sum[3] = { 0.0f, 0.0f, 0.0f };   // bass, broadband, treble
+        float sum[4] = { 0.0f, 0.0f, 0.0f, 0.0f };   // bass, mid, treble, broadband
         for (int i = 0; i < n; i++) {
             float s = buf[i] / 32768.0f;
             s_dc += DC_K * (s - s_dc);
@@ -133,31 +132,36 @@ static void audio_task(void *arg)
 
             s_lp_bass += LP_BASS_K * (s - s_lp_bass);
             s_lp_treble += LP_TREBLE_K * (s - s_lp_treble);
+            float mid = s_lp_treble - s_lp_bass;
             float hi = s - s_lp_treble;
             sum[0] += s_lp_bass * s_lp_bass;
-            sum[1] += s * s;
+            sum[1] += mid * mid;
             sum[2] += hi * hi;
+            sum[3] += s * s;
         }
 
-        for (int b = 0; b < 3; b++) {
+        // Raw per-block levels; attack/release shaping happens per effect.
+        for (int b = 0; b < 4; b++) {
             float rms = sqrtf(sum[b] / n);
             s_peak[b] = fmaxf(rms, s_peak[b] * AGC_RELEASE);
             float lv = clamp01(rms / fmaxf(s_peak[b], AGC_MIN_REF));
-            // Instant attack, musical release.
-            s_env[b] = lv > s_env[b] ? lv : s_env[b] + (lv - s_env[b]) * ENV_RELEASE;
-            s_features.bands[b] = s_env[b];
+            if (b < 3) {
+                s_features.bands[b] = lv;
+            } else {
+                s_features.level = lv;
+            }
         }
-        s_features.level = s_features.bands[1];
 
         // Beat: broadband transient over the running average, gated so noise
         // in a silent room can't ratio-trigger.
-        float rms = sqrtf(sum[1] / n);
+        float rms = sqrtf(sum[3] / n);
         s_avg_energy = s_avg_energy * (1.0f - AVG_ALPHA) + rms * AVG_ALPHA;
         if (rms > AGC_MIN_REF && rms > s_avg_energy * BEAT_RATIO) {
             s_beat_env = 1.0f;
         }
-        s_beat_env *= BEAT_DECAY;
+        // Publish before decaying, so consumers see the full 1.0 peak.
         s_features.beat = s_beat_env;
+        s_beat_env *= BEAT_DECAY;
     }
 }
 

@@ -54,6 +54,48 @@ static void hsv2rgb(float h, float s, float v, float out[3])
     }
 }
 
+// Inverse of hsv2rgb, for effects that rotate the main color's hue.
+static void rgb2hsv(const float in[3], float *h, float *s, float *v)
+{
+    float mx = fmaxf(in[0], fmaxf(in[1], in[2]));
+    float mn = fminf(in[0], fminf(in[1], in[2]));
+    float d = mx - mn;
+    *v = mx;
+    *s = mx > 0.0f ? d / mx : 0.0f;
+    if (d <= 0.0f) {
+        *h = 0.0f;
+        return;
+    }
+    float hh;
+    if (mx == in[0]) {
+        hh = (in[1] - in[2]) / d;
+    } else if (mx == in[1]) {
+        hh = 2.0f + (in[2] - in[0]) / d;
+    } else {
+        hh = 4.0f + (in[0] - in[1]) / d;
+    }
+    hh /= 6.0f;
+    *h = hh - floorf(hh);
+}
+
+// Attack/release envelope follower, time constants in seconds.
+static float env_follow(float env, float target, float atk, float rel, float dt)
+{
+    float tau = target > env ? atk : rel;
+    float k = tau > 0.001f ? 1.0f - expf(-dt / tau) : 1.0f;
+    return env + (target - env) * k;
+}
+
+// Crossfade bass -> mid -> treble on a 0..2 slider.
+static float band_level(const effect_ctx_t *ctx, float b)
+{
+    if (b < 0.0f) b = 0.0f;
+    if (b > 2.0f) b = 2.0f;
+    int lo = b < 1.0f ? 0 : 1;
+    float f = b - lo;
+    return ctx->audio.bands[lo] * (1.0f - f) + ctx->audio.bands[lo + 1] * f;
+}
+
 static float rand01(void)
 {
     return (float)esp_random() / (float)UINT32_MAX;
@@ -82,24 +124,103 @@ static void breathe_render(const effect_ctx_t *ctx, float out[3])
     }
 }
 
+typedef struct {
+    float env;
+    float hue_off;
+    float prev_beat;
+    float since_step;
+} audio_state_t;
+
 static const effect_param_def_t audio_params[] = {
+    { "band", 0.0f, 2.0f, 0.0f },
+    { "step", 0.0f, 1.0f, 0.0f },
+    { "attack", 0.0f, 0.3f, 0.01f },
+    { "release", 0.02f, 1.5f, 0.15f },
+};
+
+// Level-reactive main color. step > 0 rotates an internal hue offset on each
+// detected beat; the set color itself is never modified.
+static void audio_render(const effect_ctx_t *ctx, float out[3])
+{
+    audio_state_t *s = ctx->state;
+    float step = ctx->params[1];
+
+    s->since_step += ctx->dt;
+    if (ctx->audio.beat > s->prev_beat + 0.1f && s->since_step > 0.25f) {
+        s->hue_off += step;
+        s->hue_off -= floorf(s->hue_off);
+        s->since_step = 0.0f;
+    }
+    s->prev_beat = ctx->audio.beat;
+
+    s->env = env_follow(s->env, band_level(ctx, ctx->params[0]),
+                        ctx->params[2], ctx->params[3], ctx->dt);
+    float level = clamp01(s->env * ctx->audio_sens * 2.0f);
+
+    float col[3] = { ctx->color[0], ctx->color[1], ctx->color[2] };
+    if (step > 0.0f) {
+        float h, sat, v;
+        rgb2hsv(ctx->color, &h, &sat, &v);
+        hsv2rgb(h + s->hue_off, sat, v, col);
+    }
+    for (int c = 0; c < 3; c++) {
+        out[c] = col[c] * level;
+    }
+}
+
+typedef struct {
+    float env[3];
+} spectrum_state_t;
+
+static const effect_param_def_t spectrum_params[] = {
+    { "attack", 0.0f, 0.3f, 0.01f },
+    { "release", 0.02f, 1.5f, 0.15f },
+};
+
+// Bass -> red, mid -> green, treble -> blue.
+static void spectrum_render(const effect_ctx_t *ctx, float out[3])
+{
+    spectrum_state_t *s = ctx->state;
+    for (int c = 0; c < 3; c++) {
+        s->env[c] = env_follow(s->env[c], ctx->audio.bands[c],
+                               ctx->params[0], ctx->params[1], ctx->dt);
+        out[c] = clamp01(s->env[c] * ctx->audio_sens * 2.0f);
+    }
+}
+
+typedef struct {
+    float ph[3];
+    float lvl;
+} lava_state_t;
+
+static const effect_param_def_t lava_params[] = {
+    { "window", 0.0f, 1.0f, 0.25f },
+    { "center", 0.0f, 1.0f, 0.5f },
+    { "audio", 0.0f, 2.0f, 0.0f },
     { "band", 0.0f, 2.0f, 0.0f },
 };
 
-// Band slider crossfades bass -> broadband -> treble.
-static void audio_render(const effect_ctx_t *ctx, float out[3])
+// multi-lfo color drift with audio coupled to speed
+static void lava_render(const effect_ctx_t *ctx, float out[3])
 {
-    float b = ctx->params[0];
-    if (b < 0.0f) b = 0.0f;
-    if (b > 2.0f) b = 2.0f;
-    int lo = b < 1.0f ? 0 : 1;
-    float f = b - lo;
-    float lvl = ctx->audio.bands[lo] * (1.0f - f) + ctx->audio.bands[lo + 1] * f;
-    float level = clamp01(lvl * ctx->audio_sens * 2.0f);
-    for (int c = 0; c < 3; c++) {
-        out[c] = ctx->color[c] * level;
+    static const float freq[3] = { 1.0f / 41.0f, 1.0f / 59.0f, 1.0f / 83.0f };
+    lava_state_t *s = ctx->state;
+
+    s->lvl = env_follow(s->lvl, band_level(ctx, ctx->params[3]), 0.05f, 0.3f, ctx->dt);
+    // Squared level for contrast; full audio slider on a loud hit stirs the
+    // drift at ~25x so it visibly reacts despite the slow LFO periods.
+    float rate = 2.0f * ctx->speed * (1.0f + ctx->params[2] * 12.0f * s->lvl * s->lvl);
+    for (int i = 0; i < 3; i++) {
+        s->ph[i] += TWO_PI * freq[i] * rate * ctx->dt;
+        if (s->ph[i] > TWO_PI) s->ph[i] -= TWO_PI;
     }
+
+    float hue = ctx->params[1] +
+                ctx->params[0] * (0.3f * sinf(s->ph[0]) + 0.2f * sinf(s->ph[1]));
+    float v = 0.75f + 0.25f * sinf(s->ph[2]);
+    hsv2rgb(hue, 1.0f, v, out);
 }
+
 
 // Full hue cycle, ignores the set color.
 static void rainbow_render(const effect_ctx_t *ctx, float out[3])
@@ -171,8 +292,9 @@ static const effect_desc_t s_registry[] = {
     {
         .id = "audio", .display_name = "Audio",
         .global_mask = GLOBAL_COLOR | GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_AUDIO_SENS,
-        .params = audio_params, .n_params = 1,
+        .params = audio_params, .n_params = 4,
         .render = audio_render,
+        .state_size = sizeof(audio_state_t),
         .keepalive = true,
     },
     {
@@ -194,6 +316,21 @@ static const effect_desc_t s_registry[] = {
         .render = discombobulate_render,
         .state_size = sizeof(discombobulate_state_t),
         .keepalive = true,
+    },
+    {
+        .id = "spectrum", .display_name = "Spectrum",
+        .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_AUDIO_SENS,
+        .params = spectrum_params, .n_params = 2,
+        .render = spectrum_render,
+        .state_size = sizeof(spectrum_state_t),
+        .keepalive = true,
+    },
+    {
+        .id = "lava", .display_name = "Lava Drift",
+        .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_SPEED,
+        .params = lava_params, .n_params = 4,
+        .render = lava_render,
+        .state_size = sizeof(lava_state_t),
     },
 };
 #define EFFECT_COUNT (sizeof(s_registry) / sizeof(s_registry[0]))

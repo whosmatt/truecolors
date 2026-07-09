@@ -10,9 +10,11 @@ extern "C" {
 #endif
 
 // Snapshot of audio features, single-writer (audio task) / read per frame.
+// Levels are raw per-block AGC-normalized values; effects apply their own
+// attack/release shaping.
 typedef struct {
-    float level;     // 0..1 AGC-normalized broadband level (== bands[1])
-    float bands[3];  // 0..1 AGC-normalized bass / broadband / treble
+    float level;     // 0..1 AGC-normalized broadband level
+    float bands[3];  // 0..1 AGC-normalized bass / mid / treble
     float beat;      // 0..1 transient/beat envelope
 } audio_features_t;
 
