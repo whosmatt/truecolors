@@ -1,33 +1,11 @@
 // test_laser_math.c
-// Host unit test for the laser width math. Compile and run on the dev machine:
-//   gcc -I ../include -I ../../common/include test_laser_math.c ../laser_math.c -lm -o /tmp/lt && /tmp/lt
+// Unity tests for the laser width math; runs on the host via test/host/.
 #include "laser_math.h"
 #include "app_config.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
-
-static int g_fail = 0;
-static int g_checks = 0;
-
-static void check(int cond, const char *msg)
-{
-    g_checks++;
-    if (!cond) {
-        g_fail++;
-        printf("  FAIL: %s\n", msg);
-    }
-}
-
-static void check_near(float got, float want, float tol, const char *msg)
-{
-    g_checks++;
-    if (fabsf(got - want) > tol) {
-        g_fail++;
-        printf("  FAIL: %s (got %.4f, want %.4f, tol %.4f)\n", msg, got, want, tol);
-    }
-}
+#include "unity.h"
 
 static float duty(const laser_widths_t *w, int c)
 {
@@ -59,127 +37,158 @@ static void check_invariants(const laser_widths_t *w, const char *ctx)
     char buf[128];
     int32_t sum = w->on[0] + w->on[1] + w->on[2];
     snprintf(buf, sizeof buf, "%s: sum on < period", ctx);
-    check(sum < w->period, buf);
+    TEST_ASSERT_TRUE_MESSAGE(sum < w->period, buf);
 
     int32_t expect = 0;
     for (int c = 0; c < 3; c++) {
         if (w->on[c] > 0) {
             snprintf(buf, sizeof buf, "%s: cmpa[%d] packed", ctx, c);
-            check(w->cmpa[c] == expect, buf);
+            TEST_ASSERT_TRUE_MESSAGE(w->cmpa[c] == expect, buf);
             snprintf(buf, sizeof buf, "%s: cmpb[%d] = cmpa+on", ctx, c);
-            check(w->cmpb[c] == expect + w->on[c], buf);
+            TEST_ASSERT_TRUE_MESSAGE(w->cmpb[c] == expect + w->on[c], buf);
             snprintf(buf, sizeof buf, "%s: cmpb[%d] reachable", ctx, c);
-            check(w->cmpb[c] <= w->period - 1, buf);
+            TEST_ASSERT_TRUE_MESSAGE(w->cmpb[c] <= w->period - 1, buf);
             expect += w->on[c] + GAP_TICKS;
         } else {
             snprintf(buf, sizeof buf, "%s: off channel %d zero width", ctx, c);
-            check(w->cmpa[c] == 0 && w->cmpb[c] == 0, buf);
+            TEST_ASSERT_TRUE_MESSAGE(w->cmpa[c] == 0 && w->cmpb[c] == 0, buf);
         }
     }
 }
 
-int main(void)
+// Single pure color: 33% at stretch 0, 100% at stretch 1.
+TEST_CASE("pure colors: 33% at stretch 0, 100% at stretch 1", "[laser_math]")
 {
     laser_widths_t w;
 
-    printf("laser_math host tests (period=%d ticks, MIN_ON=%d ticks)\n",
-           (int)TC_PERIOD_TICKS, (int)MIN_ON_TICKS);
-
-    // Single pure color: 33%% at stretch 0, 100%% at stretch 1.
     w = compute(1, 0, 0, 0.0f);
-    check_near(duty(&w, 0), 0.3333f, 0.01f, "red s0 = 33%");
-    check(w.on[1] == 0 && w.on[2] == 0, "red s0: G,B off");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.3333f, duty(&w, 0), "red s0 = 33%");
+    TEST_ASSERT_TRUE_MESSAGE(w.on[1] == 0 && w.on[2] == 0, "red s0: G,B off");
     check_invariants(&w, "red s0");
 
     w = compute(1, 0, 0, 1.0f);
-    check_near(duty(&w, 0), 1.0f, 0.01f, "red s1 = 100%");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 1.0f, duty(&w, 0), "red s1 = 100%");
     check_invariants(&w, "red s1");
 
-    // Pure green at stretch 1 -> green continuously on.
     w = compute(0, 1, 0, 1.0f);
-    check_near(duty(&w, 1), 1.0f, 0.01f, "green s1 = 100%");
-    check(w.on[0] == 0 && w.on[2] == 0, "green s1: R,B off");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 1.0f, duty(&w, 1), "green s1 = 100%");
+    TEST_ASSERT_TRUE_MESSAGE(w.on[0] == 0 && w.on[2] == 0, "green s1: R,B off");
     check_invariants(&w, "green s1");
 
     w = compute(0, 0, 1, 1.0f);
-    check_near(duty(&w, 2), 1.0f, 0.01f, "blue s1 = 100%");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 1.0f, duty(&w, 2), "blue s1 = 100%");
     check_invariants(&w, "blue s1");
+}
 
-    // Two-color mix R+G at stretch 1 -> 50/50 packed.
+// Two-color mix R+G at stretch 1 -> 50/50 packed.
+TEST_CASE("two-color mix packs back-to-back", "[laser_math]")
+{
+    laser_widths_t w;
+
     w = compute(1, 1, 0, 1.0f);
-    check_near(duty(&w, 0), 0.5f, 0.01f, "R+G s1: R = 50%");
-    check_near(duty(&w, 1), 0.5f, 0.01f, "R+G s1: G = 50%");
-    check(w.cmpa[1] == w.cmpb[0], "R+G s1: G starts where R ends");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.5f, duty(&w, 0), "R+G s1: R = 50%");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.5f, duty(&w, 1), "R+G s1: G = 50%");
+    TEST_ASSERT_TRUE_MESSAGE(w.cmpa[1] == w.cmpb[0], "R+G s1: G starts where R ends");
     check_invariants(&w, "R+G s1");
 
     w = compute(1, 1, 0, 0.0f);
-    check_near(duty(&w, 0), 0.3333f, 0.01f, "R+G s0: R = 33%");
-    check_near(duty(&w, 1), 0.3333f, 0.01f, "R+G s0: G = 33%");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.3333f, duty(&w, 0), "R+G s0: R = 33%");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.3333f, duty(&w, 1), "R+G s0: G = 33%");
     check_invariants(&w, "R+G s0");
+}
 
-    // Full white stays 33/33/33 at any stretch.
+// Full white stays 33/33/33 at any stretch.
+TEST_CASE("white stays 33/33/33 across stretch", "[laser_math]")
+{
     for (float s = 0.0f; s <= 1.0f; s += 0.25f) {
-        w = compute(1, 1, 1, s);
+        laser_widths_t w = compute(1, 1, 1, s);
         char ctx[32];
         snprintf(ctx, sizeof ctx, "white s%.2f", s);
-        check_near(duty(&w, 0), 0.3333f, 0.01f, "white R = 33%");
-        check_near(duty(&w, 1), 0.3333f, 0.01f, "white G = 33%");
-        check_near(duty(&w, 2), 0.3333f, 0.01f, "white B = 33%");
+        TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.3333f, duty(&w, 0), "white R = 33%");
+        TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.3333f, duty(&w, 1), "white G = 33%");
+        TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.3333f, duty(&w, 2), "white B = 33%");
         check_invariants(&w, ctx);
     }
+}
 
-    // Normalize preserves the R:G:B ratio.
-    w = compute(1.0f, 0.5f, 0.0f, 1.0f);
-    check_near((float)w.on[0] / (float)w.on[1], 2.0f, 0.02f, "ratio R:G = 2:1 preserved");
+TEST_CASE("normalization preserves color ratio", "[laser_math]")
+{
+    laser_widths_t w = compute(1.0f, 0.5f, 0.0f, 1.0f);
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.02f, 2.0f, (float)w.on[0] / (float)w.on[1],
+                                     "ratio R:G = 2:1 preserved");
     check_invariants(&w, "ratio");
+}
 
-    // Floor: zero stays zero, sub-min snaps up to MIN_ON_TICKS.
-    w = compute(0.0f, 0.0f, 0.0f, 0.0f);
-    check(w.on[0] == 0 && w.on[1] == 0 && w.on[2] == 0, "all-zero stays off");
+TEST_CASE("all-zero input stays off", "[laser_math]")
+{
+    laser_widths_t w = compute(0.0f, 0.0f, 0.0f, 0.0f);
+    TEST_ASSERT_TRUE_MESSAGE(w.on[0] == 0 && w.on[1] == 0 && w.on[2] == 0,
+                             "all-zero stays off");
+}
 
-    w = compute(0.001f, 0.0f, 0.0f, 0.0f);
-    check(w.on[0] == (int32_t)MIN_ON_TICKS, "tiny red snaps to MIN_ON");
+// Floor: sub-min width snaps up to MIN_ON_TICKS.
+TEST_CASE("sub-min width snaps up to MIN_ON", "[laser_math]")
+{
+    laser_widths_t w = compute(0.001f, 0.0f, 0.0f, 0.0f);
+    TEST_ASSERT_TRUE_MESSAGE(w.on[0] == (int32_t)MIN_ON_TICKS, "tiny red snaps to MIN_ON");
     check_invariants(&w, "floor snap");
+}
 
-    // Clamp out-of-range input.
-    w = compute(2.0f, -1.0f, 0.5f, 2.0f);
+TEST_CASE("out-of-range input is clamped", "[laser_math]")
+{
+    laser_widths_t w = compute(2.0f, -1.0f, 0.5f, 2.0f);
     check_invariants(&w, "out-of-range clamp");
+}
 
-    // Keepalive: dark channels idle at the MIN_ON floor instead of turning
-    // off, so the driver bias never decays into low-power shutdown.
+// Keepalive: dark channels idle at the MIN_ON floor instead of turning off,
+// so the driver bias never decays into low-power shutdown.
+TEST_CASE("keepalive floors dark channels at MIN_ON", "[laser_math]")
+{
+    laser_widths_t w;
+
     w = compute_ka(0.0f, 0.0f, 0.0f, 0.0f);
-    check(w.on[0] == (int32_t)MIN_ON_TICKS && w.on[1] == (int32_t)MIN_ON_TICKS &&
-          w.on[2] == (int32_t)MIN_ON_TICKS, "keepalive black: all at MIN_ON");
+    TEST_ASSERT_TRUE_MESSAGE(w.on[0] == (int32_t)MIN_ON_TICKS &&
+                             w.on[1] == (int32_t)MIN_ON_TICKS &&
+                             w.on[2] == (int32_t)MIN_ON_TICKS,
+                             "keepalive black: all at MIN_ON");
     check_invariants(&w, "keepalive black");
 
     w = compute_ka(1.0f, 0.0f, 0.0f, 0.0f);
-    check_near(duty(&w, 0), 0.3333f, 0.01f, "keepalive red = 33%");
-    check(w.on[1] == (int32_t)MIN_ON_TICKS && w.on[2] == (int32_t)MIN_ON_TICKS,
-          "keepalive red: dark G,B at MIN_ON");
+    TEST_ASSERT_FLOAT_WITHIN_MESSAGE(0.01f, 0.3333f, duty(&w, 0), "keepalive red = 33%");
+    TEST_ASSERT_TRUE_MESSAGE(w.on[1] == (int32_t)MIN_ON_TICKS &&
+                             w.on[2] == (int32_t)MIN_ON_TICKS,
+                             "keepalive red: dark G,B at MIN_ON");
     check_invariants(&w, "keepalive red");
 
-    // Keepalive under full stretch: refit shrinks the floor but every channel
-    // keeps pulsing, and nothing may occupy the whole period.
+    // Under full stretch the refit shrinks the floor but every channel keeps
+    // pulsing, and nothing may occupy the whole period.
     w = compute_ka(1.0f, 0.0f, 0.0f, 1.0f);
-    check(w.on[1] > 0 && w.on[2] > 0, "keepalive red s1: G,B still pulse");
+    TEST_ASSERT_TRUE_MESSAGE(w.on[1] > 0 && w.on[2] > 0, "keepalive red s1: G,B still pulse");
     check_invariants(&w, "keepalive red s1");
 
     w = compute_ka(1.0f, 1.0f, 0.0f, 1.0f);
-    check(w.on[2] > 0, "keepalive R+G s1: B still pulses");
+    TEST_ASSERT_TRUE_MESSAGE(w.on[2] > 0, "keepalive R+G s1: B still pulses");
     check_invariants(&w, "keepalive R+G s1");
+}
 
-    // Crossfade corner regression: two hot channels with stretch past 1/4
-    // engage dynamic packing, which used to pack the last pulse out to the
-    // period tick and latch the channel on (rainbow flash at the 50/50 mark).
-    w = compute(1.0f, 0.974f, 0.0f, 0.26f);
+// Crossfade corner regression: two hot channels with stretch past 1/4 engage
+// dynamic packing, which used to pack the last pulse out to the period tick
+// and latch the channel on (rainbow flash at the 50/50 mark).
+TEST_CASE("crossfade corner cannot latch a channel", "[laser_math]")
+{
+    laser_widths_t w = compute(1.0f, 0.974f, 0.0f, 0.26f);
     check_invariants(&w, "corner s0.26");
+}
 
-    // Sweep crossfades across the stretch range, two- and three-channel.
+// Sweep crossfades across the stretch range, two- and three-channel.
+TEST_CASE("stretch/fade sweep holds invariants", "[laser_math]")
+{
     for (int si = 0; si <= 20; si++) {
         float s = si / 20.0f;
         for (int fi = 0; fi <= 100; fi++) {
             float f = fi / 100.0f;
             char ctx[48];
+            laser_widths_t w;
             snprintf(ctx, sizeof ctx, "sweep s%.2f f%.2f 2ch", s, f);
             w = compute(1.0f, f, 0.0f, s);
             check_invariants(&w, ctx);
@@ -188,21 +197,22 @@ int main(void)
             check_invariants(&w, ctx);
         }
     }
+}
 
-    // Runtime periods: invariants hold at every dropdown frequency
-    // (120 Hz, 240 Hz, 480 Hz).
+// Runtime periods: invariants hold at every dropdown frequency
+// (120 Hz, 240 Hz, 480 Hz).
+TEST_CASE("invariants hold at all runtime periods", "[laser_math]")
+{
     static const int32_t periods[] = { 41666, 20833, 10416 };
     for (size_t pi = 0; pi < sizeof(periods) / sizeof(periods[0]); pi++) {
         for (int fi = 0; fi <= 20; fi++) {
             float f = fi / 20.0f;
             float rgb[3] = { 1.0f, f, 0.25f };
             char ctx[48];
+            laser_widths_t w;
             snprintf(ctx, sizeof ctx, "period %d f%.2f", (int)periods[pi], f);
             laser_compute_widths(rgb, f, true, periods[pi], &w);
             check_invariants(&w, ctx);
         }
     }
-
-    printf("\n%d checks, %d failures\n", g_checks, g_fail);
-    return g_fail ? 1 : 0;
 }

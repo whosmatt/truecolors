@@ -75,6 +75,10 @@ A websocket endpoint is used to sync the UI state with the firmware, and events 
 The official Espressif dev container is used and should automatically be detected in VS Code. Build via the status bar, the command palette or just `idf.py build`.  
 Build contains all stages, including web.  
 
+### Tests
+
+Critical components have unit tests via Unity, run them via `cd test/host && idf.py build && ./build/truecolors_host_tests.elf`.  
+
 ### Flashing & Debugging
 
 Access to USB devices from the dev container is a little tricky. 
