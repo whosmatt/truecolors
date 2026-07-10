@@ -22,7 +22,6 @@ typedef struct {
     float ntc_temp_c;
     bool  ntc_valid;
     int   fan_rpm;
-    float fan_duty;
     float vin_v;
 } safety_inputs_t;
 

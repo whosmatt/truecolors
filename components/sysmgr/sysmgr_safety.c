@@ -22,11 +22,16 @@ void safety_step(safety_state_t *st, const safety_inputs_t *in,
         st->overtemp_latched = true;
     }
 
-    // Fan stall: no tach pulses while the fan is commanded hard, sustained.
-    if (in->fan_duty >= STALL_DUTY && in->fan_rpm == 0) {
+    // Fan stall: the fan must always spin (fancontrol bursts FAN_KICK_DUTY
+    // whenever the tach is silent). Silence is a warning while the spin-up
+    // attempt runs; it latches as an error once the attempt has failed.
+    if (in->fan_rpm == 0) {
         st->stall_timer_s += dt;
-        if (st->stall_timer_s >= STALL_DEBOUNCE_S) {
+        if (st->stall_timer_s >= STALL_FAIL_S) {
             st->fanstall_latched = true;
+        }
+        if (st->stall_timer_s >= STALL_WARN_S) {
+            warn |= SF_FAN_STALL;
         }
     } else {
         st->stall_timer_s = 0.0f;

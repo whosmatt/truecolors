@@ -303,7 +303,8 @@ static void monitor_task(void *arg)
         float mcu_temp = read_mcu_temp();
         int fan_rpm = read_fan_rpm(dt);
 
-        float fan_duty = fancontrol_update(ntc_valid ? laser_temp : T_LIMIT_C, dt);
+        float fan_duty = fancontrol_update(ntc_valid ? laser_temp : T_LIMIT_C,
+                                           fan_rpm, dt);
 
         safety_inputs_t in = {
             .pd_ok = pd_ok,
@@ -311,7 +312,6 @@ static void monitor_task(void *arg)
             .ntc_temp_c = laser_temp,
             .ntc_valid = ntc_valid,
             .fan_rpm = fan_rpm,
-            .fan_duty = fan_duty,
             .vin_v = vin,
         };
         safety_output_t out;

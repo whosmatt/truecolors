@@ -38,7 +38,7 @@ esp_err_t fancontrol_init(void)
     return ESP_OK;
 }
 
-float fancontrol_update(float temp_c, float dt)
+float fancontrol_update(float temp_c, int fan_rpm, float dt)
 {
     float err = temp_c - FAN_TARGET_C;
     float unclamped = FAN_KP * err + FAN_KI * (s_integ + err * dt);
@@ -54,6 +54,13 @@ float fancontrol_update(float temp_c, float dt)
 
     // Linearize fan response
     float duty = u > 0.0f ? FAN_KNEE_DUTY + u * (1.0f - FAN_KNEE_DUTY) : 0.0f;
+
+    // Fan may sometimes start stalled, kick it
+    if (fan_rpm == 0 && duty < FAN_KICK_DUTY) {
+        duty = FAN_KICK_DUTY;
+    }
+
+    // If the fan stays at 0 rpm for STALL_FAIL_S, it latches a persistent error 
 
     uint32_t reg = (uint32_t)(duty * FAN_DUTY_MAX);
     ledc_set_duty(LEDC_FAN_MODE, LEDC_FAN_CHANNEL, reg);

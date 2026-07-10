@@ -37,7 +37,6 @@ static safety_inputs_t good(void)
         .ntc_temp_c = 30.0f,
         .ntc_valid = true,
         .fan_rpm = 2000,
-        .fan_duty = 0.2f,
         .vin_v = 20.0f,
     };
     return in;
@@ -91,25 +90,33 @@ int main(void)
     safety_step(&st, &in,0.1f, &out);
     check(out.latched && (out.err_flags & SF_OVERTEMP), "NTC invalid -> latched overtemp");
 
-    // Fan stall: needs the debounce window before latching.
+    // Fan stall: silent tach warns after STALL_WARN_S while the kick tries a
+    // start, and only latches an error after STALL_FAIL_S.
     safety_init(&st);
     prime(&st);
     in = good();
-    in.fan_duty = 0.6f;
     in.fan_rpm = 0;
-    safety_step(&st, &in,STALL_DEBOUNCE_S * 0.5f, &out);
-    check(!out.latched, "short stall not yet latched");
-    safety_step(&st, &in,STALL_DEBOUNCE_S, &out);
-    check(out.latched && (out.err_flags & SF_FAN_STALL), "sustained stall -> latched");
+    safety_step(&st, &in,STALL_WARN_S * 0.5f, &out);
+    check((out.warn_flags & SF_FAN_STALL) == 0 && !out.latched,
+          "brief tach silence: no flags");
+    safety_step(&st, &in,STALL_WARN_S, &out);
+    check((out.warn_flags & SF_FAN_STALL) != 0, "sustained silence -> warn");
+    check(!out.latched && out.err_flags == 0, "spin-up attempt is not an error");
+    check_near(out.safety_scale, 1.0f, 0.001f, "warning keeps running");
 
-    // Stall timer resets when the fan is not commanded hard.
-    safety_init(&st);
-    prime(&st);
-    in = good();
-    in.fan_duty = 0.1f;
+    // Recovery during the attempt clears the warning without latching.
+    in.fan_rpm = 500;
+    safety_step(&st, &in,0.1f, &out);
+    check((out.warn_flags & SF_FAN_STALL) == 0 && !out.latched,
+          "fan recovered -> warn clears, no latch");
+
+    // A failed start attempt latches.
     in.fan_rpm = 0;
-    safety_step(&st, &in,STALL_DEBOUNCE_S * 2.0f, &out);
-    check(!out.latched, "rpm 0 below stall duty is not a stall");
+    safety_step(&st, &in,STALL_FAIL_S, &out);
+    check(out.latched && (out.err_flags & SF_FAN_STALL), "failed start -> latched");
+    in = good();
+    safety_step(&st, &in,0.1f, &out);
+    check(out.latched, "fan stall stays latched");
 
     // Undercurrent is a warning only, output keeps running at full scale.
     safety_init(&st);

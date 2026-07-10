@@ -25,12 +25,12 @@
 #define FAN_PWM_HZ           25000      // 25 kHz, inaudible
 #define FAN_PWM_RES_BITS     10         // LEDC resolution
 #define FAN_PULSES_PER_REV   2          // confirmed
-#define FAN_START_DUTY       0.01f      // any duty spins the fan, already spinning at 0%
+#define FAN_KICK_DUTY        0.30f      // spin-up burst while tach reads 0 rpm
 // Measured ramp 2026-07-07: ~84 rpm floor below the knee, rpm = 1875*duty - 250
 // above it, linear to 1621 rpm at 100%, no hysteresis.
 #define FAN_KNEE_DUTY        0.19f      // PID demand maps onto [knee, 1]
-#define STALL_DUTY           0.40f      // PID duty above which RPM==0 means stall
-#define STALL_DEBOUNCE_S     3.0f       // sustained-stall debounce before latching
+#define STALL_WARN_S         1.0f       // tach silent this long -> warning (kick is attempting a start)
+#define STALL_FAIL_S         6.0f      // tach silent this long -> start failed, latched error
 // Tuned from logged limit cycle 2026-07-06, rescaled by 1/(1-knee) for the
 // knee remap so loop dynamics around equilibrium stay the same.
 #define FAN_KP               0.12f
