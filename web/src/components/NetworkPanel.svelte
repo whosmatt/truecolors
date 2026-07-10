@@ -9,6 +9,7 @@
     factoryReset,
     otaUpdate,
     setPwmHz,
+    setEpilepsySafe,
   } from '../lib/ws';
 
   let selectedSsid = $state('');
@@ -266,6 +267,20 @@
         </select>
       </div>
 
+      <div class="pwm">
+        <span class="sub-title">Epilepsy Safe</span>
+        <label class="switch">
+          <input
+            type="checkbox"
+            checked={store.epilepsySafe}
+            onchange={(e) =>
+              setEpilepsySafe((e.currentTarget as HTMLInputElement).checked)}
+            aria-label="Epilepsy safe mode"
+          />
+          <span class="knob"></span>
+        </label>
+      </div>
+
       <div class="ota">
         <span class="sub-title">Firmware Update</span>
         <div class="ota-pick">
@@ -465,6 +480,55 @@
     border-radius: var(--radius-sm);
     padding: 7px 10px;
     font-size: 0.85rem;
+  }
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    flex: 0 0 auto;
+  }
+  .switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: pointer;
+  }
+  .switch .knob {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border-solid);
+    transition: background 0.15s ease;
+    pointer-events: none;
+  }
+  .switch .knob::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition:
+      transform 0.15s ease,
+      background 0.15s ease;
+  }
+  .switch input:checked + .knob {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .switch input:checked + .knob::after {
+    transform: translateX(18px);
+    background: #fff;
+  }
+  .switch input:focus-visible + .knob {
+    outline: 2px solid var(--accent-2);
+    outline-offset: 2px;
   }
   /* OTA firmware update */
   .ota {

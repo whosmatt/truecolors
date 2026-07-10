@@ -5,6 +5,7 @@
     setParam,
     patchScene,
     GLOBAL,
+    type EffectParamDef,
   } from '../lib/state.svelte';
   import Slider from './Slider.svelte';
 
@@ -13,6 +14,22 @@
   // Which globals does the selected effect consume? (bitmask -> booleans)
   const showSpeed = $derived(!!eff && (eff.globals & GLOBAL.SPEED) !== 0);
   const showAudio = $derived(!!eff && (eff.globals & GLOBAL.AUDIO_SENS) !== 0);
+
+  // Epilepsy-safe bounds and blocked effects come from the device's catalog;
+  // the device also clamps at render, this only keeps the sliders honest.
+  function paramMin(p: EffectParamDef): number {
+    return store.epilepsySafe && p.safeMin != null
+      ? Math.max(p.min, p.safeMin)
+      : p.min;
+  }
+
+  function paramMax(p: EffectParamDef): number {
+    return store.epilepsySafe && p.safeMax != null
+      ? Math.min(p.max, p.safeMax)
+      : p.max;
+  }
+
+  const effBlocked = $derived(store.epilepsySafe && !!eff?.epilepsyUnsafe);
 
   function onSelect(e: Event) {
     setEffect(parseInt((e.target as HTMLSelectElement).value, 10));
@@ -27,9 +44,15 @@
   {:else}
     <select value={store.scene.effectId} onchange={onSelect} aria-label="Effect">
       {#each store.effects as e, i (e.id)}
-        <option value={i}>{e.name}</option>
+        <option value={i} disabled={store.epilepsySafe && e.epilepsyUnsafe}>
+          {e.name}
+        </option>
       {/each}
     </select>
+
+    {#if effBlocked}
+      <p class="blocked">Disabled by epilepsy-safe mode (see Settings).</p>
+    {/if}
 
     <div class="controls">
       {#if showSpeed}
@@ -51,12 +74,14 @@
 
       {#if eff}
         {#each eff.params as p, i (p.name)}
+          {@const mn = paramMin(p)}
+          {@const mx = paramMax(p)}
           <Slider
             label={p.name}
-            value={store.scene.params[i] ?? p.def}
-            min={p.min}
-            max={p.max}
-            step={(p.max - p.min) / 1000}
+            value={Math.min(Math.max(store.scene.params[i] ?? p.def, mn), mx)}
+            min={mn}
+            max={mx}
+            step={(mx - mn) / 1000}
             format={(v) => v.toFixed(2)}
             oninput={(v) => setParam(i, v)}
           />
@@ -80,5 +105,10 @@
     color: var(--text-faint);
     font-size: 0.85rem;
     margin: 6px 0 0;
+  }
+  .blocked {
+    color: var(--warn, #e0b352);
+    font-size: 0.82rem;
+    margin: 10px 0 0;
   }
 </style>

@@ -74,10 +74,15 @@ interface SnapshotMsg {
   effects: EffectDef[];
   net: NetInfo;
   pwmHz?: number;
+  epilepsySafe?: boolean;
 }
 interface PwmHzMsg {
   type: 'pwm_hz';
   hz: number;
+}
+interface EpilepsySafeMsg {
+  type: 'epilepsy_safe';
+  on: boolean;
 }
 interface PatchMsg {
   type: 'patch';
@@ -109,6 +114,7 @@ type ServerMsg =
   | MetricsMsg
   | WifiListMsg
   | PwmHzMsg
+  | EpilepsySafeMsg
   | ErrorMsg;
 
 function handleMessage(raw: string): void {
@@ -160,6 +166,9 @@ function handleMessage(raw: string): void {
       break;
     case 'pwm_hz':
       store.pwmHz = msg.hz;
+      break;
+    case 'epilepsy_safe':
+      store.epilepsySafe = msg.on;
       break;
     case 'error':
       store.lastError = { code: msg.code, msg: msg.msg };
@@ -246,6 +255,9 @@ export function reboot(): void {
 }
 export function setPwmHz(hz: number): void {
   rawSend({ type: 'set_pwm_hz', hz });
+}
+export function setEpilepsySafe(on: boolean): void {
+  rawSend({ type: 'set_epilepsy_safe', on });
 }
 export function factoryReset(): void {
   rawSend({ type: 'factory_reset' });

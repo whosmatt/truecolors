@@ -25,6 +25,8 @@ typedef enum {
 typedef struct {
     const char *name;
     float min, max, def;
+    float safe_min;   // epilepsy-safe floor, enforced when > min
+    float safe_max;   // epilepsy-safe ceiling, enforced when nonzero
 } effect_param_def_t;
 
 // Resolved per-frame inputs handed to an effect's render function.
@@ -39,6 +41,7 @@ typedef struct {
     float dt;
     audio_features_t audio;
     void *state;
+    bool epilepsy_safe;   // effects must soften flicker-prone behavior
 } effect_ctx_t;
 
 typedef struct {
@@ -50,8 +53,8 @@ typedef struct {
     void (*init)(void *state);
     void (*render)(const effect_ctx_t *ctx, float out_rgb[3]);
     size_t state_size;
-    bool keepalive;   // strobes from black: floor dark channels at MIN_ON so
-                      // the drivers restart instantly instead of fading in
+    bool keepalive;   // strobes from black: floor dark channels at MIN_ON to prevent drivers going into low power mode
+    bool epilepsy_unsafe;   // can't be softened: blocked in ui selector and renders black as fallback if epilepsy_safe is on
 } effect_desc_t;
 
 esp_err_t effects_init(void);
@@ -61,6 +64,10 @@ esp_err_t effects_start_render(void);
 
 // The static effect catalog, for the WS snapshot.
 const effect_desc_t *effects_get_catalog(size_t *count);
+
+// Epilepsy-safe mode (default on). Persisted by the caller.
+void effects_set_epilepsy_safe(bool on);
+bool effects_get_epilepsy_safe(void);
 
 #ifdef __cplusplus
 }

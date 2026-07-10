@@ -99,4 +99,5 @@
 #define NVS_KEY_WIFI_PASS    "wifi_pass"
 #define NVS_KEY_HOSTNAME     "hostname"
 #define NVS_KEY_PWM_HZ       "pwm_hz"
+#define NVS_KEY_EPI_SAFE     "epi_safe"
 #define PERSIST_DEBOUNCE_MS  2000           // coalesce scene writes to flash

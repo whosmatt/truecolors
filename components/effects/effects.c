@@ -21,6 +21,8 @@ static const char *TAG = "effects";
 static volatile float s_safety_scale = 0.0f;
 static volatile bool  s_latched = false;
 
+static volatile bool s_epilepsy_safe = true;
+
 static float clamp01(float v)
 {
     if (v < 0.0f) return 0.0f;
@@ -111,7 +113,7 @@ static void solid_render(const effect_ctx_t *ctx, float out[3])
 }
 
 static const effect_param_def_t breathe_params[] = {
-    { "depth", 0.0f, 1.0f, 0.8f },
+    { "depth", 0.0f, 1.0f, 0.8f, 0.0f, 0.0f },
 };
 
 static void breathe_render(const effect_ctx_t *ctx, float out[3])
@@ -133,10 +135,10 @@ typedef struct {
 } audio_state_t;
 
 static const effect_param_def_t audio_params[] = {
-    { "band", 0.0f, 2.0f, 0.0f },
-    { "step", 0.0f, 1.0f, 0.0f },
-    { "attack", 0.0f, 0.3f, 0.01f },
-    { "release", 0.02f, 1.5f, 0.15f },
+    { "band", 0.0f, 2.0f, 0.0f, 0.0f, 0.0f },
+    { "step", 0.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+    { "attack", 0.0f, 0.3f, 0.01f, 0.10f, 0.0f },
+    { "release", 0.02f, 1.5f, 0.15f, 0.60f, 0.0f },
 };
 
 // Level-reactive main color. step > 0 rotates an internal hue offset on each
@@ -181,18 +183,25 @@ typedef struct {
 } spectrum_state_t;
 
 static const effect_param_def_t spectrum_params[] = {
-    { "attack", 0.0f, 0.3f, 0.01f },
-    { "release", 0.02f, 1.5f, 0.15f },
+    { "attack", 0.0f, 0.3f, 0.01f, 0.10f, 0.0f },
+    { "release", 0.02f, 1.5f, 0.15f, 0.60f, 0.0f },
+    { "hue", 0.0f, 1.0f, 0.0f, 0.0f, 0.0f },
 };
 
-// Bass -> red, mid -> green, treble -> blue.
+// Bass, mid, treble on three hues 120° apart; hue 0 = plain R, G, B.
 static void spectrum_render(const effect_ctx_t *ctx, float out[3])
 {
     spectrum_state_t *s = ctx->state;
+    out[0] = out[1] = out[2] = 0.0f;
     for (int c = 0; c < 3; c++) {
         s->env[c] = env_follow(s->env[c], ctx->audio.bands[c],
                                ctx->params[0], ctx->params[1], ctx->dt);
-        out[c] = clamp01(s->env[c] * ctx->audio_sens * 2.0f);
+        float level = clamp01(s->env[c] * ctx->audio_sens * 2.0f);
+        float col[3];
+        hsv2rgb(ctx->params[2] + c / 3.0f, 1.0f, 1.0f, col);
+        for (int k = 0; k < 3; k++) {
+            out[k] += col[k] * level;   // rotated bands can share an output
+        }                               // channel; render loop clamps the sum
     }
 }
 
@@ -202,10 +211,10 @@ typedef struct {
 } lava_state_t;
 
 static const effect_param_def_t lava_params[] = {
-    { "window", 0.0f, 1.0f, 0.25f },
-    { "center", 0.0f, 1.0f, 0.5f },
-    { "audio", 0.0f, 2.0f, 0.0f },
-    { "band", 0.0f, 2.0f, 0.0f },
+    { "window", 0.0f, 1.0f, 0.25f, 0.0f, 0.0f },
+    { "center", 0.0f, 1.0f, 0.5f, 0.0f, 0.0f },
+    { "audio", 0.0f, 2.0f, 0.0f, 0.0f, 0.0f },
+    { "band", 0.0f, 2.0f, 0.0f, 0.0f, 0.0f },
 };
 
 // multi-lfo color drift with audio coupled to speed
@@ -238,8 +247,8 @@ static void rainbow_render(const effect_ctx_t *ctx, float out[3])
 }
 
 static const effect_param_def_t rainbow_window_params[] = {
-    { "window", 0.0f, 1.0f, 0.25f },
-    { "center", 0.0f, 1.0f, 0.5f },
+    { "window", 0.0f, 1.0f, 0.25f, 0.0f, 0.0f },
+    { "center", 0.0f, 1.0f, 0.5f, 0.0f, 0.0f },
 };
 
 // Hue fades back and forth across a window of the wheel.
@@ -258,8 +267,8 @@ typedef struct {
 } discombobulate_state_t;
 
 static const effect_param_def_t discombobulate_params[] = {
-    { "speed", 0.0f, 1.0f, 1.0f },
-    { "ratio", 0.0f, 1.0f, 0.5f },
+    { "speed", 0.0f, 1.0f, 1.0f, 0.0f, 0.0f },
+    { "ratio", 0.0f, 1.0f, 0.5f, 0.0f, 0.0f },
 };
 
 static void discombobulate_pick(discombobulate_state_t *s, float speed, float ratio)
@@ -324,11 +333,12 @@ static const effect_desc_t s_registry[] = {
         .render = discombobulate_render,
         .state_size = sizeof(discombobulate_state_t),
         .keepalive = true,
+        .epilepsy_unsafe = true,
     },
     {
         .id = "spectrum", .display_name = "Spectrum",
         .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_AUDIO_SENS,
-        .params = spectrum_params, .n_params = 2,
+        .params = spectrum_params, .n_params = 3,
         .render = spectrum_render,
         .state_size = sizeof(spectrum_state_t),
         .keepalive = true,
@@ -417,6 +427,19 @@ static void render_task(void *arg)
             t += dt;
         }
 
+        bool epi_safe = s_epilepsy_safe;
+        if (epi_safe) {
+            // st is a local copy; clamp params to their declared safe range.
+            for (size_t i = 0; i < eff->n_params; i++) {
+                const effect_param_def_t *d = &eff->params[i];
+                if (d->safe_min > d->min && st.params[i] < d->safe_min) {
+                    st.params[i] = d->safe_min;
+                }
+                if (d->safe_max != 0.0f && st.params[i] > d->safe_max) {
+                    st.params[i] = d->safe_max;
+                }
+            }
+        }
         effect_ctx_t ctx = {
             .brightness = st.brightness,
             .stretch = st.stretch,
@@ -426,18 +449,22 @@ static void render_task(void *arg)
             .t = t,
             .dt = dt,
             .state = s_state_blob,
+            .epilepsy_safe = epi_safe,
         };
         memcpy(ctx.color, st.color, sizeof(ctx.color));
         audio_get_features(&ctx.audio);
 
-        float rgb[3];
-        eff->render(&ctx, rgb);
+        bool blocked = epi_safe && eff->epilepsy_unsafe;
+        float rgb[3] = { 0.0f, 0.0f, 0.0f };
+        if (!blocked) {
+            eff->render(&ctx, rgb);
+        }
 
         float bri_lin = apply_gamma(st.brightness);
         float scale = (st.power && !s_latched) ? s_safety_scale : 0.0f;
         // Keepalive only while the light is actually running: the power
         // switch, safety latch, boot gate and brightness zero stay true black.
-        bool keepalive = eff->keepalive && scale > 0.0f && st.brightness > 0.0f;
+        bool keepalive = !blocked && eff->keepalive && scale > 0.0f && st.brightness > 0.0f;
         float out[3];
         for (int c = 0; c < 3; c++) {
             out[c] = apply_gamma(clamp01(rgb[c])) * bri_lin * scale;
@@ -446,6 +473,16 @@ static void render_task(void *arg)
 
         vTaskDelayUntil(&wake, period);
     }
+}
+
+void effects_set_epilepsy_safe(bool on)
+{
+    s_epilepsy_safe = on;
+}
+
+bool effects_get_epilepsy_safe(void)
+{
+    return s_epilepsy_safe;
 }
 
 esp_err_t effects_init(void)

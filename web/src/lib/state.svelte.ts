@@ -31,12 +31,15 @@ export interface EffectParamDef {
   min: number;
   max: number;
   def: number;
+  safeMin?: number; // floor while epilepsy-safe mode is on
+  safeMax?: number; // ceiling while epilepsy-safe mode is on
 }
 
 export interface EffectDef {
   id: string;
   name: string;
   globals: number; // bitmask
+  epilepsyUnsafe?: boolean; // renders black while epilepsy-safe mode is on
   params: EffectParamDef[];
 }
 
@@ -95,6 +98,7 @@ class Store {
   net = $state<NetInfo>({ mode: 'boot', ssid: '', hostname: '', ip: '' });
   metrics = $state<Metrics | null>(null);
   pwmHz = $state(120);
+  epilepsySafe = $state(true);
   aps = $state<AccessPoint[]>([]);
   scanning = $state(false);
   lastError = $state<{ code: number; msg: string } | null>(null);
@@ -118,12 +122,14 @@ class Store {
     effects: EffectDef[];
     net: NetInfo;
     pwmHz?: number;
+    epilepsySafe?: boolean;
   }): void {
     this.seq = msg.seq;
     this.scene = { ...emptyScene(), ...msg.scene };
     this.effects = msg.effects ?? [];
     this.net = msg.net ?? this.net;
     this.pwmHz = msg.pwmHz ?? this.pwmHz;
+    this.epilepsySafe = msg.epilepsySafe ?? this.epilepsySafe;
   }
 
   applyPatch(seq: number, set: ScenePatch): void {

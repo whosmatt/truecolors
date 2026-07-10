@@ -126,6 +126,19 @@ uint32_t storage_load_pwm_hz(void)
     return hz;
 }
 
+esp_err_t storage_save_epilepsy_safe(bool on)
+{
+    esp_err_t err = nvs_set_u8(s_nvs, NVS_KEY_EPI_SAFE, on ? 1 : 0);
+    return err == ESP_OK ? nvs_commit(s_nvs) : err;
+}
+
+bool storage_load_epilepsy_safe(void)
+{
+    uint8_t on = 1;
+    nvs_get_u8(s_nvs, NVS_KEY_EPI_SAFE, &on);
+    return on != 0;
+}
+
 esp_err_t storage_save_wifi(const char *ssid, const char *pass)
 {
     esp_err_t err = nvs_set_str(s_nvs, NVS_KEY_WIFI_SSID, ssid ? ssid : "");

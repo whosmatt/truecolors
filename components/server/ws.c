@@ -187,13 +187,23 @@ static char *build_snapshot(void)
         cJSON_AddStringToObject(e, "id", cat[i].id);
         cJSON_AddStringToObject(e, "name", cat[i].display_name);
         cJSON_AddNumberToObject(e, "globals", cat[i].global_mask);
+        if (cat[i].epilepsy_unsafe) {
+            cJSON_AddBoolToObject(e, "epilepsyUnsafe", true);
+        }
         cJSON *ps = cJSON_AddArrayToObject(e, "params");
         for (size_t j = 0; j < cat[i].n_params; j++) {
+            const effect_param_def_t *d = &cat[i].params[j];
             cJSON *pd = cJSON_CreateObject();
-            cJSON_AddStringToObject(pd, "name", cat[i].params[j].name);
-            cJSON_AddNumberToObject(pd, "min", cat[i].params[j].min);
-            cJSON_AddNumberToObject(pd, "max", cat[i].params[j].max);
-            cJSON_AddNumberToObject(pd, "def", cat[i].params[j].def);
+            cJSON_AddStringToObject(pd, "name", d->name);
+            cJSON_AddNumberToObject(pd, "min", d->min);
+            cJSON_AddNumberToObject(pd, "max", d->max);
+            cJSON_AddNumberToObject(pd, "def", d->def);
+            if (d->safe_min > d->min) {
+                cJSON_AddNumberToObject(pd, "safeMin", d->safe_min);
+            }
+            if (d->safe_max != 0.0f) {
+                cJSON_AddNumberToObject(pd, "safeMax", d->safe_max);
+            }
             cJSON_AddItemToArray(ps, pd);
         }
         cJSON_AddItemToArray(effs, e);
@@ -201,6 +211,7 @@ static char *build_snapshot(void)
 
     cJSON_AddItemToObject(root, "net", net_obj());
     cJSON_AddNumberToObject(root, "pwmHz", laser_get_pwm_hz());
+    cJSON_AddBoolToObject(root, "epilepsySafe", effects_get_epilepsy_safe());
 
     char *out = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
@@ -212,6 +223,16 @@ static char *build_pwm_hz(void)
     cJSON *root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "type", "pwm_hz");
     cJSON_AddNumberToObject(root, "hz", laser_get_pwm_hz());
+    char *out = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    return out;
+}
+
+static char *build_epilepsy_safe(void)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "type", "epilepsy_safe");
+    cJSON_AddBoolToObject(root, "on", effects_get_epilepsy_safe());
     char *out = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
     return out;
@@ -362,6 +383,14 @@ static void handle_message(httpd_req_t *req, const char *data)
                 storage_save_pwm_hz((uint32_t)hz->valuedouble);
                 audio_set_notch_hz(laser_get_pwm_hz());
                 char *json = build_pwm_hz();
+                if (json) { broadcast(json); free(json); }
+            }
+        } else if (strcmp(t, "set_epilepsy_safe") == 0) {
+            cJSON *on = cJSON_GetObjectItem(root, "on");
+            if (cJSON_IsBool(on)) {
+                effects_set_epilepsy_safe(cJSON_IsTrue(on));
+                storage_save_epilepsy_safe(cJSON_IsTrue(on));
+                char *json = build_epilepsy_safe();
                 if (json) { broadcast(json); free(json); }
             }
         }

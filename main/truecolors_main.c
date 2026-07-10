@@ -38,6 +38,7 @@ void app_main(void)
     laser_set_pwm_hz(storage_load_pwm_hz());
     audio_set_notch_hz(laser_get_pwm_hz());
     ESP_ERROR_CHECK(effects_init());
+    effects_set_epilepsy_safe(storage_load_epilepsy_safe());
     ESP_ERROR_CHECK(audio_init());
 
     // 5. System manager + status LED + safety gate.

@@ -22,6 +22,10 @@ bool storage_load_wifi(char *ssid, size_t ssid_len, char *pass, size_t pass_len)
 
 esp_err_t storage_save_pwm_hz(uint32_t hz);
 uint32_t storage_load_pwm_hz(void);   // TC_PWM_HZ when unset
+
+esp_err_t storage_save_epilepsy_safe(bool on);
+bool storage_load_epilepsy_safe(void);   // true when unset (factory default)
+
 void storage_clear_all(void);
 
 #ifdef __cplusplus
