@@ -273,15 +273,15 @@ typedef struct {
 } discombobulate_state_t;
 
 static const effect_param_def_t discombobulate_params[] = {
-    // mean flash rate: pick() draws 7 + speed*(8..18) Hz
-    { "speed", 0.0f, 1.0f, 1.0f,
-      .unit = "Hz", .unit_scale = 13.0f, .unit_offset = 7.0f },
+    // mean flash rate: pick() draws 2 + speed*(13..23) Hz; default = 7 Hz
+    { "speed", 0.0f, 1.0f, 0.2778f,
+      .unit = "Hz", .unit_scale = 18.0f, .unit_offset = 2.0f },
     { "ratio", 0.0f, 1.0f, 0.5f, .unit = "%", .unit_scale = 100.0f },
 };
 
 static void discombobulate_pick(discombobulate_state_t *s, float speed, float ratio)
 {
-    float freq = 7.0f + speed * (8.0f + rand01() * 10.0f);
+    float freq = 2.0f + speed * (13.0f + rand01() * 10.0f);
     s->blue = !s->blue;
     s->remaining += (s->blue ? (1.0f - ratio) : ratio) / freq;
 }
