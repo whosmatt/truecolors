@@ -190,6 +190,11 @@ static char *build_snapshot(void)
         if (cat[i].epilepsy_unsafe) {
             cJSON_AddBoolToObject(e, "epilepsyUnsafe", true);
         }
+        if (cat[i].speed_unit) {
+            cJSON_AddStringToObject(e, "speedUnit", cat[i].speed_unit);
+            cJSON_AddNumberToObject(e, "speedScale",
+                                    cat[i].speed_scale != 0.0f ? cat[i].speed_scale : 1.0f);
+        }
         cJSON *ps = cJSON_AddArrayToObject(e, "params");
         for (size_t j = 0; j < cat[i].n_params; j++) {
             const effect_param_def_t *d = &cat[i].params[j];
@@ -203,6 +208,21 @@ static char *build_snapshot(void)
             }
             if (d->safe_max != 0.0f) {
                 cJSON_AddNumberToObject(pd, "safeMax", d->safe_max);
+            }
+            if (d->unit) {
+                cJSON_AddStringToObject(pd, "unit", d->unit);
+            }
+            if (d->unit_scale != 0.0f) {
+                cJSON_AddNumberToObject(pd, "scale", d->unit_scale);
+            }
+            if (d->unit_offset != 0.0f) {
+                cJSON_AddNumberToObject(pd, "offset", d->unit_offset);
+            }
+            if (d->labels) {
+                cJSON *ls = cJSON_AddArrayToObject(pd, "labels");
+                for (const char *const *l = d->labels; *l; l++) {
+                    cJSON_AddItemToArray(ls, cJSON_CreateString(*l));
+                }
             }
             cJSON_AddItemToArray(ps, pd);
         }

@@ -27,6 +27,11 @@ typedef struct {
     float min, max, def;
     float safe_min;   // epilepsy-safe floor, enforced when > min
     float safe_max;   // epilepsy-safe ceiling, enforced when nonzero
+    const char *unit;   // display only; NULL = unitless
+    float unit_scale;   // display = value * unit_scale + unit_offset; 0 = 1.0
+    float unit_offset;
+    const char *const *labels;   // NULL-terminated anchor names at integer
+                                 // positions; overrides unit display
 } effect_param_def_t;
 
 // Resolved per-frame inputs handed to an effect's render function.
@@ -55,6 +60,8 @@ typedef struct {
     size_t state_size;
     bool keepalive;   // strobes from black: floor dark channels at MIN_ON to prevent drivers going into low power mode
     bool epilepsy_unsafe;   // can't be softened: blocked in ui selector and renders black as fallback if epilepsy_safe is on
+    const char *speed_unit;   // display unit of the global speed slider
+    float speed_scale;        // display = speed * speed_scale; 0 = 1.0
 } effect_desc_t;
 
 esp_err_t effects_init(void);

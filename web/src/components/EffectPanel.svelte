@@ -31,6 +31,37 @@
 
   const effBlocked = $derived(store.epilepsySafe && !!eff?.epilepsyUnsafe);
 
+  // Readout in the declared display unit. Decimals follow the scaled span;
+  // symbol units attach directly ("120°"), letter units with a space.
+  function fmtUnit(
+    min: number,
+    max: number,
+    unit: string,
+    scale: number,
+    offset: number,
+  ): (v: number) => string {
+    const span = (max - min) * scale;
+    const dec = span >= 100 ? 0 : span >= 10 ? 1 : 2;
+    const suffix = unit ? (/^[a-z]/i.test(unit) ? ` ${unit}` : unit) : '';
+    return (v) => `${(v * scale + offset).toFixed(dec)}${suffix}`;
+  }
+
+  // Labeled anchors at integer positions, blends in between ("bass→mid 30%").
+  function fmtLabels(labels: string[]): (v: number) => string {
+    return (v) => {
+      const i = Math.max(0, Math.min(Math.floor(v), labels.length - 2));
+      const f = v - i;
+      if (f < 0.03) return labels[i];
+      if (f > 0.97) return labels[i + 1];
+      return `${labels[i]}→${labels[i + 1]} ${Math.round(f * 100)}%`;
+    };
+  }
+
+  function fmtParam(p: EffectParamDef): (v: number) => string {
+    if (p.labels && p.labels.length >= 2) return fmtLabels(p.labels);
+    return fmtUnit(p.min, p.max, p.unit ?? '', p.scale ?? 1, p.offset ?? 0);
+  }
+
   function onSelect(e: Event) {
     setEffect(parseInt((e.target as HTMLSelectElement).value, 10));
   }
@@ -60,6 +91,9 @@
           label="Speed"
           value={store.scene.speed}
           accent="var(--accent)"
+          format={eff?.speedUnit
+            ? fmtUnit(0, 1, eff.speedUnit, eff.speedScale ?? 1, 0)
+            : undefined}
           oninput={(v) => patchScene({ speed: v })}
         />
       {/if}
@@ -82,7 +116,7 @@
             min={mn}
             max={mx}
             step={(mx - mn) / 1000}
-            format={(v) => v.toFixed(2)}
+            format={fmtParam(p)}
             oninput={(v) => setParam(i, v)}
           />
         {/each}

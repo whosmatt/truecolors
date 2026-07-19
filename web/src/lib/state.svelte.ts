@@ -33,6 +33,10 @@ export interface EffectParamDef {
   def: number;
   safeMin?: number; // floor while epilepsy-safe mode is on
   safeMax?: number; // ceiling while epilepsy-safe mode is on
+  unit?: string; // display unit, e.g. "ms"; absent = unitless
+  scale?: number; // display = value * scale + offset; absent = 1
+  offset?: number; // absent = 0
+  labels?: string[]; // anchor names at integer positions; overrides unit
 }
 
 export interface EffectDef {
@@ -40,6 +44,8 @@ export interface EffectDef {
   name: string;
   globals: number; // bitmask
   epilepsyUnsafe?: boolean; // renders black while epilepsy-safe mode is on
+  speedUnit?: string; // display unit of the global speed slider
+  speedScale?: number; // display = speed * speedScale
   params: EffectParamDef[];
 }
 

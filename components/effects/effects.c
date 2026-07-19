@@ -112,8 +112,10 @@ static void solid_render(const effect_ctx_t *ctx, float out[3])
     out[2] = ctx->color[2];
 }
 
+static const char *const s_band_labels[] = { "bass", "mid", "treble", NULL };
+
 static const effect_param_def_t breathe_params[] = {
-    { "depth", 0.0f, 1.0f, 0.8f, 0.0f, 0.0f },
+    { "depth", 0.0f, 1.0f, 0.8f, .unit = "%", .unit_scale = 100.0f },
 };
 
 static void breathe_render(const effect_ctx_t *ctx, float out[3])
@@ -135,10 +137,12 @@ typedef struct {
 } audio_state_t;
 
 static const effect_param_def_t audio_params[] = {
-    { "band", 0.0f, 2.0f, 0.0f, 0.0f, 0.0f },
-    { "step", 0.0f, 1.0f, 0.0f, 0.0f, 0.0f },
-    { "attack", 0.0f, 0.3f, 0.01f, 0.10f, 0.0f },
-    { "release", 0.02f, 1.5f, 0.15f, 0.60f, 0.0f },
+    { "band", 0.0f, 2.0f, 0.0f, .labels = s_band_labels },
+    { "step", 0.0f, 1.0f, 0.0f, .unit = "°", .unit_scale = 360.0f },
+    { "attack", 0.0f, 0.3f, 0.01f,
+      .safe_min = 0.10f, .unit = "ms", .unit_scale = 1000.0f },
+    { "release", 0.02f, 1.5f, 0.15f,
+      .safe_min = 0.60f, .unit = "ms", .unit_scale = 1000.0f },
 };
 
 // Level-reactive main color. step > 0 rotates an internal hue offset on each
@@ -183,9 +187,11 @@ typedef struct {
 } spectrum_state_t;
 
 static const effect_param_def_t spectrum_params[] = {
-    { "attack", 0.0f, 0.3f, 0.01f, 0.10f, 0.0f },
-    { "release", 0.02f, 1.5f, 0.15f, 0.60f, 0.0f },
-    { "hue", 0.0f, 1.0f, 0.0f, 0.0f, 0.0f },
+    { "attack", 0.0f, 0.3f, 0.01f,
+      .safe_min = 0.10f, .unit = "ms", .unit_scale = 1000.0f },
+    { "release", 0.02f, 1.5f, 0.15f,
+      .safe_min = 0.60f, .unit = "ms", .unit_scale = 1000.0f },
+    { "hue", 0.0f, 1.0f, 0.0f, .unit = "°", .unit_scale = 360.0f },
 };
 
 // Bass, mid, treble on three hues 120° apart; hue 0 = plain R, G, B.
@@ -211,10 +217,10 @@ typedef struct {
 } lava_state_t;
 
 static const effect_param_def_t lava_params[] = {
-    { "window", 0.0f, 1.0f, 0.25f, 0.0f, 0.0f },
-    { "center", 0.0f, 1.0f, 0.5f, 0.0f, 0.0f },
-    { "audio", 0.0f, 2.0f, 0.0f, 0.0f, 0.0f },
-    { "band", 0.0f, 2.0f, 0.0f, 0.0f, 0.0f },
+    { "window", 0.0f, 1.0f, 0.25f, .unit = "°", .unit_scale = 360.0f },
+    { "center", 0.0f, 1.0f, 0.5f, .unit = "°", .unit_scale = 360.0f },
+    { "audio", 0.0f, 2.0f, 0.0f, .unit = "%", .unit_scale = 100.0f },
+    { "band", 0.0f, 2.0f, 0.0f, .labels = s_band_labels },
 };
 
 // multi-lfo color drift with audio coupled to speed
@@ -247,8 +253,8 @@ static void rainbow_render(const effect_ctx_t *ctx, float out[3])
 }
 
 static const effect_param_def_t rainbow_window_params[] = {
-    { "window", 0.0f, 1.0f, 0.25f, 0.0f, 0.0f },
-    { "center", 0.0f, 1.0f, 0.5f, 0.0f, 0.0f },
+    { "window", 0.0f, 1.0f, 0.25f, .unit = "°", .unit_scale = 360.0f },
+    { "center", 0.0f, 1.0f, 0.5f, .unit = "°", .unit_scale = 360.0f },
 };
 
 // Hue fades back and forth across a window of the wheel.
@@ -267,8 +273,10 @@ typedef struct {
 } discombobulate_state_t;
 
 static const effect_param_def_t discombobulate_params[] = {
-    { "speed", 0.0f, 1.0f, 1.0f, 0.0f, 0.0f },
-    { "ratio", 0.0f, 1.0f, 0.5f, 0.0f, 0.0f },
+    // mean flash rate: pick() draws 7 + speed*(8..18) Hz
+    { "speed", 0.0f, 1.0f, 1.0f,
+      .unit = "Hz", .unit_scale = 13.0f, .unit_offset = 7.0f },
+    { "ratio", 0.0f, 1.0f, 0.5f, .unit = "%", .unit_scale = 100.0f },
 };
 
 static void discombobulate_pick(discombobulate_state_t *s, float speed, float ratio)
@@ -305,6 +313,7 @@ static const effect_desc_t s_registry[] = {
         .global_mask = GLOBAL_COLOR | GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_SPEED,
         .params = breathe_params, .n_params = 1,
         .render = breathe_render,
+        .speed_unit = "Hz", .speed_scale = 1.0f,
     },
     {
         .id = "audio", .display_name = "Audio",
@@ -319,12 +328,14 @@ static const effect_desc_t s_registry[] = {
         .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_SPEED,
         .params = NULL, .n_params = 0,
         .render = rainbow_render,
+        .speed_unit = "Hz", .speed_scale = 0.1f,
     },
     {
         .id = "rainbow_window", .display_name = "Rainbow Window",
         .global_mask = GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_SPEED,
         .params = rainbow_window_params, .n_params = 2,
         .render = rainbow_window_render,
+        .speed_unit = "Hz", .speed_scale = 0.1f,
     },
     {
         .id = "discombobulate", .display_name = "Discombobulate",
@@ -349,6 +360,8 @@ static const effect_desc_t s_registry[] = {
         .params = lava_params, .n_params = 4,
         .render = lava_render,
         .state_size = sizeof(lava_state_t),
+        // LFO periods are fixed; speed is a rate multiplier, not a frequency
+        .speed_unit = "×", .speed_scale = 2.0f,
     },
 };
 #define EFFECT_COUNT (sizeof(s_registry) / sizeof(s_registry[0]))
