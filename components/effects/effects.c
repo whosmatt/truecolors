@@ -138,7 +138,10 @@ typedef struct {
 
 static const effect_param_def_t audio_params[] = {
     { "band", 0.0f, 2.0f, 0.0f, .labels = s_band_labels },
-    { "step", 0.0f, 1.0f, 0.0f, .unit = "°", .unit_scale = 360.0f },
+    // beat pulse mixed into the brightness follower; 100% = a beat alone
+    // reaches full brightness
+    { "beat → brightness", 0.0f, 2.0f, 0.0f, .unit = "%", .unit_scale = 100.0f },
+    { "beat hue step", 0.0f, 1.0f, 0.0f, .unit = "°", .unit_scale = 360.0f },
     { "attack", 0.0f, 0.3f, 0.01f,
       .safe_min = 0.10f, .unit = "ms", .unit_scale = 1000.0f },
     { "release", 0.02f, 1.5f, 0.15f,
@@ -150,7 +153,7 @@ static const effect_param_def_t audio_params[] = {
 static void audio_render(const effect_ctx_t *ctx, float out[3])
 {
     audio_state_t *s = ctx->state;
-    float step = ctx->params[1];
+    float step = ctx->params[2];
 
     s->since_step += ctx->dt;
     if (ctx->audio.beat > s->prev_beat + 0.1f && s->since_step > 0.25f) {
@@ -160,9 +163,11 @@ static void audio_render(const effect_ctx_t *ctx, float out[3])
     }
     s->prev_beat = ctx->audio.beat;
 
-    s->env = env_follow(s->env, band_level(ctx, ctx->params[0]),
-                        ctx->params[2], ctx->params[3], ctx->dt);
-    float level = clamp01(s->env * ctx->audio_sens * 2.0f);
+    // Band RMS (scaled by sens) and the beat pulse mix into one drive signal before atk/rel follower
+    float drive = band_level(ctx, ctx->params[0]) * ctx->audio_sens * 2.0f +
+                  ctx->audio.beat * ctx->params[1];
+    s->env = env_follow(s->env, drive, ctx->params[3], ctx->params[4], ctx->dt);
+    float level = clamp01(s->env);
 
     float col[3] = { ctx->color[0], ctx->color[1], ctx->color[2] };
     if (step > 0.0f) {
@@ -318,7 +323,7 @@ static const effect_desc_t s_registry[] = {
     {
         .id = "audio", .display_name = "Audio",
         .global_mask = GLOBAL_COLOR | GLOBAL_BRIGHTNESS | GLOBAL_STRETCH | GLOBAL_AUDIO_SENS,
-        .params = audio_params, .n_params = 4,
+        .params = audio_params, .n_params = 5,
         .render = audio_render,
         .state_size = sizeof(audio_state_t),
         .keepalive = true,

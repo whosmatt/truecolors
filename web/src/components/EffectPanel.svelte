@@ -99,9 +99,8 @@
       {/if}
       {#if showAudio}
         <Slider
-          label="Audio Sensitivity"
+          label="RMS → brightness"
           value={store.scene.audioSens}
-          accent="var(--accent-2)"
           oninput={(v) => patchScene({ audioSens: v })}
         />
       {/if}
