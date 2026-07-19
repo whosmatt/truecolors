@@ -1,7 +1,21 @@
 <script lang="ts">
+  import { slide } from 'svelte/transition';
   import { store } from '../lib/state.svelte';
+  import BeatgridViz from './BeatgridViz.svelte';
 
   const m = $derived(store.metrics);
+
+  // Beatgrid collapse replaces the plain BPM row.
+  let showBeatgrid = $state(false);
+  const bgStatus = $derived.by(() => {
+    const l = store.bgLast;
+    if (l && l.period > 0) {
+      const loopS = l.period / l.blockHz;
+      return `${l.bpm.toFixed(1)} BPM · loop ${loopS.toFixed(2)} s`;
+    }
+    if (m && m.bpm > 0) return `${m.bpm.toFixed(0)} BPM`;
+    return 'no lock';
+  });
 
   const connTitle = $derived(
     store.conn === 'open'
@@ -68,7 +82,6 @@
             label: 'Sound Level',
             val: `${m.audioDb.toFixed(0)} dB`,
           },
-          { key: 'bpm', label: 'BPM', val: m.bpm > 0 ? m.bpm.toFixed(0) : '—' },
         ]
       : [],
   );
@@ -97,7 +110,41 @@
           <span class="m-val" class:bad={r.key === 'pdOk' && !m.pdOk}>{r.val}</span>
         </div>
       {/each}
+
+      <button
+        class="metric bg-toggle"
+        onclick={() => (showBeatgrid = !showBeatgrid)}
+        aria-expanded={showBeatgrid}
+      >
+        <span class="m-label">
+          Beatgrid
+          <svg
+            class="chev"
+            class:open={showBeatgrid}
+            viewBox="0 0 16 16"
+            width="12"
+            height="12"
+            aria-hidden="true"
+          >
+            <path
+              d="M4 6l4 4 4-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <span class="m-val">{bgStatus}</span>
+      </button>
     </div>
+
+    {#if showBeatgrid}
+      <div transition:slide={{ duration: 200 }}>
+        <BeatgridViz />
+      </div>
+    {/if}
 
     {#if m.err.length || m.warn.length}
       <div class="flags">
@@ -160,6 +207,29 @@
   }
   .metric:last-child {
     border-bottom: none;
+  }
+  .bg-toggle {
+    width: 100%;
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .bg-toggle .m-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .bg-toggle:hover .m-label {
+    color: var(--text);
+  }
+  .chev {
+    transition: transform 0.18s ease;
+  }
+  .chev.open {
+    transform: rotate(180deg);
   }
   .m-label {
     font-size: 0.84rem;

@@ -19,6 +19,7 @@ typedef enum {
     EVT_METRICS_UPDATED,     // sysmgr (1 Hz) -> server, fancontrol, status LED
     EVT_SAFETY_CHANGED,      // sysmgr -> server, effects/laser, status LED
     EVT_WIFI_STATE,          // wifi -> server, status LED, mDNS
+    EVT_BEATGRID,            // audio (event-driven) -> server, visualization
 } app_event_id_t;
 
 // Origin of a state change (carried in EVT_STATE_CHANGED).
@@ -61,6 +62,22 @@ typedef struct {
     uint32_t warn_flags;     // app_flag_t bits
     uint32_t err_flags;
 } app_metrics_evt_t;
+
+// EVT_BEATGRID payload: one audio block with beatgrid activity (a detection,
+// a metronome tick, or a PLL nudge). Block-quantized; for the live debug view.
+typedef struct {
+    uint32_t t;         // audio block index since boot
+    float block_hz;     // blocks per second
+    float phase;        // blocks into the locked loop; 0 while unlocked
+    float period;       // loop period in blocks, 0 while unlocked
+    float bpm;
+    bool  kick;
+    bool  snare;
+    bool  met;          // metronome tick
+    float off;          // kick/snare hit time relative to t (blocks, <= 0)
+    float nudge;        // PLL phase shift applied this block (blocks)
+    float err;          // matched-hit phase error (blocks)
+} app_beatgrid_evt_t;
 
 // EVT_SAFETY_CHANGED payload (on transition only).
 typedef struct {

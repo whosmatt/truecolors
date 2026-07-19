@@ -35,6 +35,9 @@ static float s_ring;
 static float s_ema;
 static uint32_t s_count;
 static uint32_t s_snares;
+static float s_prev_total;   // last block's total, for peak interpolation
+static float s_f_prev;       // total one block before the anchor
+static float s_f_next;       // total one block after the anchor
 
 void kick_init(void)
 {
@@ -44,6 +47,7 @@ void kick_init(void)
     s_ema = 0.0f;
     s_count = 0;
     s_snares = 0;
+    s_prev_total = 0.0f;
 }
 
 static float strength_of(const kick_in_t *in)
@@ -64,6 +68,7 @@ void kick_block(const kick_in_t *in, kick_out_t *out)
 {
     out->hit = false;
     out->snare = false;
+    out->t_off = 0.0f;
 
     if (s_since_k < REFRACTORY) {
         s_since_k++;
@@ -90,7 +95,12 @@ void kick_block(const kick_in_t *in, kick_out_t *out)
             s_cand_kick = kq;
             s_cand_snare = s_cand_snare || s_since_s >= REFRACTORY;
             s_ring = 0.0f;
+            s_f_prev = s_prev_total;
+            s_f_next = 0.0f;
         } else {
+            if (s_pending == 0) {
+                s_f_next = total;
+            }
             s_pending++;
             s_ring += in->mid_flux + in->treble_flux;
             if (s_pending >= CONFIRM_BLK) {
@@ -98,6 +108,16 @@ void kick_block(const kick_in_t *in, kick_out_t *out)
                 bool kick_ok = s_cand_kick &&
                                in->fund_rms > SUSTAIN * s_anchor.fund_rms &&
                                s_ring < RING_MAX * a_str;
+                // Sub-block onset: quadratic peak interpolation across the
+                // anchor's neighbor blocks, reported relative to now. Removes
+                // the confirm delay and most block-quantization jitter.
+                float den = s_f_prev - 2.0f * s_cand_total + s_f_next;
+                float frac = den < -1e-6f
+                                 ? 0.5f * (s_f_prev - s_f_next) / den
+                                 : 0.0f;
+                if (frac < -0.5f) frac = -0.5f;
+                if (frac > 0.5f) frac = 0.5f;
+                out->t_off = frac - (float)CONFIRM_BLK;
                 if (kick_ok) {
                     s_since_k = 0;
                     s_count++;
@@ -123,9 +143,12 @@ void kick_block(const kick_in_t *in, kick_out_t *out)
             s_cand_kick = kick_cand;
             s_cand_snare = snare_cand;
             s_ring = 0.0f;
+            s_f_prev = s_prev_total;
+            s_f_next = 0.0f;
         }
     }
 
+    s_prev_total = total;
     if (out->hit == false) {
         s_ema *= EMA_DECAY;
     }

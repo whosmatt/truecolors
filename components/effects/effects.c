@@ -138,8 +138,8 @@ typedef struct {
 
 static const effect_param_def_t audio_params[] = {
     { "band", 0.0f, 2.0f, 0.0f, .labels = s_band_labels },
-    // beat pulse mixed into the brightness follower; 100% = a beat alone
-    // reaches full brightness
+    // locked-grid metronome pulse into the brightness follower; silent
+    // without a bpm lock. 100% = a beat alone reaches full brightness
     { "beat → brightness", 0.0f, 2.0f, 0.0f, .unit = "%", .unit_scale = 100.0f },
     { "beat hue step", 0.0f, 1.0f, 0.0f, .unit = "°", .unit_scale = 360.0f },
     { "attack", 0.0f, 0.3f, 0.01f,
@@ -163,9 +163,11 @@ static void audio_render(const effect_ctx_t *ctx, float out[3])
     }
     s->prev_beat = ctx->audio.beat;
 
-    // Band RMS (scaled by sens) and the beat pulse mix into one drive signal before atk/rel follower
+    // Band RMS (scaled by sens) and the locked-grid metronome pulse mix into
+    // one drive signal before the atk/rel follower; grid is 0 while unlocked
+    // (raw kicks still step the hue above).
     float drive = band_level(ctx, ctx->params[0]) * ctx->audio_sens * 2.0f +
-                  ctx->audio.beat * ctx->params[1];
+                  ctx->audio.grid * ctx->params[1];
     s->env = env_follow(s->env, drive, ctx->params[3], ctx->params[4], ctx->dt);
     float level = clamp01(s->env);
 

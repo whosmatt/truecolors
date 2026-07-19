@@ -17,6 +17,8 @@ typedef struct {
     float bands[3];   // 0..1 AGC-normalized bass / mid / treble
     float beat;       // 0..1 beat envelope: kick hits, or the locked grid's
                       // predicted attack-aligned beats
+    float grid;       // 0..1 metronome envelope: evenly spaced ticks at the
+                      // locked tempo, beat-anchored; stays 0 while unlocked
     float bpm;        // beat-grid tempo, 0 while unlocked
     uint32_t kicks;   // total detected kicks
     float spl_db;     // slow-averaged sound level, dB SPL (datasheet calibrated)

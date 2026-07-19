@@ -5,6 +5,7 @@
 #include "beatgrid.h"
 #include "board_pins.h"
 #include "app_config.h"
+#include "app_events.h"
 
 #include <math.h>
 #include <string.h>
@@ -53,6 +54,8 @@ typedef struct {
 static i2s_chan_handle_t s_rx;
 static audio_features_t s_features;
 static float s_beat_env;
+static float s_grid_env;
+static uint32_t s_block_n;
 static float s_dc;
 static biquad_t s_hicut[4];
 static float s_lp_bass;
@@ -212,15 +215,38 @@ static void audio_task(void *arg)
         kick_out_t ko;
         kick_block(&ki, &ko);
         beatgrid_out_t bg;
-        beatgrid_block(ko.hit, ko.snare, &bg);
+        beatgrid_block(ko.hit, ko.snare, ko.t_off, &bg);
         if (bg.beat) {
             s_beat_env = 1.0f;
         }
+        if (bg.grid_beat) {
+            s_grid_env = 1.0f;
+        }
         // Publish before decaying, so consumers see the full 1.0 peak.
         s_features.beat = s_beat_env;
+        s_features.grid = s_grid_env;
         s_beat_env *= BEAT_DECAY;
+        s_grid_env *= BEAT_DECAY;
         s_features.kicks = ko.count;
         s_features.bpm = bg.bpm;
+
+        s_block_n++;
+        if (ko.hit || ko.snare || bg.grid_beat || bg.nudge != 0.0f) {
+            app_beatgrid_evt_t ev = {
+                .t = s_block_n,
+                .block_hz = (float)SAMPLE_RATE / BLOCK_SAMPLES,
+                .phase = bg.phase,
+                .period = bg.period,
+                .bpm = bg.bpm,
+                .kick = ko.hit,
+                .snare = ko.snare,
+                .met = bg.grid_beat,
+                .off = ko.t_off,
+                .nudge = bg.nudge,
+                .err = bg.err,
+            };
+            app_bus_post(EVT_BEATGRID, &ev, sizeof(ev), 0);
+        }
 
         // Slow-averaged SPL from the raw (unfiltered) signal.
         float k = 1.0f - expf(-((float)n / SAMPLE_RATE) / SPL_TAU_S);

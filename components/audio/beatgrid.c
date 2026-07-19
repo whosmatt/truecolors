@@ -36,8 +36,13 @@
 #ifndef OFFGRID_LIM
 #define OFFGRID_LIM  6       // consecutive off-pattern kicks before unlock
 #endif
-#define PREDICT_ADV  5.0f    // fire early: confirm delay + flux rise (attack-aligned)
+#define PREDICT_ADV  2.0f    // fire early: onset leads the flux peak (hit
+                             // times are peak-interpolated, confirm delay
+                             // already removed at the detector)
 #define PHASE_PULL   0.4f
+#define MET_CORR     0.02f   // metronome phase pull toward the grid anchor,
+                             // per block (~0.5 s tau): low-passes PLL nudges
+                             // so flashes stay even, offset stays bounded
 #define PERIOD_I     0.05f   // integral term: converges period bias to zero
                              // (phase-only tracking drifts out of tolerance)
 #ifndef TOL_BASE
@@ -50,7 +55,7 @@
 
 static float s_block_hz;
 static int32_t s_now;
-static int32_t s_hits[HIST];   // most recent first
+static float s_hits[HIST];     // most recent first, peak-interpolated times
 static uint8_t s_htype[HIST];  // 1 = kick, 0 = snare
 static int s_nhits;
 static bool s_locked;
@@ -64,6 +69,13 @@ static int s_miss;
 static int s_miss_limit;
 static int s_offgrid_run;
 static int32_t s_last_beat;   // dedupes prediction + detection of one kick
+// Metronome: nkick even divisions of the loop, anchored on a kick slot.
+// Own base (not s_base) so the slot predictor's mid-cycle base advance
+// can't skip ticks; re-centers on the grid via MET_CORR.
+static float s_met_base;
+static float s_met_anchor;    // anchoring kick slot's loop offset
+static int s_met_k;           // next tick index in [0, s_met_n)
+static int s_met_n;           // ticks per loop = kick-slot count
 
 void beatgrid_init(float block_hz)
 {
@@ -75,6 +87,7 @@ void beatgrid_init(float block_hz)
     s_ntmpl = 0;
     s_miss = 0;
     s_offgrid_run = 0;
+    s_met_n = 0;
     memset(s_hits, 0, sizeof(s_hits));
 }
 
@@ -269,22 +282,47 @@ static bool try_lock(void)
             s_miss = 0;
             s_miss_limit = 2 * s_ntmpl > 8 ? 2 * s_ntmpl : 8;
             s_offgrid_run = 0;
+
+            s_met_n = 0;
+            s_met_anchor = 0.0f;
+            for (int k = 0; k < s_ntmpl; k++) {
+                if (s_tkick[k] && s_met_n++ == 0) {
+                    s_met_anchor = s_tmpl[k];
+                }
+            }
+            s_met_base = s_base + s_met_anchor;
+            s_met_k = 0;
+            if (s_met_n > 0) {
+                float ival = s_period / (float)s_met_n;
+                while (s_met_base + (float)s_met_k * ival <= (float)s_now) {
+                    if (++s_met_k >= s_met_n) {
+                        s_met_k = 0;
+                        s_met_base += s_period;
+                    }
+                }
+            }
             return true;
         }
     }
     return false;
 }
 
-void beatgrid_block(bool kick_hit, bool snare_hit, beatgrid_out_t *out)
+void beatgrid_block(bool kick_hit, bool snare_hit, float hit_off,
+                    beatgrid_out_t *out)
 {
     s_now++;
     out->beat = false;
+    out->grid_beat = false;
+    out->phase = 0.0f;
+    out->nudge = 0.0f;
+    out->err = 0.0f;
     bool hit = kick_hit || snare_hit;
+    float hit_t = (float)s_now + hit_off;
 
     if (hit) {
         memmove(&s_hits[1], &s_hits[0], (HIST - 1) * sizeof(s_hits[0]));
         memmove(&s_htype[1], &s_htype[0], (HIST - 1) * sizeof(s_htype[0]));
-        s_hits[0] = s_now;
+        s_hits[0] = hit_t;
         s_htype[0] = kick_hit ? 1 : 0;
         if (s_nhits < HIST) {
             s_nhits++;
@@ -315,7 +353,7 @@ void beatgrid_block(bool kick_hit, bool snare_hit, beatgrid_out_t *out)
         }
         s_miss = 0;   // kicks are arriving, keep coasting through fills
         // Circular distance to the nearest template slot.
-        float rel = fmodf((float)s_now - s_base, s_period);
+        float rel = fmodf(hit_t - s_base, s_period);
         if (rel < 0.0f) rel += s_period;
         float best = 1e9f;
         for (int i = 0; i < s_ntmpl; i++) {
@@ -333,6 +371,8 @@ void beatgrid_block(bool kick_hit, bool snare_hit, beatgrid_out_t *out)
         if (fabsf(best) <= 2.0f * tol) {
             // Hit detection isn't perfect, track and nudge phase to maintain the loop
             float pull = fabsf(best) <= tol ? PHASE_PULL : 0.5f * PHASE_PULL;
+            out->err = best;
+            out->nudge = pull * best;
             s_base += pull * best;
             s_period += PERIOD_I * best;
             s_offgrid_run = 0;
@@ -344,6 +384,24 @@ void beatgrid_block(bool kick_hit, bool snare_hit, beatgrid_out_t *out)
             s_period = 0.0f;
         }
         // Off-pattern hits only influence the unlock accounting above.
+    }
+
+    // Metronome ticks: the loop divided evenly at the kick rate (the same
+    // rate bpm reports), independent of the kick pattern within the loop.
+    // Its phase re-centers on the grid anchor through a slow pull instead of
+    // taking raw PLL nudges.
+    if (s_locked && s_met_n > 0) {
+        float d = s_met_base - s_base - s_met_anchor;
+        d -= s_period * roundf(d / s_period);
+        s_met_base -= MET_CORR * d;
+        float ival = s_period / (float)s_met_n;
+        if ((float)s_now >= s_met_base + (float)s_met_k * ival - PREDICT_ADV) {
+            out->grid_beat = true;
+            if (++s_met_k >= s_met_n) {
+                s_met_k = 0;
+                s_met_base += s_period;
+            }
+        }
     }
 
     // Snare slots anchor the grid but only kick slots emit beats.
@@ -368,4 +426,9 @@ void beatgrid_block(bool kick_hit, bool snare_hit, beatgrid_out_t *out)
     }
     out->bpm = s_locked ? 60.0f * s_block_hz * (float)nkick / s_period : 0.0f;
     out->period = s_locked ? s_period : 0.0f;
+    if (s_locked) {
+        float ph = fmodf((float)s_now - s_base, s_period);
+        if (ph < 0.0f) ph += s_period;
+        out->phase = ph;
+    }
 }

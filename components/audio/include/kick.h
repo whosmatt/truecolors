@@ -22,6 +22,8 @@ typedef struct {
 typedef struct {
     bool hit;          // kick confirmed this block
     bool snare;        // snare/clap/rim confirmed this block (never with hit)
+    float t_off;       // hit time relative to this block (blocks, <= 0):
+                       // peak-interpolated onset, confirm delay removed
     uint32_t count;    // total kicks since boot
     uint32_t snares;   // total snare-class hits since boot
 } kick_out_t;

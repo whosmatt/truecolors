@@ -248,6 +248,26 @@ static char *build_pwm_hz(void)
     return out;
 }
 
+static char *build_beatgrid(const app_beatgrid_evt_t *e)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "type", "beatgrid");
+    cJSON_AddNumberToObject(root, "t", e->t);
+    cJSON_AddNumberToObject(root, "blockHz", e->block_hz);
+    cJSON_AddNumberToObject(root, "phase", e->phase);
+    cJSON_AddNumberToObject(root, "period", e->period);
+    cJSON_AddNumberToObject(root, "bpm", e->bpm);
+    cJSON_AddBoolToObject(root, "kick", e->kick);
+    cJSON_AddBoolToObject(root, "snare", e->snare);
+    cJSON_AddBoolToObject(root, "met", e->met);
+    cJSON_AddNumberToObject(root, "off", e->off);
+    cJSON_AddNumberToObject(root, "nudge", e->nudge);
+    cJSON_AddNumberToObject(root, "err", e->err);
+    char *out = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    return out;
+}
+
 static char *build_epilepsy_safe(void)
 {
     cJSON *root = cJSON_CreateObject();
@@ -484,6 +504,15 @@ static void on_safety(void *arg, esp_event_base_t base, int32_t id, void *data)
     if (json) { broadcast(json); free(json); }
 }
 
+static void on_beatgrid(void *arg, esp_event_base_t base, int32_t id, void *data)
+{
+    if (s_fd_count == 0) {
+        return;   // event-rate traffic: skip the JSON build with no clients
+    }
+    char *json = build_beatgrid((const app_beatgrid_evt_t *)data);
+    if (json) { broadcast(json); free(json); }
+}
+
 static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data)
 {
     cJSON *root = net_obj();
@@ -510,4 +539,5 @@ void ws_start(httpd_handle_t server)
     app_bus_subscribe(EVT_METRICS_UPDATED, on_metrics, NULL);
     app_bus_subscribe(EVT_SAFETY_CHANGED, on_safety, NULL);
     app_bus_subscribe(EVT_WIFI_STATE, on_wifi, NULL);
+    app_bus_subscribe(EVT_BEATGRID, on_beatgrid, NULL);
 }

@@ -76,6 +76,23 @@ export interface AccessPoint {
   auth: number;
 }
 
+// One audio block with beatgrid activity (detection, metronome tick, or PLL
+// nudge), for the live debug view.
+export interface BeatgridEvent {
+  t: number; // device audio-block index
+  blockHz: number;
+  phase: number; // blocks into the locked loop; 0 while unlocked
+  period: number; // loop period in blocks, 0 while unlocked
+  bpm: number;
+  kick: boolean;
+  snare: boolean;
+  met: boolean;
+  off: number; // kick/snare hit time relative to t (blocks, <= 0)
+  nudge: number; // PLL phase shift applied (blocks)
+  err: number; // matched-hit phase error (blocks)
+  rx: number; // local receive time, performance.now() ms
+}
+
 export type ConnStatus = 'connecting' | 'open' | 'closed';
 
 // Partial scene update — keys sent over the wire in a patch.
@@ -108,6 +125,8 @@ class Store {
   aps = $state<AccessPoint[]>([]);
   scanning = $state(false);
   lastError = $state<{ code: number; msg: string } | null>(null);
+  bgEvents = $state<BeatgridEvent[]>([]);
+  bgLast = $state<BeatgridEvent | null>(null);
 
   // Sender installed by the ws layer. Returns true if the message was sent.
   send: (msg: unknown) => boolean = () => false;
@@ -149,6 +168,19 @@ class Store {
 
   applyMetrics(m: Metrics): void {
     this.metrics = m;
+  }
+
+  applyBeatgrid(ev: BeatgridEvent): void {
+    // Lock state flipped: marks from the other time domain are meaningless.
+    const wasLocked = (this.bgLast?.period ?? 0) > 0;
+    if (ev.period > 0 !== wasLocked) this.bgEvents = [];
+    this.bgLast = ev;
+    const evs =
+      this.bgEvents.length >= 400
+        ? this.bgEvents.slice(-300)
+        : this.bgEvents.slice();
+    evs.push(ev);
+    this.bgEvents = evs;
   }
 }
 

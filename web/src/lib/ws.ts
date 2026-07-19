@@ -10,6 +10,7 @@ import {
   type NetInfo,
   type Metrics,
   type AccessPoint,
+  type BeatgridEvent,
 } from './state.svelte';
 
 const MIN_BACKOFF = 500;
@@ -84,6 +85,9 @@ interface EpilepsySafeMsg {
   type: 'epilepsy_safe';
   on: boolean;
 }
+interface BeatgridMsg extends Omit<BeatgridEvent, 'rx'> {
+  type: 'beatgrid';
+}
 interface PatchMsg {
   type: 'patch';
   seq: number;
@@ -115,6 +119,7 @@ type ServerMsg =
   | WifiListMsg
   | PwmHzMsg
   | EpilepsySafeMsg
+  | BeatgridMsg
   | ErrorMsg;
 
 function handleMessage(raw: string): void {
@@ -170,6 +175,11 @@ function handleMessage(raw: string): void {
     case 'epilepsy_safe':
       store.epilepsySafe = msg.on;
       break;
+    case 'beatgrid': {
+      const { type: _, ...ev } = msg;
+      store.applyBeatgrid({ ...ev, rx: performance.now() });
+      break;
+    }
     case 'error':
       store.lastError = { code: msg.code, msg: msg.msg };
       break;
