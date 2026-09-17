@@ -61,9 +61,28 @@ The tach signal is fed back to the MCU for fault monitoring.
 
 ### Audio
 
-A MSM261DGT003 PDM MEMS microphone is included for planned audio reactive effects. Connected to the ESP32's I2S peripheral in PDM mode.
+A MSM261DGT003 PDM MEMS microphone is included for audio reactive effects. Connected to the ESP32's I2S peripheral in PDM mode.
 
 A short recording was analyzed for coil whine cancellation: A single comb filter at the MCPWM frequency as well as a ~48db/oct 4kHz lowpass provided good results and leaves plenty of signal for audio reactive effects.
+
+Coil whine is a bit of a misnomer, as most of the noise originates from the 4 MLCC output caps at each driver. 
+Reducing noise is currently WIP:
+- Lower noise inductors
+  - C22396364 is footprint compatible and advertised as "ultra low buzz noise"
+  - TESTED: No meaningful impact, because MLCC noise is still dominant
+  - Probably still worth keeping
+- Soft terminated capacitors
+  - Unlikely to do as much as other options, not going to test
+- C0G/NP0 caps
+  - Would be perfect but way too low capacitance, not enough space
+- No output caps
+  - TODO WIP
+  - Requires carefully trimming to peak current via scope instead of average current
+  - Safe as long as correctly trimmed, but slighly lower power output
+  - degraded EMI
+- Low noise input caps
+  - Murata ZRB: Drop in replacement with ~15dB reduction
+  - Next board revision should allow for KRM series with ~25dB reduction
 
 ## Web UI
 
