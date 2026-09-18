@@ -30,7 +30,7 @@
 // above it, linear to 1621 rpm at 100%, no hysteresis.
 #define FAN_KNEE_DUTY        0.19f      // PID demand maps onto [knee, 1]
 #define STALL_WARN_S         1.0f       // tach silent this long -> warning (kick is attempting a start)
-#define STALL_FAIL_S         6.0f      // tach silent this long -> start failed, latched error
+#define STALL_FAIL_S         15.0f      // tach silent this long -> start failed, latched error
 // Tuned from logged limit cycle 2026-07-06, rescaled by 1/(1-knee) for the
 // knee remap so loop dynamics around equilibrium stay the same.
 #define FAN_KP               0.12f
