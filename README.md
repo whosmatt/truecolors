@@ -65,21 +65,17 @@ A MSM261DGT003 PDM MEMS microphone is included for audio reactive effects. Conne
 
 A short recording was analyzed for coil whine cancellation: A single comb filter at the MCPWM frequency as well as a ~48db/oct 4kHz lowpass provided good results and leaves plenty of signal for audio reactive effects.
 
-Coil whine is a bit of a misnomer, as most of the noise originates from the 4 MLCC output caps at each driver. 
-Reducing noise is currently WIP:
+The first design was quite noisy, these mitigations have been tested and are already in the files:
 - Lower noise inductors
   - C22396364 is footprint compatible and advertised as "ultra low buzz noise"
-  - TESTED: No meaningful impact, because MLCC noise is still dominant
-  - Probably still worth keeping
-- Soft terminated capacitors
-  - Unlikely to do as much as other options, not going to test
-- C0G/NP0 caps
-  - Would be perfect but way too low capacitance, not enough space
+  - Small impact, because MLCC noise is dominant
 - No output caps
-  - TODO WIP
+  - With no output caps noise is reduced to a minimum
+    Noise is still significantly audible at 240, 480 Hz. 120 Hz recommended
   - Requires carefully trimming to peak current via scope instead of average current
-  - Safe as long as correctly trimmed, but slighly lower power output
   - degraded EMI
+
+The following hasn't been tested but is recommended:
 - Low noise input caps
   - Murata ZRB: Drop in replacement with ~15dB reduction
   - Next board revision should allow for KRM series with ~25dB reduction

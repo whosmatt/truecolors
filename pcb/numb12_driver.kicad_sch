@@ -2471,7 +2471,7 @@
 				)
 			)
 		)
-		(property "Value" "APH1265T220M"
+		(property "Value" "SMPQ1306-220MT"
 			(at 111.76 89.916 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2514,7 +2514,7 @@
 				)
 			)
 		)
-		(property "LCSC Part" "C5349635"
+		(property "LCSC Part" "C22396364"
 			(at 111.76 102.87 0)
 			(hide yes)
 			(show_name no)
@@ -3033,7 +3033,7 @@
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "1b0a88d5-ef70-4226-8022-15f1a54f1a2f")
 		(property "Reference" "C9"
 			(at 101.346 99.568 0)
@@ -3560,7 +3560,7 @@
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "8713ec93-bf2d-42d5-bc2f-1514eae17965")
 		(property "Reference" "C12"
 			(at 116.586 99.568 0)
@@ -3862,7 +3862,7 @@
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "95bb9694-e78d-4084-a2d8-f96dc4a5314a")
 		(property "Reference" "C11"
 			(at 111.506 99.568 0)
@@ -4258,7 +4258,7 @@
 		(in_bom yes)
 		(on_board yes)
 		(in_pos_files yes)
-		(dnp no)
+		(dnp yes)
 		(uuid "b2ccc056-8522-49a0-ba3e-38634c72eefe")
 		(property "Reference" "C10"
 			(at 106.426 99.568 0)
