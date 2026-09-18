@@ -6,9 +6,12 @@ idf_component_register(
     SRCS "test_runner.c"
          "${REPO}/components/laser/laser_math.c"
          "${REPO}/components/laser/test/test_laser_math.c"
+         "${REPO}/components/audio/frontend.c"
+         "${REPO}/components/audio/test/test_frontend.c"
          "${REPO}/components/sysmgr/sysmgr_safety.c"
          "${REPO}/components/sysmgr/test/test_sysmgr_safety.c"
     PRIV_INCLUDE_DIRS "${REPO}/components/laser/include"
+                      "${REPO}/components/audio/include"
                       "${REPO}/components/sysmgr/include"
                       "${REPO}/components/common/include"
     PRIV_REQUIRES unity
