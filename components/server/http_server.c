@@ -109,6 +109,7 @@ esp_err_t server_start(void)
     config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.close_fn = on_socket_close;
+    config.core_id = 0;   // keep core 1 for audio
 
     httpd_handle_t server = NULL;
     esp_err_t err = httpd_start(&server, &config);
