@@ -81,12 +81,26 @@ void fe_set_notch_hz(fe_t *fe, uint32_t hz)
     }
 }
 
+uint32_t fe_variant(void)
+{
+    return 0u
+#ifndef FE_NO_COMB
+        | FE_VARIANT_COMB
+#endif
+#ifndef FE_NO_HICUT
+        | FE_VARIANT_HICUT
+#endif
+        ;
+}
+
 void fe_block(fe_t *fe, const int16_t *samples, int n, fe_out_t *out)
 {
+#ifndef FE_NO_COMB
     int cn = fe->comb_n;
     if (fe->comb_i >= cn) {
         fe->comb_i = 0;
     }
+#endif
 
     float sum[4] = { 0.0f, 0.0f, 0.0f, 0.0f };   // bass, mid, treble, broadband
     float sum_kick[3] = { 0.0f, 0.0f, 0.0f };    // 40-80 / 80-140 / 140-220 Hz
@@ -98,16 +112,20 @@ void fe_block(fe_t *fe, const int16_t *samples, int n, fe_out_t *out)
         sum_raw += s * s;
 
         // Comb filter
+#ifndef FE_NO_COMB
         float d = fe->comb[fe->comb_i];
         fe->comb[fe->comb_i] = s;
         if (++fe->comb_i >= cn) fe->comb_i = 0;
         s -= d;
+#endif
 
         // Hi-cut
+#ifndef FE_NO_HICUT
         s = biquad_run(&fe->hicut[0], s);
         s = biquad_run(&fe->hicut[1], s);
         s = biquad_run(&fe->hicut[2], s);
         s = biquad_run(&fe->hicut[3], s);
+#endif
 
         fe->lp_bass += LP_BASS_K * (s - fe->lp_bass);
         fe->lp_treble += LP_TREBLE_K * (s - fe->lp_treble);

@@ -13,6 +13,10 @@ extern "C" {
 // Bump on frontend changes, model is trained against this version
 #define FE_SPEC_VERSION 1
 
+// Filters can be compiled out with -DFE_NO_COMB / -DFE_NO_HICUT
+#define FE_VARIANT_COMB  (1u << 0)
+#define FE_VARIANT_HICUT (1u << 1)
+
 #define FE_SAMPLE_RATE   48000   // divides evenly by every PWM frequency
 #define FE_BLOCK_SAMPLES 512
 #define FE_COMB_MAX      600
@@ -50,6 +54,9 @@ typedef struct {
 } fe_out_t;
 
 void fe_init(fe_t *fe, uint32_t notch_hz);
+
+// Show frontend variant
+uint32_t fe_variant(void);
 
 // Align the coil-whine comb to the laser PWM frequency. Call on PWM change.
 void fe_set_notch_hz(fe_t *fe, uint32_t hz);
