@@ -68,6 +68,15 @@ export interface Metrics {
   bpm: number;
   warn: string[];
   err: string[];
+  nn?: {
+    ready: boolean;
+    music: number; // instantaneous; gate.frac is the windowed value
+    gate: {
+      prob: number;
+      frac: number;
+      open: boolean;
+    };
+  };
 }
 
 export interface AccessPoint {
@@ -76,20 +85,20 @@ export interface AccessPoint {
   auth: number;
 }
 
-// One audio block with beatgrid activity (detection, metronome tick, or PLL
-// nudge), for the live debug view.
+// One audio block with grid activity, for the live debug view.
 export interface BeatgridEvent {
   t: number; // device audio-block index
   blockHz: number;
-  phase: number; // blocks into the locked loop; 0 while unlocked
-  period: number; // loop period in blocks, 0 while unlocked
+  phase: number; // blocks into the current beat; 0 while unlocked
+  period: number; // beat period in blocks, 0 while unlocked
   bpm: number;
   kick: boolean;
   snare: boolean;
+  hihat: boolean;
   met: boolean;
-  off: number; // kick/snare hit time relative to t (blocks, <= 0)
-  nudge: number; // PLL phase shift applied (blocks)
-  err: number; // matched-hit phase error (blocks)
+  act: number; // model beat activation, 0..1
+  off: number; // model sub-block onset position, 0..1
+  err: number; // phase error of the last observation (blocks)
   rx: number; // local receive time, performance.now() ms
 }
 

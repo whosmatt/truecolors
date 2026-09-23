@@ -1,14 +1,12 @@
 <script lang="ts">
-  // Live beatgrid debug view (embedded in the Telemetry card). Piano-roll of
-  // kick / snare / metronome events: marks sit at their loop phase (locked)
-  // or in a fixed window (unlocked) and fade out; only the cursor moves.
-  // Below, a strip chart of the PLL phase error at each matched hit shows
-  // how jittery the lock is.
+  // Live grid debug view. Marks sit at their phase within one beat (locked)
+  // or in a fixed window (unlocked) and fade; only the cursor moves. The fold
+  // is a beat, not a bar. Below, the phase error of each estimate.
   import { onMount } from 'svelte';
   import { store } from '../lib/state.svelte';
 
   const UNLOCKED_WIN_S = 4; // fallback window while unlocked
-  const FADE_LOOPS = 4; // locked marks live this many loops
+  const FADE_LOOPS = 4; // locked marks live this many beats
   const FADE_S = 8; // unlocked marks live this many seconds
   const JITTER_N = 64; // PLL errors shown in the strip
 
@@ -28,15 +26,19 @@
     const col = {
       kick: css.getPropertyValue('--accent').trim() || '#7c5cff',
       snare: css.getPropertyValue('--accent-2').trim() || '#4cc2ff',
+      hihat: css.getPropertyValue('--warn').trim() || '#e0a33c',
+      act: css.getPropertyValue('--text-dim').trim() || '#8899aa',
       met: css.getPropertyValue('--good').trim() || '#2ecc71',
       dim: css.getPropertyValue('--text-faint').trim() || '#666',
       text: css.getPropertyValue('--text-dim').trim() || '#aaa',
       line: 'rgba(255,255,255,0.08)',
       cursor: 'rgba(255,255,255,0.75)',
     };
-    const lanes: Array<{ key: 'kick' | 'snare' | 'met'; label: string }> = [
+    const lanes: Array<{ key: 'kick' | 'snare' | 'hihat' | 'act' | 'met'; label: string }> = [
       { key: 'kick', label: 'kick' },
       { key: 'snare', label: 'snare' },
+      { key: 'hihat', label: 'hihat' },
+      { key: 'act', label: 'beat act' },
       { key: 'met', label: 'metro' },
     ];
 
@@ -45,7 +47,7 @@
     const ro = new ResizeObserver(() => {
       const dpr = window.devicePixelRatio || 1;
       W = wrap.clientWidth;
-      H = 170;
+      H = 220;
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       canvas.style.width = `${W}px`;
@@ -105,11 +107,24 @@
           }
           if (alpha <= 0) continue;
           for (let i = 0; i < lanes.length; i++) {
-            if (!ev[lanes[i].key]) continue;
-            const x = (lanes[i].key === 'met' ? posMet : posHit) * W;
+            const key = lanes[i].key;
+            const top = i * laneH + 14;
+            const full = laneH - 17;
+            if (key === 'act') {
+              // Height is the activation stage 2 consumes, never thresholded.
+              const a = ev.act ?? 0;
+              if (a <= 0.01) continue;
+              ctx.globalAlpha = alpha * 0.85;
+              ctx.fillStyle = col.act;
+              const h = Math.max(1, a * full);
+              ctx.fillRect(posHit * W - 1, top + (full - h), 2, h);
+              continue;
+            }
+            if (!ev[key]) continue;
+            const x = (key === 'met' ? posMet : posHit) * W;
             ctx.globalAlpha = alpha;
-            ctx.fillStyle = col[lanes[i].key];
-            ctx.fillRect(x - 1, i * laneH + 14, 2, laneH - 17);
+            ctx.fillStyle = col[key];
+            ctx.fillRect(x - 1, top, 2, full);
           }
         }
         ctx.globalAlpha = 1;
@@ -123,7 +138,16 @@
       }
 
       // PLL jitter strip: last N phase errors (ms), newest right.
-      const errs = evs.filter((e) => e.nudge !== 0).slice(-JITTER_N);
+      // err only changes when an observation lands.
+      const errs: typeof evs = [];
+      let lastErr: number | null = null;
+      for (const e of evs) {
+        if (e.err !== lastErr) {
+          errs.push(e);
+          lastErr = e.err;
+        }
+      }
+      errs.splice(0, Math.max(0, errs.length - JITTER_N));
       const mid = stripY + stripH / 2;
       ctx.fillStyle = col.line;
       ctx.fillRect(0, mid, W, 1);
@@ -140,11 +164,11 @@
         }
         ctx.fillStyle = col.text;
         ctx.textBaseline = 'middle';
-        ctx.fillText(`PLL ±${rms.toFixed(1)} ms`, 4, mid);
+        ctx.fillText(`grid err ±${rms.toFixed(1)} ms rms`, 4, mid);
       } else {
         ctx.fillStyle = col.dim;
         ctx.textBaseline = 'middle';
-        ctx.fillText('PLL —', 4, mid);
+        ctx.fillText('grid err —', 4, mid);
       }
     };
     raf = requestAnimationFrame(draw);

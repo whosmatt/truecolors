@@ -5,13 +5,21 @@
 
   const m = $derived(store.metrics);
 
+  // Per-block value, decided over a window: show the fraction.
+  const musicVal = $derived.by(() => {
+    const g = m?.nn?.gate;
+    if (!g) return '—';
+    const pct = Math.round(g.frac * 100);
+    return `${g.open ? 'pass' : 'muted'} · ${pct}% · ${g.prob.toFixed(2)}`;
+  });
+
   // Beatgrid collapse replaces the plain BPM row.
   let showBeatgrid = $state(false);
   const bgStatus = $derived.by(() => {
     const l = store.bgLast;
     if (l && l.period > 0) {
-      const loopS = l.period / l.blockHz;
-      return `${l.bpm.toFixed(1)} BPM · loop ${loopS.toFixed(2)} s`;
+      const beatS = l.period / l.blockHz;
+      return `${l.bpm.toFixed(1)} BPM · beat ${beatS.toFixed(2)} s`;
     }
     if (m && m.bpm > 0) return `${m.bpm.toFixed(0)} BPM`;
     return 'no lock';
@@ -82,6 +90,7 @@
             label: 'Sound Level',
             val: `${m.audioDb.toFixed(0)} dB`,
           },
+          { key: 'music', label: 'Music', val: musicVal },
         ]
       : [],
   );

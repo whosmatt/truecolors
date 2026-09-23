@@ -163,6 +163,7 @@ function handleMessage(raw: string): void {
         bpm: msg.bpm ?? 0,
         warn: msg.warn ?? [],
         err: msg.err ?? [],
+        nn: msg.nn,
       });
       break;
     case 'wifi_list':
