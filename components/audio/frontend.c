@@ -57,7 +57,7 @@ static float clamp01(float v)
     return v;
 }
 
-void fe_init(fe_t *fe, uint32_t notch_hz)
+void fe_init(fe_t *fe)
 {
     // 8th-order Butterworth section Qs.
     static const float kQ[4] = { 0.5098f, 0.6013f, 0.9000f, 2.5629f };
@@ -66,27 +66,11 @@ void fe_init(fe_t *fe, uint32_t notch_hz)
     for (int i = 0; i < 4; i++) {
         biquad_lp_init(&fe->hicut[i], HC_FC_HZ, kQ[i]);
     }
-    fe->comb_n = 1;
-    fe_set_notch_hz(fe, notch_hz);
-}
-
-void fe_set_notch_hz(fe_t *fe, uint32_t hz)
-{
-    int n = hz ? (int)((FE_SAMPLE_RATE + hz / 2) / hz) : 1;
-    if (n < 1) n = 1;
-    if (n > FE_COMB_MAX) n = FE_COMB_MAX;
-    if (n != fe->comb_n) {
-        memset(fe->comb, 0, sizeof(fe->comb));
-        fe->comb_n = n;
-    }
 }
 
 uint32_t fe_variant(void)
 {
     return 0u
-#ifndef FE_NO_COMB
-        | FE_VARIANT_COMB
-#endif
 #ifndef FE_NO_HICUT
         | FE_VARIANT_HICUT
 #endif
@@ -95,12 +79,6 @@ uint32_t fe_variant(void)
 
 void fe_block(fe_t *fe, const int16_t *samples, int n, fe_out_t *out)
 {
-#ifndef FE_NO_COMB
-    int cn = fe->comb_n;
-    if (fe->comb_i >= cn) {
-        fe->comb_i = 0;
-    }
-#endif
 
     float sum[4] = { 0.0f, 0.0f, 0.0f, 0.0f };   // bass, mid, treble, broadband
     float sum_kick[3] = { 0.0f, 0.0f, 0.0f };    // 40-80 / 80-140 / 140-220 Hz
@@ -110,14 +88,6 @@ void fe_block(fe_t *fe, const int16_t *samples, int n, fe_out_t *out)
         fe->dc += DC_K * (s - fe->dc);
         s -= fe->dc;
         sum_raw += s * s;
-
-        // Comb filter
-#ifndef FE_NO_COMB
-        float d = fe->comb[fe->comb_i];
-        fe->comb[fe->comb_i] = s;
-        if (++fe->comb_i >= cn) fe->comb_i = 0;
-        s -= d;
-#endif
 
         // Hi-cut
 #ifndef FE_NO_HICUT

@@ -4,6 +4,8 @@
 
 #include <stdint.h>
 #include "esp_err.h"
+#include "beat_types.h"
+#include "frontend.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,11 +29,25 @@ typedef struct {
 // Initialize I2S PDM RX and the audio task.
 esp_err_t audio_init(void);
 
+// Registered by the model's component so audio does not depend on it.
+typedef bool (*audio_infer_fn)(const float *window, beat_infer_t *out);
+void audio_set_infer_hook(audio_infer_fn fn);
+
+// .valid is false until the context ring has filled.
+void audio_get_infer(beat_infer_t *out);
+
+// Context assembly + inference, last block.
+uint32_t audio_infer_cycles(void);
+
+// Grid tracking state.
+void audio_track_state(bool *locked, float *strength, float *bpm, float *err);
+
+// Music head: last per-block value, fraction of the window above threshold,
+// and the windowed decision. Reported only; it gates nothing.
+void audio_music_state(float *prob, float *fraction, bool *open);
+
 // Copy the latest features snapshot (lock-free single-writer).
 void audio_get_features(audio_features_t *out);
-
-// Align the coil-whine comb to the laser PWM frequency. Call on PWM change.
-void audio_set_notch_hz(uint32_t hz);
 
 #ifdef __cplusplus
 }

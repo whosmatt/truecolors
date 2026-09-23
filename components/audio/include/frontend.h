@@ -1,6 +1,6 @@
 // frontend.h
-// Mic front end: DC block -> coil-whine comb -> 4 kHz hi-cut -> band split ->
-// per-band AGC -> block features
+// Mic front end: DC block -> 4 kHz hi-cut -> band split -> per-band AGC ->
+// block features
 // C99 compatible, seperated to allow reuse for preprocessing in truecolors-ml
 #pragma once
 
@@ -10,16 +10,17 @@
 extern "C" {
 #endif
 
-// Bump on frontend changes, model is trained against this version
-#define FE_SPEC_VERSION 1
+// Bump on frontend changes; the model is trained against this version.
+// v2: comb removed, bit-identical to v1 built with -DFE_NO_COMB.
+#define FE_SPEC_VERSION 2
 
-// Filters can be compiled out with -DFE_NO_COMB / -DFE_NO_HICUT
+// Which filters this build contains. COMB keeps its bit so the mask means the
+// same across versions; v2 never sets it. Hi-cut: -DFE_NO_HICUT.
 #define FE_VARIANT_COMB  (1u << 0)
 #define FE_VARIANT_HICUT (1u << 1)
 
-#define FE_SAMPLE_RATE   48000   // divides evenly by every PWM frequency
+#define FE_SAMPLE_RATE   48000
 #define FE_BLOCK_SAMPLES 512
-#define FE_COMB_MAX      600
 
 typedef struct {
     float b0, b1, b2, a1, a2;
@@ -28,9 +29,6 @@ typedef struct {
 
 typedef struct {
     float dc;
-    float comb[FE_COMB_MAX];
-    volatile int comb_n;   // fe_set_notch_hz runs on another task than fe_block
-    int comb_i;
     fe_biquad_t hicut[4];
     float lp_bass, lp_treble;
     float peak[4];
@@ -53,13 +51,10 @@ typedef struct {
     float spl_db;       // slow-averaged, datasheet calibrated
 } fe_out_t;
 
-void fe_init(fe_t *fe, uint32_t notch_hz);
+void fe_init(fe_t *fe);
 
 // Show frontend variant
 uint32_t fe_variant(void);
-
-// Align the coil-whine comb to the laser PWM frequency. Call on PWM change.
-void fe_set_notch_hz(fe_t *fe, uint32_t hz);
 
 void fe_block(fe_t *fe, const int16_t *samples, int n, fe_out_t *out);
 

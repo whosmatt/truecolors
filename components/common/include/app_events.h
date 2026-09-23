@@ -63,20 +63,23 @@ typedef struct {
     uint32_t err_flags;
 } app_metrics_evt_t;
 
-// EVT_BEATGRID payload: one audio block with beatgrid activity (a detection,
-// a metronome tick, or a PLL nudge). Block-quantized; for the live debug view.
+// EVT_BEATGRID payload: one audio block with grid activity, for the live debug
+// view. `period` is one beat, not a bar: the estimator searches 55-220 BPM and
+// prefers the shortest lag that explains the signal.
 typedef struct {
     uint32_t t;         // audio block index since boot
     float block_hz;     // blocks per second
-    float phase;        // blocks into the locked loop; 0 while unlocked
-    float period;       // loop period in blocks, 0 while unlocked
+    float phase;        // blocks into the current beat; 0 while unlocked
+    float period;       // beat period in blocks, 0 while unlocked
     float bpm;
     bool  kick;
     bool  snare;
+    bool  hihat;        // third model hit class
     bool  met;          // metronome tick
-    float off;          // kick/snare hit time relative to t (blocks, <= 0)
-    float nudge;        // PLL phase shift applied this block (blocks)
-    float err;          // matched-hit phase error (blocks)
+    float act;          // model beat activation this block, 0..1
+    float music;        // model music probability this block, 0..1
+    float off;          // model sub-block onset position, 0..1
+    float err;          // phase error of the last observation (blocks)
 } app_beatgrid_evt_t;
 
 // EVT_SAFETY_CHANGED payload (on transition only).
