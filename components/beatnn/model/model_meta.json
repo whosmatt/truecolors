@@ -1,0 +1,113 @@
+{
+  "fe_spec_version": 1,
+  "fe_variant": 2,
+  "fe_variant_name": "hicut",
+  "feature_order": [
+    "level",
+    "bands0",
+    "bands1",
+    "bands2",
+    "rms",
+    "flux0",
+    "flux1",
+    "flux2",
+    "fund_rms",
+    "mid_flux",
+    "treble_flux",
+    "spl_db"
+  ],
+  "block_samples": 512,
+  "sample_rate": 48000,
+  "context": {
+    "fine_past": 13,
+    "fine_future": 2,
+    "mid_frames": 16,
+    "mid_stride": 4,
+    "coarse_frames": 12,
+    "coarse_stride": 16,
+    "frames": 44,
+    "inputs": 528,
+    "seconds": 2.869333333333333,
+    "lookback_blocks": 269,
+    "ring_blocks": 272,
+    "lookahead_blocks": 2
+  },
+  "normalisation": {
+    "mean": [
+      0.2189139425754547,
+      0.19191651046276093,
+      0.20460759103298187,
+      0.13663175702095032,
+      0.009556853212416172,
+      0.021487703546881676,
+      0.02123328112065792,
+      0.020160550251603127,
+      0.15639428794384003,
+      0.02875622920691967,
+      0.019306516274809837,
+      85.0119400024414
+    ],
+    "scale": [
+      0.24444295465946198,
+      0.23447057604789734,
+      0.23698370158672333,
+      0.19243738055229187,
+      0.019870106130838394,
+      0.06774726510047913,
+      0.06703226268291473,
+      0.06455512344837189,
+      0.21070188283920288,
+      0.08316685259342194,
+      0.07681421935558319,
+      14.400357246398926
+    ]
+  },
+  "outputs": {
+    "beat": 1,
+    "beat_offset": 1,
+    "hit": 4,
+    "music": 1
+  },
+  "output_order": [
+    "beat",
+    "beat_offset",
+    "hit",
+    "music"
+  ],
+  "hit_classes": [
+    "kick",
+    "snare",
+    "hihat",
+    "none"
+  ],
+  "macs": 76224,
+  "tflite_bytes": 86048,
+  "sha256": "fb9ac4ebfbe0c8cd7796f512a89ec8c075d2c812293493ef259a6a4b4fe7759e",
+  "trained_from": {
+    "repo_commit": "1c7028bcbfc082b1589fb0a4eb5c3cf8f0589889",
+    "manifest_sha256": "b38ec7dd9e961f1a2df548e487594b4ad2bb3dddac772bc3d2f9bc4b35c08abc",
+    "ir_sha256": "5279ea9dd9f4f0b28b4c503c14a39431768be727ffc4dec9d0e3f4ede49099eb",
+    "corpus": "data/features4",
+    "run": "runs/g_music2_s0"
+  },
+  "metrics": {
+    "float32": {
+      "takes": 945,
+      "usable": 0.6328042328042328,
+      "octave": 0.8751322751322751,
+      "phase_exact": 6.104166666666515,
+      "phase_octave": 225.40416666666664,
+      "phase_p90": 280.06833333333327
+    },
+    "int8": {
+      "takes": 945,
+      "usable": 0.6317460317460317,
+      "octave": 0.8698412698412699,
+      "phase_exact": 6.633333333333326,
+      "phase_octave": 218.58333333333331,
+      "phase_p90": 277.74999999999943
+    },
+    "activation_correlation": 0.9961565650880209
+  },
+  "exported": "2026-09-23T21:25:02"
+}
