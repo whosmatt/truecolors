@@ -9,6 +9,8 @@
 #include "laser.h"
 #include "effects.h"
 #include "audio.h"
+#include "beattrack.h"
+#include "beatnn.h"
 #include "sysmgr.h"
 #include "wifi_mgr.h"
 #include "server.h"
@@ -36,10 +38,14 @@ void app_main(void)
     // 4. Laser (MCPWM, widths 0, generators LOW), effects registry, audio (I2S).
     ESP_ERROR_CHECK(laser_init());
     laser_set_pwm_hz(storage_load_pwm_hz());
-    audio_set_notch_hz(laser_get_pwm_hz());
     ESP_ERROR_CHECK(effects_init());
     effects_set_epilepsy_safe(storage_load_epilepsy_safe());
+    esp_err_t merr = beatnn_init();
+    if (merr != ESP_OK) {
+        ESP_LOGE(TAG, "beat model disabled: %s", esp_err_to_name(merr));
+    }
     ESP_ERROR_CHECK(audio_init());
+    ESP_ERROR_CHECK(beattrack_start());
 
     // 5. System manager + status LED + safety gate.
     ESP_ERROR_CHECK(sysmgr_init());

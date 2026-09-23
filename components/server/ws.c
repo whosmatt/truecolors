@@ -6,6 +6,7 @@
 #include "storage.h"
 #include "laser.h"
 #include "audio.h"
+#include "beatnn.h"
 #include "app_config.h"
 #include "app_events.h"
 
@@ -259,9 +260,11 @@ static char *build_beatgrid(const app_beatgrid_evt_t *e)
     cJSON_AddNumberToObject(root, "bpm", e->bpm);
     cJSON_AddBoolToObject(root, "kick", e->kick);
     cJSON_AddBoolToObject(root, "snare", e->snare);
+    cJSON_AddBoolToObject(root, "hihat", e->hihat);
     cJSON_AddBoolToObject(root, "met", e->met);
+    cJSON_AddNumberToObject(root, "act", e->act);
+    cJSON_AddNumberToObject(root, "music", e->music);
     cJSON_AddNumberToObject(root, "off", e->off);
-    cJSON_AddNumberToObject(root, "nudge", e->nudge);
     cJSON_AddNumberToObject(root, "err", e->err);
     char *out = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
@@ -318,6 +321,49 @@ static char *build_metrics(const app_metrics_evt_t *m)
     cJSON_AddNumberToObject(root, "bpm", m->bpm);
     add_flag_strings(cJSON_AddArrayToObject(root, "warn"), m->warn_flags);
     add_flag_strings(cJSON_AddArrayToObject(root, "err"), m->err_flags);
+
+    // report beat model for host testing
+    cJSON *nn = cJSON_AddObjectToObject(root, "nn");
+    beat_infer_t bi;
+    audio_get_infer(&bi);
+    cJSON_AddBoolToObject(nn, "ready", beatnn_ready());
+    cJSON_AddBoolToObject(nn, "valid", bi.valid);
+    cJSON_AddNumberToObject(nn, "beat", bi.beat);
+    cJSON_AddNumberToObject(nn, "music", bi.music);
+    cJSON_AddNumberToObject(nn, "offset", bi.beat_offset);
+    cJSON *h = cJSON_AddArrayToObject(nn, "hit");
+    for (int i = 0; i < 4; i++) {
+        cJSON_AddItemToArray(h, cJSON_CreateNumber(bi.hit[i]));
+    }
+    cJSON_AddNumberToObject(nn, "cycles", audio_infer_cycles());
+    cJSON_AddNumberToObject(nn, "inferCycles", beatnn_last_cycles());
+    cJSON_AddNumberToObject(nn, "quantCycles", beatnn_quant_cycles());
+    cJSON_AddNumberToObject(nn, "invokeCycles", beatnn_invoke_cycles());
+    cJSON_AddNumberToObject(nn, "inAlign", beatnn_input_align());
+    beat_infer_t st;
+    beatnn_selftest_result(&st);
+    cJSON *sj = cJSON_AddObjectToObject(nn, "selftest");
+    cJSON_AddBoolToObject(sj, "pass", beatnn_selftest_passed());
+    cJSON_AddNumberToObject(sj, "beat", st.beat);
+    cJSON_AddNumberToObject(sj, "offset", st.beat_offset);
+    cJSON *sh = cJSON_AddArrayToObject(sj, "hit");
+    for (int i = 0; i < 4; i++) cJSON_AddItemToArray(sh, cJSON_CreateNumber(st.hit[i]));
+    cJSON_AddNumberToObject(nn, "arena", beatnn_arena_used());
+    bool lk; float stg, bp, er;
+    audio_track_state(&lk, &stg, &bp, &er);
+    float mprob, mfrac; bool mopen;
+    audio_music_state(&mprob, &mfrac, &mopen);
+    cJSON *mu = cJSON_AddObjectToObject(nn, "gate");
+    cJSON_AddNumberToObject(mu, "prob", mprob);
+    cJSON_AddNumberToObject(mu, "frac", mfrac);
+    cJSON_AddBoolToObject(mu, "open", mopen);
+
+    cJSON *tr = cJSON_AddObjectToObject(nn, "track");
+    cJSON_AddBoolToObject(tr, "locked", lk);
+    cJSON_AddNumberToObject(tr, "strength", stg);
+    cJSON_AddNumberToObject(tr, "bpm", bp);
+    cJSON_AddNumberToObject(tr, "err", er);
+
     char *out = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
     return out;
@@ -421,7 +467,6 @@ static void handle_message(httpd_req_t *req, const char *data)
             if (cJSON_IsNumber(hz) &&
                 laser_set_pwm_hz((uint32_t)hz->valuedouble) == ESP_OK) {
                 storage_save_pwm_hz((uint32_t)hz->valuedouble);
-                audio_set_notch_hz(laser_get_pwm_hz());
                 char *json = build_pwm_hz();
                 if (json) { broadcast(json); free(json); }
             }
