@@ -17,8 +17,8 @@ extern "C" {
 typedef struct {
     float level;      // 0..1 AGC-normalized broadband level
     float bands[3];   // 0..1 AGC-normalized bass / mid / treble
-    float beat;       // 0..1 beat envelope: kick hits, or the locked grid's
-                      // predicted attack-aligned beats
+    float beat;       // 0..1 beat envelope: grid beats when locked, activation
+                      // crossings before
     float grid;       // 0..1 metronome envelope: evenly spaced ticks at the
                       // locked tempo, beat-anchored; stays 0 while unlocked
     float bpm;        // beat-grid tempo, 0 while unlocked
