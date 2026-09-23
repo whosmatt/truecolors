@@ -15,6 +15,9 @@ Unfortunately, the module is challenging to drive:
 - Laser diodes are much more sensitive to overcurrent than LEDs
 - The common cathode has a lower rating than the combined maximum currents, so staggered PWM is required to stay within the ratings
 
+Beyond color gamut, this project also focuses on advanced audio reactive effects. Frustrated with RMS multiband effects, I trained a model to predict the presence and offset of beats in live audio, along with tagging drum hits.  
+This allows effects to be completely locked into the tempo of a track rather than responding to volume changes. [truecolors-ml repo](https://github.com/whosmatt/truecolors-ml)
+
 ## Safety warning
 
 The laser module used is a class 4 laser, with the output wavelength fully in the visible range. This means that the light has maximum eye damage potential and requires a robust safety protocol to be used safely. Use rated laser safety glasses and a shuttered room when testing without diffusers.
@@ -79,6 +82,60 @@ The following hasn't been tested but is recommended:
 - Low noise input caps
   - Murata ZRB: Drop in replacement with ~15dB reduction
   - Next board revision should allow for KRM series with ~25dB reduction
+
+## Software design
+
+### Audio
+
+Core 1 is reserved for audio (including inference) and effect rendering.  
+
+<details>
+<summary>Audio pipeline diagram</summary>
+
+```mermaid
+flowchart TD
+    MIC["PDM mic<br/>I2S RX, 48 kHz"] --> BLK["512-sample block<br/>93.75 blocks/s"]
+
+    subgraph CORE1A["audio task: core 1, prio 5"]
+        BLK --> FE["fe_block (frontend v2)<br/>DC block → 4 kHz hi-cut<br/>→ band split → multiband AGC"]
+        FE --> FEOUT["fe_out_t: 12 floats<br/>level, bands[3], rms, flux[3],<br/>fund_rms, mid_flux, treble_flux, spl_db"]
+        FEOUT --> RING["fe_ctx ring: 272 blocks"]
+        RING --> WIN["window: 528 floats<br/>16 fine + 16 mid + 12 coarse<br/>+2 block lookahead"]
+        WIN --> QUANT["normalise + quantise:<br/>folded, int8"]
+        QUANT --> NN[["TFLM + esp-nn<br/>528→128→64, int8<br/>76k MAC, 10.5% of block"]]
+        NN --> HEADS["beat, beat_offset, hit[4], music"]
+
+        HEADS -- beat, beat_offset --> TRACK["beattrack<br/>phase accumulator + PLL"]
+        HEADS -- music --> GATE["musicgate<br/>median over ~2 s @ 0.7<br/>+ 3 s hold-off"]
+        HEADS -- beat, beat_offset --> ABUF["tempo ringbuffer: 750 blocks / 8 s"]
+    end
+
+    subgraph CORE1B["estimator task: core 1, prio 3"]
+        ABUF --> EST["tempo_estimate, 1 Hz<br/>unbiased autocorr →<br/>harmonic sum, fractional lag →<br/>subharmonic → joint period+phase"]
+    end
+
+    EST -- "period, to_next, strength<br/>(seqlock observation)" --> TRACK
+
+    TRACK --> FEAT["audio_features_t<br/>level · bands[3] · beat · grid<br/>bpm · kicks · spl_db"]
+    FEOUT --> FEAT
+    GATE -. "currently debug only" .-> TEL
+
+    FEAT --> FX["effects render task<br/>core 1, prio 18, 90 Hz<br/>reads beat, grid, bands"]
+    FX --> LASER["laser_set → MCPWM"]
+
+    HEADS -- *all* --> EVT["EVT_BEATGRID, block rate<br/>kick/snare/hihat/met<br/>act · music · off · err<br/>period · phase · bpm"]
+    TRACK --> EVT
+    FEAT --> TEL["metrics, 1 Hz<br/>audioDb · bpm<br/>nn.{beat,music,cycles,arena}<br/>nn.gate · nn.track · nn.selftest"]
+
+    subgraph CORE0["core: 0"]
+        EVT
+        TEL
+    end
+```
+
+</details> 
+
+
 
 ## Web UI
 
