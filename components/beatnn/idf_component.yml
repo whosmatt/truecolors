@@ -1,0 +1,2 @@
+dependencies:
+  esp-tflite-micro: "^1.4.1"

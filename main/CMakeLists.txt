@@ -8,6 +8,7 @@ idf_component_register(
         laser
         effects
         audio
+        beatnn
         sysmgr
         wifi
         server

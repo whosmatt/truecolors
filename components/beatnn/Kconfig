@@ -1,0 +1,10 @@
+menu "Beat model"
+
+config BEATNN_ARENA_KB
+    int "TFLM tensor arena (KB)"
+    default 8
+    help
+        Reserved statically in internal .bss for aligment
+        beatnn_arena_used() reports footprint
+
+endmenu
