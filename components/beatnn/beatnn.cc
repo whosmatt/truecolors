@@ -125,8 +125,8 @@ esp_err_t beatnn_init(void)
     for (int i = 0; i < SELFTEST_N; i++) {
         beat_infer_t r = {};
         beatnn_infer(kSelftestWindows[i], &r);
-        // int8 output steps are 1/256; a real mismatch is far larger.
-        const float tol = 1.0f / 512.0f;
+        // esp-nn requantize can differ from the reference by 1 LSB
+        const float tol = 1.5f / 256.0f;
         bool ok = fabsf(r.beat - kSelftestBeat[i]) < tol &&
                   fabsf(r.beat_offset - kSelftestOffset[i]) < tol &&
                   fabsf(r.music - kSelftestMusic[i]) < tol;

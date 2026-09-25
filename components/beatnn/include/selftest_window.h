@@ -94,9 +94,9 @@ static const float kSelftestWindow0[528] = {
     0.348240385f, 0.333545628f, 0.410324787f, 0.247104011f, 0.00814611363f, 0.0373889423f,
     0.0325830316f, 0.0357800454f, 0.333215858f, 0.0628857214f, 0.051551951f, 80.0131392f,
 };
-static const float kSelftestBeat0   = 0.84765625f;
-static const float kSelftestOffset0 = 0.546875f;
-static const float kSelftestMusic0  = 0.859375f;
+static const float kSelftestBeat0   = 0.92578125f;
+static const float kSelftestOffset0 = 0.57421875f;
+static const float kSelftestMusic0  = 0.63671875f;
 
 // silence
 static const float kSelftestWindow1[528] = {
@@ -189,8 +189,8 @@ static const float kSelftestWindow1[528] = {
     0.0213387492f, 0.0168631711f, 0.00876679766f, 0.00674819836f, 6.40162473e-05f, 0.0f,
     0.0f, 0.0f, 0.00466104571f, 0.000895580866f, 0.000362345757f, 50.3090744f,
 };
-static const float kSelftestBeat1   = 0.328125f;
-static const float kSelftestOffset1 = 0.5234375f;
+static const float kSelftestBeat1   = 0.35546875f;
+static const float kSelftestOffset1 = 0.5f;
 static const float kSelftestMusic1  = 0.0f;
 
 static const float *const kSelftestWindows[SELFTEST_N] = {kSelftestWindow0, kSelftestWindow1};

@@ -346,6 +346,7 @@ static char *build_metrics(const app_metrics_evt_t *m)
     cJSON_AddBoolToObject(sj, "pass", beatnn_selftest_passed());
     cJSON_AddNumberToObject(sj, "beat", st.beat);
     cJSON_AddNumberToObject(sj, "offset", st.beat_offset);
+    cJSON_AddNumberToObject(sj, "music", st.music);
     cJSON *sh = cJSON_AddArrayToObject(sj, "hit");
     for (int i = 0; i < 4; i++) cJSON_AddItemToArray(sh, cJSON_CreateNumber(st.hit[i]));
     cJSON_AddNumberToObject(nn, "arena", beatnn_arena_used());
