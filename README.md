@@ -98,23 +98,33 @@ flowchart TD
 
     subgraph CORE1A["audio task: core 1, prio 5"]
         BLK --> FE["fe_block (frontend v2)<br/>DC block → 4 kHz hi-cut<br/>→ band split → multiband AGC"]
+        BLK --> MEL["melflux_block<br/>1024 Hann (previous + current block)<br/>→ FFT → 16 mel bands 150 Hz - 4 kHz<br/>→ log10 → positive flux"]
         FE --> FEOUT["fe_out_t: 12 floats<br/>level, bands[3], rms, flux[3],<br/>fund_rms, mid_flux, treble_flux, spl_db"]
-        FEOUT --> RING["fe_ctx ring: 272 blocks"]
-        RING --> WIN["window: 528 floats<br/>16 fine + 16 mid + 12 coarse<br/>+2 block lookahead"]
-        WIN --> QUANT["normalise + quantise:<br/>folded, int8"]
-        QUANT --> NN[["TFLM + esp-nn<br/>528→128→64, int8<br/>76k MAC, 10.5% of block"]]
-        NN --> HEADS["beat, beat_offset, hit[4], music"]
+        FEOUT & MEL --> X["x: 28 floats"]
 
-        HEADS -- beat, beat_offset --> TRACK["beattrack<br/>phase accumulator + PLL"]
+        X --> PA["stage A projection<br/>28 → 12, float"]
+        PA --> RA["ring A: 272 blocks × 12"]
+        RA --> WA["window: 528 floats<br/>16 fine + 16 mid + 12 coarse<br/>+2 block lookahead"]
+        WA --> NNA[["TFLM + esp-nn, int8<br/>stage A 528→128→64 → beat<br/>76k MAC"]]
+        NNA --> FB["stage A beat of the<br/>previous block: a[n-3]"]
+
+        X & FB --> PB["stage B projection<br/>29 → 12, float"]
+        PB --> RB["ring B: 272 blocks × 12"]
+        RB --> WB["window: 528 floats"]
+        WB --> NNB[["TFLM + esp-nn, int8<br/>stage B 528→64→32<br/>36k MAC"]]
+        NNB --> HEADS["beat, beat_offset, hit[4], music"]
+
+        HEADS -- beat --> TRACK["beattrack<br/>phase accumulator, latches each observation<br/>unlocked: fires on activation ≥ 0.5"]
+        HEADS -- beat --> ABUF["tempo ringbuffer: 750 blocks / 8 s"]
         HEADS -- music --> GATE["musicgate<br/>median over ~2 s @ 0.7<br/>+ 3 s hold-off"]
-        HEADS -- beat, beat_offset --> ABUF["tempo ringbuffer: 750 blocks / 8 s"]
     end
 
     subgraph CORE1B["estimator task: core 1, prio 3"]
-        ABUF --> EST["tempo_estimate, 1 Hz<br/>unbiased autocorr →<br/>harmonic sum, fractional lag →<br/>subharmonic → joint period+phase"]
+        ABUF --> EST["tempo_estimate every 0.5 s, after ~14 s settle<br/>unbiased autocorr → harmonic sum, fractional lag →<br/>subharmonic → joint period+phase"]
+        EST --> HOLD["hold: keep the held grid unless the candidate<br/>refines it, beats its contrast over the last 4 s<br/>by 0.02, or the held contrast drops below 0.03"]
     end
 
-    EST -- "period, to_next, strength<br/>(seqlock observation)" --> TRACK
+    HOLD -- "period, to_next, contrast<br/>(seqlock observation)" --> TRACK
 
     TRACK --> FEAT["audio_features_t<br/>level · bands[3] · beat · grid<br/>bpm · kicks · spl_db"]
     FEOUT --> FEAT
