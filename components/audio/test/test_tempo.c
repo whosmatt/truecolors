@@ -90,3 +90,21 @@ TEST_CASE("next beat is ahead of the newest sample", "[tempo]")
     TEST_ASSERT_TRUE(nb > 0.0f);
     TEST_ASSERT_TRUE(nb <= e.period + 0.001f);
 }
+
+TEST_CASE("contrast separates a fitted grid from a wrong one", "[tempo]")
+{
+    // The re-fit-and-hold tracker decides on this quantity; its margin (0.02)
+    // and floor (0.03) are only meaningful if a real grid scores far above.
+    feed(120.0f, 7.0f, TEMPO_WIN_BLOCKS);
+    tempo_est_t e;
+    TEST_ASSERT_TRUE(tempo_estimate(&s_b, &e));
+
+    float tn = tempo_next_beat_in(&e);
+    float fitted = tempo_contrast(&s_b, e.period, tn, 375);
+    float half_off = tempo_contrast(&s_b, e.period, tn + e.period * 0.5f, 375);
+    float wrong_period = tempo_contrast(&s_b, e.period * 1.5f, tn, 375);
+
+    TEST_ASSERT_TRUE(fitted > 0.3f);
+    TEST_ASSERT_TRUE(half_off < 0.03f);
+    TEST_ASSERT_TRUE(wrong_period < fitted - 0.02f);
+}

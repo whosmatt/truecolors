@@ -11,38 +11,33 @@
 
 static const char *TAG = "beattrack";
 
-#define ESTIMATE_EVERY_MS 1000
-// Untuned: only the batch fit underneath has been measured.
-#define LOCK_STRENGTH     0.15f
-#define UNLOCK_STRIKES    3
-#define PERIOD_GAIN       0.25f
-#define PHASE_GAIN        0.25f
-#define SETTLE_BLOCKS     375     // 4 s of AGC convergence, discarded
-#define BIG_ERR_FRAC      0.15f   // phase jump needing confirmation
-#define AGREE_FRAC        0.01f   // two observations this close agree
-#define DISAGREE_FRAC     0.02f   // ... and this far from the tracked period
+// refit every 0.5 s on 8 s, hold grid until there is a better fit for the last 4 s
+#define ESTIMATE_EVERY_MS 500
+#define HOLD_SPAN         375     // 4 s the two grids are compared over
+#define HOLD_MARGIN       0.02f   // contrast a candidate must win by
+#define HOLD_FLOOR        0.03f   // below this the held grid stopped explaining
+#define SAME_LAG_FRAC     0.015f  // candidate refines the held grid rather
+#define SAME_PHASE_BLOCKS 1.5f    // ... than replacing it
+// settle time for startup because stage A needs to fully fill the stage B buffer first
+// around 14s
+#define SETTLE_BLOCKS     550
 #define REFRACTORY        0.5f    // of a period, between emitted beats
-#define FREE_THRESH       0.5f    // unlocked: fire on the activation
+#define FREE_THRESH       0.5f    // unlocked: fire on activation
 
 static tempo_buf_t s_buf;
 static uint32_t s_block;          // audio blocks since init, audio task only
 
-// Seqlock: odd sequence while writing, so the reader never sees a partial
-// observation.
+// seqlock for observations
 static volatile uint32_t s_seq;
 static volatile float s_obs_period, s_obs_to_next, s_obs_strength;
 static volatile uint32_t s_obs_at;
 static uint32_t s_seen_seq;
 
-// Audio task only. Blocks-until-next-beat rather than an absolute time: a
-// float block counter loses 0.25 blocks of resolution after ~10 h.
+// blocks until next beat for tracking
 static bool s_locked;
 static float s_period, s_to_next, s_err, s_strength;
 static float s_since_beat;
-static int s_strikes;
 static float s_prev_act;
-static float s_last_obs_period;   // for the agreement test
-static float s_pending_err;       // large phase error awaiting confirmation
 
 void beattrack_init(void)
 {
@@ -56,23 +51,13 @@ void beattrack_init(void)
     s_err = 0.0f;
     s_strength = 0.0f;
     s_since_beat = 1e6f;
-    s_strikes = 0;
     s_prev_act = 0.0f;
-    s_last_obs_period = 0.0f;
-    s_pending_err = 0.0f;
 }
 
+// Latch to what the estimator has published instead of slowly filtering
 static void apply_observation(float period, float to_next, float strength, uint32_t at)
 {
     s_strength = strength;
-    if (strength < LOCK_STRENGTH) {
-        if (s_locked && ++s_strikes >= UNLOCK_STRIKES) {
-            s_locked = false;
-            s_strikes = 0;
-        }
-        return;
-    }
-    s_strikes = 0;
     if (period <= 1.0f) {
         return;
     }
@@ -84,66 +69,18 @@ static void apply_observation(float period, float to_next, float strength, uint3
         aged += period;
     }
 
-    // Acquire only on two agreeing observations: one bad window locks the
-    // wrong tempo, and the gains below take tens of seconds to walk back.
-    bool agrees = s_last_obs_period > 0.0f &&
-                  fabsf(period - s_last_obs_period) < AGREE_FRAC * period;
-    float prev_obs = s_last_obs_period;
-    s_last_obs_period = period;
-
-    if (!s_locked) {
-        if (!agrees) {
-            return;
-        }
-        s_period = period;
-        s_to_next = aged;
-        s_locked = true;
-        s_err = 0.0f;
-        return;
-    }
-
-    // Agreeing with each other but not with the tracked period: snap.
-    if (agrees && fabsf(period - s_period) > DISAGREE_FRAC * s_period &&
-        fabsf(prev_obs - s_period) > DISAGREE_FRAC * s_period) {
-        s_period = period;
-        s_to_next = aged;
-        s_err = 0.0f;
-        return;
-    }
-
-    float err = aged - s_to_next;
-    if (err > period * 0.5f) err -= period;
-    if (err < -period * 0.5f) err += period;
-
-    // An octave jump is a re-lock, not a nudge.
-    if (fabsf(period - s_period) > 0.25f * s_period) {
-        s_period = period;
-        s_to_next = aged;
-        s_err = 0.0f;
-        return;
-    }
-    s_period += PERIOD_GAIN * (period - s_period);
-    s_err = err;
-
-    // A large jump is usually one ambiguous window, not the beat moving.
-    if (fabsf(err) > BIG_ERR_FRAC * period) {
-        bool confirms = s_pending_err != 0.0f &&
-                        (s_pending_err > 0.0f) == (err > 0.0f) &&
-                        fabsf(err - s_pending_err) < BIG_ERR_FRAC * period;
-        s_pending_err = err;
-        if (!confirms) {
-            return;
-        }
-        s_to_next += err;
-        s_pending_err = 0.0f;
+    if (s_locked) {
+        float err = aged - s_to_next;
+        if (err > period * 0.5f) err -= period;
+        if (err < -period * 0.5f) err += period;
+        s_err = err;
     } else {
-        s_pending_err = 0.0f;
-        s_to_next += PHASE_GAIN * err;
+        s_err = 0.0f;
     }
 
-    while (s_to_next <= 0.0f) {
-        s_to_next += s_period;
-    }
+    s_period = period;
+    s_to_next = aged;
+    s_locked = strength >= HOLD_FLOOR;
 }
 
 void beattrack_block(float activation, beattrack_out_t *out)
@@ -192,6 +129,32 @@ void beattrack_block(float activation, beattrack_out_t *out)
     out->strength = s_strength;
 }
 
+// Floating grid for estimator, doesn't use absolute time to avoid degradation
+static bool s_hold;
+static float s_hold_period, s_hold_to_next, s_hold_contrast;
+static uint32_t s_hold_at;
+// to_next carried from block `from` to block `to`, wrapped into (0, period].
+static float age_to(float to_next, float period, uint32_t from, uint32_t to)
+{
+    float v = fmodf(to_next - (float)(to - from), period);
+    return v <= 0.0f ? v + period : v;
+}
+
+static bool same_grid(float period_a, float to_next_a, float period_b, float to_next_b)
+{
+    if (fabsf(period_a - period_b) > SAME_LAG_FRAC * period_b) {
+        return false;
+    }
+    float d = fmodf(to_next_a - to_next_b, period_b);
+    if (d < 0.0f) {
+        d += period_b;
+    }
+    if (d > period_b * 0.5f) {
+        d -= period_b;
+    }
+    return fabsf(d) <= SAME_PHASE_BLOCKS;
+}
+
 static void estimator_task(void *arg)
 {
     static tempo_buf_t snap;
@@ -210,17 +173,42 @@ static void estimator_task(void *arg)
         if (!tempo_estimate(&snap, &e)) {
             continue;
         }
+        float cand_to_next = tempo_next_beat_in(&e);
+        float cand_c = tempo_contrast(&snap, e.period, cand_to_next, HOLD_SPAN);
+
+        bool take = true;
+        float aged = 0.0f, held_c = 0.0f;
+        if (s_hold) {
+            aged = age_to(s_hold_to_next, s_hold_period, s_hold_at, at);
+            held_c = tempo_contrast(&snap, s_hold_period, aged, HOLD_SPAN);
+
+            // Refine on the same grid, replace only on a clearly better candidate
+            take = same_grid(e.period, cand_to_next, s_hold_period, aged) ||
+                   cand_c > held_c + HOLD_MARGIN ||
+                   held_c < HOLD_FLOOR;
+        }
+
+        if (take) {
+            s_hold_period = e.period;
+            s_hold_to_next = cand_to_next;
+            s_hold_contrast = cand_c;
+        } else {
+            s_hold_to_next = aged;
+            s_hold_contrast = held_c;
+        }
+        s_hold_at = at;
+        s_hold = true;
 
         // Activation time runs FE_CTX_LOOKAHEAD blocks behind audio time.
-        float to_next = tempo_next_beat_in(&e) - (float)FE_CTX_LOOKAHEAD;
+        float to_next = s_hold_to_next - (float)FE_CTX_LOOKAHEAD;
         while (to_next <= 0.0f) {
-            to_next += e.period;
+            to_next += s_hold_period;
         }
 
         s_seq++;                       // odd
-        s_obs_period = e.period;
+        s_obs_period = s_hold_period;
         s_obs_to_next = to_next;
-        s_obs_strength = e.strength;
+        s_obs_strength = s_hold_contrast;
         s_obs_at = at;
         s_seq++;                       // even
     }
@@ -228,8 +216,7 @@ static void estimator_task(void *arg)
 
 esp_err_t beattrack_start(void)
 {
-    // Core 1 with the audio chain, below the audio task: an estimate spans
-    // several blocks and must not delay one. Core 0 stays for network work.
+    // Pin audio to core1
     if (xTaskCreatePinnedToCore(estimator_task, "beattrack", 4096, NULL, 3, NULL, 1)
         != pdPASS) {
         ESP_LOGE(TAG, "estimator task create failed");

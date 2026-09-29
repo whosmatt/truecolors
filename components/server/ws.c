@@ -17,6 +17,7 @@
 #include "freertos/semphr.h"
 #include "esp_system.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 
 static const char *TAG = "ws";
 
@@ -319,6 +320,11 @@ static char *build_metrics(const app_metrics_evt_t *m)
     cJSON_AddBoolToObject(root, "pdOk", m->pd_ok);
     cJSON_AddNumberToObject(root, "audioDb", m->audio_db);
     cJSON_AddNumberToObject(root, "bpm", m->bpm);
+    // watch heap, ~30kB free
+    cJSON_AddNumberToObject(root, "heapInt",
+                            (double)heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    cJSON_AddNumberToObject(root, "heapIntMin",
+                            (double)heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL));
     add_flag_strings(cJSON_AddArrayToObject(root, "warn"), m->warn_flags);
     add_flag_strings(cJSON_AddArrayToObject(root, "err"), m->err_flags);
 

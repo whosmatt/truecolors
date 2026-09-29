@@ -35,6 +35,9 @@ typedef struct {
 void fe_ctx_init(fe_ctx_t *c);
 void fe_ctx_push(fe_ctx_t *c, const fe_out_t *f);
 
+// per block projections
+void fe_ctx_push_vec(fe_ctx_t *c, const float *v);
+
 // FE_CTX_INPUTS floats, un-normalised. False until the ring fills.
 bool fe_ctx_window(const fe_ctx_t *c, float *out);
 

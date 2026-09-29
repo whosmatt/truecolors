@@ -10,13 +10,18 @@ void fe_ctx_init(fe_ctx_t *c)
     memset(c, 0, sizeof(*c));
 }
 
-void fe_ctx_push(fe_ctx_t *c, const fe_out_t *f)
+void fe_ctx_push_vec(fe_ctx_t *c, const float *v)
 {
-    memcpy(c->ring[c->head], f, sizeof(fe_out_t));
+    memcpy(c->ring[c->head], v, FE_CTX_FEATS * sizeof(float));
     c->head = (c->head + 1) % FE_CTX_BLOCKS;
     if (c->n < FE_CTX_BLOCKS) {
         c->n++;
     }
+}
+
+void fe_ctx_push(fe_ctx_t *c, const fe_out_t *f)
+{
+    fe_ctx_push_vec(c, (const float *)f);
 }
 
 // age 0 is the newest block pushed, block t+FE_CTX_LOOKAHEAD.

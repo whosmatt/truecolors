@@ -6,6 +6,11 @@
 #include "esp_err.h"
 #include "beat_types.h"
 #include "frontend.h"
+#include "fe_ctx.h"
+#include "melflux.h"
+
+// 12 front-end features then 16 mel flux
+#define AUDIO_X_FEATS (FE_CTX_FEATS + MEL_BANDS)
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,8 +34,9 @@ typedef struct {
 // Initialize I2S PDM RX and the audio task.
 esp_err_t audio_init(void);
 
-// Registered by the model's component so audio does not depend on it.
-typedef bool (*audio_infer_fn)(const float *window, beat_infer_t *out);
+// Registered by the model's component so audio does not depend on it. Takes
+// one block of AUDIO_X_FEATS features
+typedef bool (*audio_infer_fn)(const float *feats, beat_infer_t *out);
 void audio_set_infer_hook(audio_infer_fn fn);
 
 // .valid is false until the context ring has filled.

@@ -1,10 +1,10 @@
 menu "Beat model"
 
 config BEATNN_ARENA_KB
-    int "TFLM tensor arena (KB)"
-    default 8
+    int "TFLM tensor arena per stage (KB)"
+    default 5
     help
-        Reserved statically in internal .bss for aligment
+        Arena *per* stage, reserved statically in .bss for alignment
         beatnn_arena_used() reports footprint
 
 endmenu

@@ -9,6 +9,8 @@ idf_component_register(
          "${REPO}/components/audio/frontend.c"
          "${REPO}/components/audio/test/test_frontend.c"
          "${REPO}/components/audio/fe_ctx.c"
+         "${REPO}/components/audio/melflux.c"
+         "${REPO}/components/audio/test/test_melflux.c"
          "${REPO}/components/audio/test/test_fe_ctx.c"
          "${REPO}/components/audio/test/test_golden.c"
          "${REPO}/components/audio/tempo.c"
@@ -20,6 +22,7 @@ idf_component_register(
     PRIV_INCLUDE_DIRS "${REPO}/components/laser/include"
                       "${REPO}/components/audio/test"
                       "${REPO}/components/audio/include"
+                      "${REPO}/components/beatnn/include"
                       "${REPO}/components/sysmgr/include"
                       "${REPO}/components/common/include"
     PRIV_REQUIRES unity

@@ -5,4 +5,5 @@ idf_component_register(
     PRIV_REQUIRES esp_timer
 )
 
-target_add_binary_data(${COMPONENT_LIB} "model/model.tflite" BINARY)
+target_add_binary_data(${COMPONENT_LIB} "model/stage_a.tflite" BINARY)
+target_add_binary_data(${COMPONENT_LIB} "model/stage_b.tflite" BINARY)

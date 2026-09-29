@@ -44,6 +44,9 @@ bool tempo_estimate(const tempo_buf_t *b, tempo_est_t *out);
 // Blocks from the newest sample to the next beat.
 float tempo_next_beat_in(const tempo_est_t *e);
 
+// judge how well a candidate grid fits to recent activations
+float tempo_contrast(const tempo_buf_t *b, float period, float to_next, int span);
+
 #ifdef __cplusplus
 }
 #endif

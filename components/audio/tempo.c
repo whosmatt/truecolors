@@ -150,6 +150,46 @@ bool tempo_estimate(const tempo_buf_t *b, tempo_est_t *out)
     return true;
 }
 
+static float ring_at(const tempo_buf_t *b, int i)
+{
+    return b->ring[(b->head + i) % TEMPO_WIN_BLOCKS];
+}
+
+static float ring_interp(const tempo_buf_t *b, float x)
+{
+    if (x < 0.0f || x >= (float)(TEMPO_WIN_BLOCKS - 1)) {
+        return 0.0f;
+    }
+    int i = (int)x;
+    float f = x - (float)i;
+    float a = ring_at(b, i), c = ring_at(b, i + 1);
+    return a + f * (c - a);
+}
+
+float tempo_contrast(const tempo_buf_t *b, float period, float to_next, int span)
+{
+    if (period <= 1.0f || span < 2 || b->n < TEMPO_WIN_BLOCKS ||
+        span > TEMPO_WIN_BLOCKS) {
+        return 0.0f;
+    }
+    const int n = TEMPO_WIN_BLOCKS;
+    const int lo = n - span;
+
+    float sum = 0.0f;
+    for (int i = lo; i < n; i++) {
+        sum += ring_at(b, i);
+    }
+    float mean = sum / (float)span;
+
+    float acc = 0.0f;
+    int hits = 0;
+    for (float t = (float)(n - 1) + to_next - period; t >= (float)lo; t -= period) {
+        acc += ring_interp(b, t);
+        hits++;
+    }
+    return hits ? acc / (float)hits - mean : 0.0f;
+}
+
 float tempo_next_beat_in(const tempo_est_t *e)
 {
     if (!e->valid || e->period <= 0.0f) {

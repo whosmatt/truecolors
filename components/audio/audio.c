@@ -2,6 +2,7 @@
 #include "audio.h"
 #include "frontend.h"
 #include "fe_ctx.h"
+#include "melflux.h"
 #include "beattrack.h"
 #include "musicgate.h"
 #include "beatnn_classes.h"
@@ -30,8 +31,7 @@ static float s_beat_env;
 static float s_grid_env;
 static uint32_t s_block_n;
 
-static fe_ctx_t s_ctx;
-static float s_win[FE_CTX_INPUTS];   // 2.1 KB
+static melflux_t s_mel;
 static audio_infer_fn s_infer;
 static beat_infer_t s_last_infer;
 static uint32_t s_infer_cycles;
@@ -88,14 +88,18 @@ static void audio_task(void *arg)
             continue;
         }
 
+        int n = (int)(nbytes / sizeof(int16_t));
         fe_out_t f;
-        fe_block(&s_fe, buf, nbytes / sizeof(int16_t), &f);
+        fe_block(&s_fe, buf, n, &f);
         audio_infer_fn infer = s_infer;
         if (infer) {
             uint32_t c0 = esp_cpu_get_cycle_count();
-            fe_ctx_push(&s_ctx, &f);
+            // 12 front-end features then 16 mel flux
+            float x[AUDIO_X_FEATS];
+            memcpy(x, &f, sizeof(f));
+            melflux_block(&s_mel, buf, n, x + FE_CTX_FEATS);
             beat_infer_t bi = {0};
-            if (fe_ctx_window(&s_ctx, s_win) && infer(s_win, &bi)) {
+            if (infer(x, &bi)) {
                 bi.valid = true;
             }
             s_last_infer = bi;
@@ -161,7 +165,7 @@ static void audio_task(void *arg)
 esp_err_t audio_init(void)
 {
     fe_init(&s_fe);
-    fe_ctx_init(&s_ctx);
+    melflux_init(&s_mel);
     beattrack_init();
     musicgate_init(&s_gate);
 

@@ -1,91 +1,139 @@
 #!/usr/bin/env python3
-"""Generate golden-vector headers from golden.json.
+"""Generate the device selftest header and the mel host-test header.
 
-golden.json is canonical; the shipped golden.h emits bare `0f` literals, which
-are not valid C.
-
-  test/golden_frames.h    frames + expected windows and int8 inputs (host test)
-  selftest_window.h       two windows + expected outputs (device, ~4 KB)
-
-Cases with a null centre come from other takes and are checked from window_raw
-rather than through the ring.
+golden.json indexes fe/mel_flux16/proj_* by block and the model outputs by
+centre (block - 2), first centre 269. Both conventions are used below; getting
+them the wrong way round is silent, so the block/centre pairing comes from
+check_centre rather than being written down twice.
 """
 import json
 import sys
 from pathlib import Path
 
+MEL_FIRST = 694   # two blocks of run-in before the first exact flux value
+MEL_COUNT = 6
+MEL_EXACT = 2     # the first MEL_EXACT blocks are run-in, not compared
 
-def lit(v):
-    s = f"{float(v):.9g}"
-    if not any(c in s for c in ".eE") and "inf" not in s and "nan" not in s:
+
+def f(v):
+    s = f"{v:.9g}"
+    if "." not in s and "e" not in s and "E" not in s and "inf" not in s:
         s += ".0"
     return s + "f"
 
 
-def arr(name, vals, per_line=8, typ="float"):
-    fmt = lit if typ == "float" else (lambda v: str(int(v)))
-    out = [f"static const {typ} {name}[{len(vals)}] = {{"]
-    for i in range(0, len(vals), per_line):
-        out.append("    " + ", ".join(fmt(v) for v in vals[i:i + per_line]) + ",")
-    out.append("};")
+def rows(vals, per, fmt):
+    out = []
+    for i in range(0, len(vals), per):
+        out.append("    " + ", ".join(fmt(v) for v in vals[i:i + per]) + ",")
     return out
 
 
-def main(src, host_out, dev_out):
-    g = json.loads(Path(src).read_text())
-    frames = g["frames"]
-    cases = g["cases"]
-    mean = g["normalisation"]["mean"]
-    scale = g["normalisation"]["scale"]
-    qs = g["input_quant"]["scale"]
+def main(golden_dir, out_selftest, out_mel, out_ring):
+    d = Path(golden_dir)
+    g = json.loads((d / "golden.json").read_text())
 
-    L = ["// Generated from golden.json by tools/gen_golden.py -- do not edit.",
-         "#pragma once", "",
-         f"#define GOLDEN_NFRAMES {len(frames)}",
-         f"#define GOLDEN_FEATS   {len(g['feature_order'])}",
-         f"#define GOLDEN_INPUTS  {g['context']['inputs']}",
-         f"#define GOLDEN_NCASES  {len(cases)}",
-         f"#define GOLDEN_IN_ZERO ({g['input_quant']['zero_point']})", ""]
-    L += arr("kGoldenFrames", [v for f in frames for v in f], 12)
-    L.append("")
-    # Per-model, and stale copies fail silently, so they are generated too.
-    L += arr("kGoldenNormMean", mean, 6)
-    L += arr("kGoldenQuantMul", [1.0 / (s * qs) for s in scale], 6)
-    L.append("")
-    for i, c in enumerate(cases):
-        centre = c["centre_in_frames"]
-        L.append(f"// {c['label']}: " +
-                 (f"centre block {centre}" if centre is not None else "window only"))
-        L.append(f"#define GOLDEN_CENTRE_{i} {-1 if centre is None else centre}")
-        L += arr(f"kGoldenWindow{i}", c["window_raw"], 8)
-        L += arr(f"kGoldenInt8_{i}", c["input_int8"], 16, "signed char")
-        L.append("")
-    Path(host_out).write_text("\n".join(L) + "\n")
+    centre = g["check_centre"]
+    block = centre + 2
+    if not (g["first_centre"] <= centre < g["blocks"]):
+        sys.exit(f"check_centre {centre} outside {g['first_centre']}..{g['blocks']}")
 
-    # Device: a music case and the silence case, so a boot check covers both
-    # ends of the music head.
-    want = [c for c in cases if c["label"] in ("beat", "silence")]
-    D = ["// Generated from golden.json by tools/gen_golden.py -- do not edit.",
-         "#pragma once", "", f"#define SELFTEST_N {len(want)}", ""]
-    for i, c in enumerate(want):
-        o = c["output_int8_dequantised"]
-        D.append(f"// {c['label']}")
-        D += arr(f"kSelftestWindow{i}", c["window_raw"], 6)
-        D.append(f"static const float kSelftestBeat{i}   = {lit(o['beat'][0])};")
-        D.append(f"static const float kSelftestOffset{i} = {lit(o['beat_offset'][0])};")
-        D.append(f"static const float kSelftestMusic{i}  = {lit(o['music'][0])};")
-        D.append("")
-    D.append("static const float *const kSelftestWindows[SELFTEST_N] = {" +
-             ", ".join(f"kSelftestWindow{i}" for i in range(len(want))) + "};")
-    for f in ("Beat", "Offset", "Music"):
-        D.append(f"static const float kSelftest{f}[SELFTEST_N] = {{" +
-                 ", ".join(f"kSelftest{f}{i}" for i in range(len(want))) + "};")
-    Path(dev_out).write_text("\n".join(D) + "\n")
-    print(f"host: {len(frames)} frames, {len(cases)} cases")
-    for i, c in enumerate(want):
-        o = c["output_int8_dequantised"]
-        print(f"dev : {c['label']:9} music={o['music'][0]:.4f} beat={o['beat'][0]:.4f}")
+    x28 = list(g["fe"][block]) + list(g["mel_flux16"][block])
+    if len(x28) != 28:
+        sys.exit(f"block {block} has {len(x28)} features, expected 28")
+
+    bo = g["b_output_int8"]
+    L = ["// Generated by tools/gen_golden.py from golden/golden.json -- do not edit.",
+         "// One block of a real song through the device chain: the raw features and",
+         "// both projections at the block, and both trunks' int8 vectors at its centre.",
+         "#pragma once",
+         "",
+         "#include <stdint.h>",
+         "",
+         f"#define GOLDEN_BLOCK  {block}",
+         f"#define GOLDEN_CENTRE {centre}",
+         "",
+         "static const float kGoldenX28[28] = {"]
+    L += rows(x28, 6, f)
+    L += ["};",
+          f"static const float kGoldenFb = {f(g['fb3'][block])};",
+          "static const float kGoldenProjA[12] = {"]
+    L += rows(g["proj_a"][block], 6, f)
+    L += ["};", "static const float kGoldenProjB[12] = {"]
+    L += rows(g["proj_b"][block], 6, f)
+    L += ["};", "",
+          "static const int8_t kGoldenAInput[528] = {"]
+    L += rows(g["a_input_int8"], 16, str)
+    L += ["};",
+          f"static const int8_t kGoldenABeat = {g['a_output_int8']['beat'][0]};",
+          "",
+          "static const int8_t kGoldenBInput[528] = {"]
+    L += rows(g["b_input_int8"], 16, str)
+    L += ["};",
+          f"static const int8_t kGoldenBBeat = {bo['beat'][0]};",
+          f"static const int8_t kGoldenBOffset = {bo['beat_offset'][0]};",
+          f"static const int8_t kGoldenBMusic = {bo['music'][0]};",
+          "static const int8_t kGoldenBHit[4] = {" + ", ".join(str(v) for v in bo["hit"]) + "};",
+          ""]
+    Path(out_selftest).write_text("\n".join(L) + "\n")
+
+    pcm = (d / "pcm_s16le_48k.raw").read_bytes()
+    import struct
+    n = len(pcm) // 2
+    samples = struct.unpack(f"<{n}h", pcm)
+    if n < (MEL_FIRST + MEL_COUNT) * 512:
+        sys.exit("pcm is shorter than the requested mel window")
+
+    M = ["// Generated by tools/gen_golden.py from golden/ -- do not edit.",
+         "// Consecutive blocks of the golden song with their expected mel flux.",
+         "// Flux needs the previous block's log spectrum, so the first",
+         f"// {MEL_EXACT} blocks are run-in and are not compared.",
+         "#pragma once",
+         "",
+         "#include <stdint.h>",
+         "",
+         f"#define MELT_BLOCKS {MEL_COUNT}",
+         f"#define MELT_EXACT  {MEL_EXACT}",
+         f"#define MELT_FIRST  {MEL_FIRST}",
+         "",
+         "static const int16_t kMelPcm[MELT_BLOCKS][512] = {"]
+    for b in range(MEL_COUNT):
+        blk = samples[(MEL_FIRST + b) * 512:(MEL_FIRST + b + 1) * 512]
+        M.append("    {")
+        M += ["    " + r for r in rows(list(blk), 16, str)]
+        M.append("    },")
+    M += ["};", "", "static const float kMelExpect[MELT_BLOCKS][16] = {"]
+    for b in range(MEL_COUNT):
+        M.append("    {" + ", ".join(f(v) for v in g["mel_flux16"][MEL_FIRST + b]) + "},")
+    M += ["};", ""]
+    Path(out_mel).write_text("\n".join(M) + "\n")
+
+    # One ring's worth of stage A projections ending at the check block, so the
+    # host test can rebuild that window and quantise it exactly as the firmware
+    # does. Stage B runs the same code with its own constants.
+    depth = 272
+    first = block - depth + 1
+    if first < 0:
+        sys.exit(f"check block {block} is less than {depth} blocks from boot")
+    R = ["// Generated by tools/gen_golden.py from golden/golden.json -- do not edit.",
+         "// Stage A projections for the ring ending at the check block, and the",
+         "// int8 window the training pipeline built from them.",
+         "#pragma once",
+         "",
+         "#include <stdint.h>",
+         "",
+         f"#define GOLDEN_RING_BLOCKS {depth}",
+         f"#define GOLDEN_RING_FEATS  {len(g['proj_a'][block])}",
+         "",
+         "static const float kGoldenRingA[GOLDEN_RING_BLOCKS][GOLDEN_RING_FEATS] = {"]
+    for n in range(first, block + 1):
+        R.append("    {" + ", ".join(f(v) for v in g["proj_a"][n]) + "},")
+    R += ["};", ""]
+    Path(out_ring).write_text("\n".join(R) + "\n")
+
+    print(f"wrote {out_selftest} (block {block}, centre {centre}) and {out_mel} "
+          f"(blocks {MEL_FIRST}..{MEL_FIRST + MEL_COUNT - 1}) and {out_ring}")
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:4])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
