@@ -10,7 +10,8 @@
 
 // AGC: each band is normalized against its own peak tracker
 #define AGC_RELEASE   0.99852f  // peak halves in ~5 s (per 10.7 ms block)
-#define AGC_MIN_REF   0.003f    // ~-50 dBFS, below this the room is silent
+#define AGC_MIN_REF   0.003f    // ~-50 dBFS, AGC normalization floor
+#define FLUX_GATE_RMS 0.00056f  // -65 dBFS; song at ~65 dB SPL sits at -57..-65 (2026-10-03)
 #define DC_K          0.00065f  // DC blocker pole, ~5 Hz
 #define HC_FC_HZ      4000.0f   // hi-cut corner, 8th-order Butterworth (48 dB/oct)
 #define LP_BASS_K     0.026f    // one-pole low-pass, ~200 Hz
@@ -140,7 +141,7 @@ void fe_block(fe_t *fe, const int16_t *samples, int n, fe_out_t *out)
         fe->kick_peak[b] = fmaxf(krms, fe->kick_peak[b] * AGC_RELEASE);
         float fl = (krms - fe->kick_prev[b]) / fmaxf(fe->kick_peak[b], AGC_MIN_REF);
         fe->kick_prev[b] = krms;
-        out->flux[b] = (fl > 0.0f && rms > AGC_MIN_REF) ? fl : 0.0f;
+        out->flux[b] = (fl > 0.0f && rms > FLUX_GATE_RMS) ? fl : 0.0f;
         if (b == 0) {
             out->fund_rms = krms / fmaxf(fe->kick_peak[b], AGC_MIN_REF);
         }

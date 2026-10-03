@@ -12,7 +12,8 @@ extern "C" {
 
 // Bump on frontend changes; the model is trained against this version.
 // v2: comb removed, bit-identical to v1 built with -DFE_NO_COMB.
-#define FE_SPEC_VERSION 2
+// v3: kick-flux gate at -65 dBFS, was -50 (AGC_MIN_REF).
+#define FE_SPEC_VERSION 3
 
 // Which filters this build contains. COMB keeps its bit so the mask means the
 // same across versions; v2 never sets it. Hi-cut: -DFE_NO_HICUT.
