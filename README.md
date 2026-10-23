@@ -163,9 +163,9 @@ Critical components have unit tests via Unity, run them via `cd test/host && idf
 
 ### Flashing & Debugging
 
-Access to USB devices from the dev container is a little tricky. 
+Access to USB devices from the dev container is a little tricky on windows. 
 Refer to the [Espressif documentation](https://docs.espressif.com/projects/vscode-esp-idf-extension/en/latest/additionalfeatures/docker-container.html) for (partially out of date) instructions.  
-WSL2 distros commonly don't have USB drivers loaded.  
-Run `echo -e "cp210x\nch341\ncdc_acm" | sudo tee /etc/modules-load.d/esp.conf` inside your WSL2 distro and restart WSL2. The dev container is set up to get access to all ttyACM and ttyUSB class devices. Always make sure WSL2 is running before starting the dev container, as wsl is responsible for loading the kernel modules.  
+WSL2 distros commonly don't have USB drivers loaded, so load them via `sudo modprobe cp210x; sudo modprobe ch341; sudo modprobe cdc_acm` in WSL.
+The dev container is set up to get access to all ttyACM and ttyUSB class devices.
 
 Flashing via OTA: `curl -X POST --data-binary @build/truecolors.bin http://truecolors.local/api/ota`  
