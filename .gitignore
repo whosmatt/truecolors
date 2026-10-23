@@ -10,6 +10,7 @@ build/
 sdkconfig
 sdkconfig.old
 managed_components/
+ota_signing_key.pem
 # dependencies.lock is committed on purpose (reproducible component versions).
 
 # --- Web UI --------------------------------------------------------------

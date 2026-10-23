@@ -157,6 +157,17 @@ A websocket endpoint is used to sync the UI state with the firmware, and events 
 The official Espressif dev container is used and should automatically be detected in VS Code. Build via the status bar, the command palette or just `idf.py build`.  
 Build contains all stages, including web.  
 
+### Generating the signing key
+
+OTA updates are signed and require a key to be present in the project directory as `ota_signing_key.pem`.
+```bash
+source /opt/esp/idf/export.sh
+espsecure generate-signing-key --version 2 --scheme rsa3072 ota_signing_key.pem
+```
+
+The signature is only checked during OTA updates (wifi).
+Secure boot is disabled, no fuses are written. USB flashing/recovery is unaffected.
+
 ### Tests
 
 Critical components have unit tests via Unity, run them via `cd test/host && idf.py build && ./build/truecolors_host_tests.elf`.  
