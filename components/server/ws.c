@@ -7,6 +7,7 @@
 #include "laser.h"
 #include "audio.h"
 #include "beatnn.h"
+#include "sysmgr.h"
 #include "app_config.h"
 #include "app_events.h"
 
@@ -18,6 +19,7 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_heap_caps.h"
+#include "esp_timer.h"
 
 static const char *TAG = "ws";
 
@@ -30,6 +32,16 @@ static int s_fds[WS_MAX_CLIENTS];
 static int s_fd_count;
 static SemaphoreHandle_t s_lock;
 static app_metrics_evt_t s_last_metrics;
+
+// Critical actions require pressing a physical button for confirmation
+typedef enum { PEND_NONE, PEND_FACTORY_RESET, PEND_ADD_NETWORK } pend_kind_t;
+static SemaphoreHandle_t s_pend_lock;
+static struct {
+    pend_kind_t kind;
+    int64_t deadline_us;
+    char ssid[33];
+    char pass[65];
+} s_pend;
 
 // ---- client table ----
 
@@ -169,6 +181,30 @@ static size_t effect_nparams(uint16_t id)
     return id < n ? cat[id].n_params : 0;
 }
 
+static const char *pend_name(pend_kind_t k)
+{
+    switch (k) {
+    case PEND_FACTORY_RESET: return "factory_reset";
+    case PEND_ADD_NETWORK:   return "add_network";
+    default:                 return NULL;
+    }
+}
+
+// Caller holds s_pend_lock.
+static void add_pending(cJSON *o)
+{
+    if (s_pend.kind == PEND_NONE) {
+        return;
+    }
+    int64_t left = (s_pend.deadline_us - esp_timer_get_time()) / 1000;
+    cJSON *c = cJSON_AddObjectToObject(o, "confirm");
+    cJSON_AddStringToObject(c, "action", pend_name(s_pend.kind));
+    cJSON_AddNumberToObject(c, "remainingMs", left > 0 ? left : 0);
+    if (s_pend.kind == PEND_ADD_NETWORK) {
+        cJSON_AddStringToObject(c, "ssid", s_pend.ssid);
+    }
+}
+
 static char *build_snapshot(void)
 {
     app_state_t st;
@@ -182,6 +218,10 @@ static char *build_snapshot(void)
 
     cJSON *scene = cJSON_AddObjectToObject(root, "scene");
     add_scene_fields(scene, &st, ALL_FIELDS, effect_nparams(st.effect_id));
+
+    xSemaphoreTake(s_pend_lock, portMAX_DELAY);
+    add_pending(root);
+    xSemaphoreGive(s_pend_lock);
 
     cJSON *effs = cJSON_AddArrayToObject(root, "effects");
     for (size_t i = 0; i < ne; i++) {
@@ -414,6 +454,22 @@ static void apply_set(cJSON *set, uint32_t origin)
     }
 }
 
+static void request_confirm(httpd_req_t *req, pend_kind_t kind, const char *ssid, const char *pass)
+{
+    xSemaphoreTake(s_pend_lock, portMAX_DELAY);
+    if (s_pend.kind != PEND_NONE) {
+        xSemaphoreGive(s_pend_lock);
+        send_one(req, "{\"type\":\"confirm\",\"state\":\"busy\"}");
+        return;
+    }
+    s_pend.kind = kind;
+    s_pend.deadline_us = esp_timer_get_time() + (int64_t)CONFIRM_TIMEOUT_MS * 1000;
+    strlcpy(s_pend.ssid, ssid ? ssid : "", sizeof(s_pend.ssid));
+    strlcpy(s_pend.pass, pass ? pass : "", sizeof(s_pend.pass));
+    sysmgr_confirm_arm();
+    xSemaphoreGive(s_pend_lock);
+}
+
 static void send_wifi_list(httpd_req_t *req)
 {
     wifi_ap_info_t aps[16];
@@ -459,16 +515,19 @@ static void handle_message(httpd_req_t *req, const char *data)
         } else if (strcmp(t, "wifi_provision") == 0) {
             cJSON *s = cJSON_GetObjectItem(root, "ssid");
             cJSON *p = cJSON_GetObjectItem(root, "pass");
-            if (cJSON_IsString(s)) {
-                wifi_provision(s->valuestring, cJSON_IsString(p) ? p->valuestring : "");
+            const char *pass = cJSON_IsString(p) ? p->valuestring : "";
+            if (cJSON_IsString(s) && *s->valuestring &&
+                strlen(s->valuestring) < sizeof(s_pend.ssid) && strlen(pass) < sizeof(s_pend.pass)) {
+                request_confirm(req, PEND_ADD_NETWORK, s->valuestring, pass);
             }
+        } else if (strcmp(t, "confirm_cancel") == 0) {
+            sysmgr_confirm_cancel();
         } else if (strcmp(t, "wifi_ap") == 0) {
             wifi_enter_ap();
         } else if (strcmp(t, "reboot") == 0) {
             esp_restart();
         } else if (strcmp(t, "factory_reset") == 0) {
-            storage_clear_all();
-            esp_restart();
+            request_confirm(req, PEND_FACTORY_RESET, NULL, NULL);
         } else if (strcmp(t, "set_pwm_hz") == 0) {
             cJSON *hz = cJSON_GetObjectItem(root, "hz");
             if (cJSON_IsNumber(hz) &&
@@ -574,10 +633,70 @@ static void on_wifi(void *arg, esp_event_base_t base, int32_t id, void *data)
     if (json) { broadcast(json); free(json); }
 }
 
+static const char *confirm_state_str(confirm_state_t s)
+{
+    switch (s) {
+    case CONFIRM_ARMED:     return "armed";
+    case CONFIRM_CONFIRMED: return "confirmed";
+    case CONFIRM_EXPIRED:   return "expired";
+    default:                return "cancelled";
+    }
+}
+
+static void on_confirm(void *arg, esp_event_base_t base, int32_t id, void *data)
+{
+    const app_confirm_evt_t *e = data;
+    pend_kind_t run = PEND_NONE;
+    char ssid[33], pass[65];
+
+    xSemaphoreTake(s_pend_lock, portMAX_DELAY);
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "type", "confirm");
+    cJSON_AddStringToObject(root, "state", confirm_state_str(e->state));
+    if (s_pend.kind != PEND_NONE) {
+        cJSON_AddStringToObject(root, "action", pend_name(s_pend.kind));
+        if (e->state == CONFIRM_ARMED) {
+            cJSON_AddNumberToObject(root, "remainingMs", e->remaining_ms);
+            if (s_pend.kind == PEND_ADD_NETWORK) {
+                cJSON_AddStringToObject(root, "ssid", s_pend.ssid);
+            }
+        } else {
+            if (e->state == CONFIRM_CONFIRMED) {
+                run = s_pend.kind;
+                memcpy(ssid, s_pend.ssid, sizeof(ssid));
+                memcpy(pass, s_pend.pass, sizeof(pass));
+            }
+            memset(&s_pend, 0, sizeof(s_pend));
+        }
+    }
+    xSemaphoreGive(s_pend_lock);
+
+    char *json = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    if (json) { broadcast(json); free(json); }
+
+    switch (run) {
+    case PEND_FACTORY_RESET:
+        ESP_LOGW(TAG, "factory reset confirmed");
+        vTaskDelay(pdMS_TO_TICKS(300));   // let the confirmation reach clients
+        storage_clear_all();
+        esp_restart();
+        break;
+    case PEND_ADD_NETWORK:
+        ESP_LOGI(TAG, "network \"%s\" confirmed", ssid);
+        wifi_provision(ssid, pass);
+        memset(pass, 0, sizeof(pass));
+        break;
+    default:
+        break;
+    }
+}
+
 void ws_start(httpd_handle_t server)
 {
     s_server = server;
     s_lock = xSemaphoreCreateMutex();
+    s_pend_lock = xSemaphoreCreateMutex();
 
     static const httpd_uri_t ws_uri = {
         .uri = "/ws",
@@ -592,4 +711,5 @@ void ws_start(httpd_handle_t server)
     app_bus_subscribe(EVT_SAFETY_CHANGED, on_safety, NULL);
     app_bus_subscribe(EVT_WIFI_STATE, on_wifi, NULL);
     app_bus_subscribe(EVT_BEATGRID, on_beatgrid, NULL);
+    app_bus_subscribe(EVT_CONFIRM, on_confirm, NULL);
 }

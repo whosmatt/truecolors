@@ -3,6 +3,7 @@
 #include "sysmgr_safety.h"
 #include "fancontrol.h"
 #include "status_led.h"
+#include "confirm.h"
 #include "board_pins.h"
 #include "app_config.h"
 #include "app_events.h"
@@ -245,6 +246,9 @@ static void on_wifi_state(void *arg, esp_event_base_t base, int32_t id, void *da
 
 static led_state_t pick_led(uint32_t err, uint32_t warn, bool power)
 {
+    if (confirm_pending()) {
+        return LED_CONFIRM;
+    }
     if (err) {
         return LED_ERROR;
     }
@@ -259,7 +263,7 @@ static led_state_t pick_led(uint32_t err, uint32_t warn, bool power)
     }
 }
 
-static void poll_button(void)
+static void poll_button(int64_t now)
 {
     static int low_count;
     static bool pressed;
@@ -274,13 +278,19 @@ static void poll_button(void)
         }
         if (low_count >= debounce && !pressed) {
             pressed = true;
-            ESP_LOGI(TAG, "button -> AP mode");
-            wifi_enter_ap();
+            if (confirm_poll(now, true)) {
+                ESP_LOGI(TAG, "button -> confirmed");
+            } else {
+                ESP_LOGI(TAG, "button -> AP mode");
+                wifi_enter_ap();
+            }
+            return;
         }
     } else {
         low_count = 0;
         pressed = false;
     }
+    confirm_poll(now, false);
 }
 
 static void monitor_task(void *arg)
@@ -353,7 +363,7 @@ static void monitor_task(void *arg)
         appstate_get(&st);
         status_led_set_state(pick_led(out.err_flags, out.warn_flags, st.power));
 
-        poll_button();
+        poll_button(now);
 
         if (now - last_publish >= 1000000) {
             last_publish = now;
@@ -385,6 +395,7 @@ esp_err_t sysmgr_init(void)
     status_led_set_state(LED_BOOT);
 
     safety_init(&s_safety);
+    confirm_init();
     app_bus_subscribe(EVT_WIFI_STATE, on_wifi_state, NULL);
 
     i2c_init();

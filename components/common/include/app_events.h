@@ -20,6 +20,7 @@ typedef enum {
     EVT_SAFETY_CHANGED,      // sysmgr -> server, effects/laser, status LED
     EVT_WIFI_STATE,          // wifi -> server, status LED, mDNS
     EVT_BEATGRID,            // audio (event-driven) -> server, visualization
+    EVT_CONFIRM,             // sysmgr -> server: pending button confirmation
 } app_event_id_t;
 
 // Origin of a state change (carried in EVT_STATE_CHANGED).
@@ -89,6 +90,18 @@ typedef struct {
     float safety_scale;      // 0..1 multiplier applied before laser_set
     bool  latched;           // a latching fault is active (clears only on reboot)
 } app_safety_evt_t;
+
+typedef enum {
+    CONFIRM_ARMED = 0,
+    CONFIRM_CONFIRMED,
+    CONFIRM_EXPIRED,
+    CONFIRM_CANCELLED,
+} confirm_state_t;
+
+typedef struct {
+    confirm_state_t state;
+    uint32_t remaining_ms;   // ARMED only
+} app_confirm_evt_t;
 
 // Wi-Fi connectivity mode (carried in EVT_WIFI_STATE).
 typedef enum {

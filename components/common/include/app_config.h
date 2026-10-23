@@ -47,6 +47,7 @@
 #define LASER_A_INTERCEPT    3.68f
 #define LASER_A_PER_VOLT     -0.106f
 #define LASER_A_MARGIN       0.2f
+#define CONFIRM_TIMEOUT_MS   30000  // timeout for pending confirmations via physical button
 #define POWER_RESTORE_WINDOW_MS 1500    // usually far below 500ms in practice
 #define NTC_V_OPEN           3.25f      // above this the NTC reads open
 #define NTC_V_SHORT          0.05f      // below this the NTC reads shorted

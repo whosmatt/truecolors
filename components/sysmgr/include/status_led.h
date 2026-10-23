@@ -16,6 +16,7 @@ typedef enum {
     LED_CONNECTED_RUNNING,   // green  · gentle breathe
     LED_WARNING,             // amber  · slow pulse (on -> fade)
     LED_ERROR,               // red    · pulse (sharp on -> fade, repeating)
+    LED_CONFIRM,             // white  · fast blink
     LED_STATE_COUNT,
 } led_state_t;
 

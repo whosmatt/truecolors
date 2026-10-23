@@ -16,7 +16,7 @@ static const char *TAG = "status_led";
 #define STATUS_LED_MAX    0.55f   // master scale
 #define BREATHE_FLOOR     0.25f   // apple style minimum for low breathe state
 
-typedef enum { PAT_SOLID, PAT_BREATHE, PAT_PULSE, PAT_HEARTBEAT } led_pattern_t;
+typedef enum { PAT_SOLID, PAT_BREATHE, PAT_PULSE, PAT_HEARTBEAT, PAT_BLINK } led_pattern_t;
 
 typedef struct {
     uint8_t r, g, b;
@@ -33,6 +33,7 @@ static const led_anim_t k_states[LED_STATE_COUNT] = {
     [LED_CONNECTED_RUNNING] = {  0,  10,   1, PAT_SOLID,   1.0f},
     [LED_WARNING]           = {255, 110,   0, PAT_PULSE,   1.5f},
     [LED_ERROR]             = {255,   0,   0, PAT_PULSE,   0.8f},
+    [LED_CONFIRM]           = {255, 255, 255, PAT_BLINK,   0.5f},
 };
 
 static led_strip_handle_t s_strip;
@@ -50,6 +51,8 @@ static float pattern_intensity(led_pattern_t p, float phase)
     }
     case PAT_PULSE:
         return expf(-3.0f * phase);                              // sharp on -> fade
+    case PAT_BLINK:
+        return phase < 0.5f ? 1.0f : 0.0f;
     case PAT_HEARTBEAT: {
         float a = expf(-25.0f * phase);
         float b = expf(-25.0f * fabsf(phase - 0.18f));
