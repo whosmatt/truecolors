@@ -58,6 +58,7 @@ void app_main(void)
 
     // 8. Prime the scene from persisted state (STORAGE_RESTORE patch).
     ESP_ERROR_CHECK(storage_restore_scene());
+    sysmgr_restore_power(storage_load_power());
 
     // 9. Start periodic tasks (render / monitor / audio).
     ESP_ERROR_CHECK(effects_start_render());

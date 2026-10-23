@@ -17,6 +17,8 @@ esp_err_t storage_init(void);
 // Subscribe for scene changes and apply any persisted scene.
 esp_err_t storage_restore_scene(void);
 
+bool storage_load_power(void);   // false when unset
+
 esp_err_t storage_save_wifi(const char *ssid, const char *pass);
 bool storage_load_wifi(char *ssid, size_t ssid_len, char *pass, size_t pass_len);
 

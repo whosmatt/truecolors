@@ -47,6 +47,7 @@
 #define LASER_A_INTERCEPT    3.68f
 #define LASER_A_PER_VOLT     -0.106f
 #define LASER_A_MARGIN       0.2f
+#define POWER_RESTORE_WINDOW_MS 1500    // usually far below 500ms in practice
 #define NTC_V_OPEN           3.25f      // above this the NTC reads open
 #define NTC_V_SHORT          0.05f      // below this the NTC reads shorted
 #define BTN_DEBOUNCE_MS      60
@@ -100,4 +101,5 @@
 #define NVS_KEY_HOSTNAME     "hostname"
 #define NVS_KEY_PWM_HZ       "pwm_hz"
 #define NVS_KEY_EPI_SAFE     "epi_safe"
+#define NVS_KEY_POWER        "power"
 #define PERSIST_DEBOUNCE_MS  2000           // coalesce scene writes to flash

@@ -30,6 +30,8 @@ static const char *TAG = "sysmgr";
 _Static_assert(SF_VIN_LOW == FLAG_VIN_LOW && SF_UNDERCURRENT == FLAG_UNDERCURRENT &&
                SF_PD_LOST == FLAG_PD_LOST && SF_OVERTEMP == FLAG_OVERTEMP &&
                SF_FAN_STALL == FLAG_FAN_STALL, "safety flag bits must match app_flag_t");
+_Static_assert(POWER_RESTORE_WINDOW_MS < PERSIST_DEBOUNCE_MS,
+               "restore check window must end before first possible flash write");
 
 static i2c_master_bus_handle_t s_i2c_bus;
 static i2c_master_dev_handle_t s_ch224a;
@@ -40,6 +42,7 @@ static temperature_sensor_handle_t s_tsens;
 static pcnt_unit_handle_t s_pcnt;
 
 static safety_state_t s_safety;
+static bool s_restore_power;
 static app_wifi_mode_t s_wifi_mode = WIFI_MODE_BOOT;
 
 // ---- CH224A ----
@@ -321,6 +324,19 @@ static void monitor_task(void *arg)
             laser_emergency_off();
         }
 
+        if (s_restore_power) {
+            bool good = pd_ok && !out.err_flags &&
+                        !(out.warn_flags & (SF_UNDERCURRENT | SF_VIN_LOW));
+            if (good) {
+                app_patch_t p = { .mask = STATE_F_POWER, .power = true };
+                appstate_apply_patch(APP_SRC_STORAGE_RESTORE, &p);
+                s_restore_power = false;
+            } else if (now >= (int64_t)POWER_RESTORE_WINDOW_MS * 1000) {
+                ESP_LOGW(TAG, "no good PD within %d ms, staying off", POWER_RESTORE_WINDOW_MS);
+                s_restore_power = false;
+            }
+        }
+
         if (out.safety_scale != prev.safety_scale || out.warn_flags != prev.warn_flags ||
             out.err_flags != prev.err_flags || out.latched != prev.latched) {
             app_safety_evt_t ev = {
@@ -379,6 +395,11 @@ esp_err_t sysmgr_init(void)
     button_init();
 
     return ESP_OK;
+}
+
+void sysmgr_restore_power(bool saved_on)
+{
+    s_restore_power = saved_on;
 }
 
 esp_err_t sysmgr_start(void)

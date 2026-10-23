@@ -61,7 +61,7 @@ void safety_step(safety_state_t *st, const safety_inputs_t *in,
         scale = 1.0f;
     }
 
-    // Warning only, we rely on the PD source to restart in an overcurrent condition, sending the light back to its default OFF state. 
+    // Used to default to power off when supply is below spec
     float required_a = LASER_A_INTERCEPT + LASER_A_PER_VOLT * in->vin_v + LASER_A_MARGIN;
     if (in->pd_ok && in->pd_current_a < required_a) {
         warn |= SF_UNDERCURRENT;

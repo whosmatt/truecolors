@@ -11,7 +11,7 @@
 
 static const char *TAG = "storage";
 
-// v2: dropped power, the light always boots off.
+// v2: power is a separate key
 #define SCENE_BLOB_VERSION 2
 
 typedef struct {
@@ -46,6 +46,9 @@ static void persist_now(void *arg)
 
     esp_err_t err = nvs_set_blob(s_nvs, NVS_KEY_SCENE, &blob, sizeof(blob));
     if (err == ESP_OK) {
+        err = nvs_set_u8(s_nvs, NVS_KEY_POWER, st.power ? 1 : 0);
+    }
+    if (err == ESP_OK) {
         err = nvs_commit(s_nvs);
     }
     if (err != ESP_OK) {
@@ -57,10 +60,6 @@ static void on_state_changed(void *arg, esp_event_base_t base, int32_t id, void 
 {
     const app_state_changed_evt_t *evt = data;
     if (evt && evt->src == APP_SRC_STORAGE_RESTORE) {
-        return;
-    }
-    // Power is not persisted, so a pure on/off toggle skips the flash write.
-    if (evt && (evt->changed_mask & ~STATE_F_POWER) == 0) {
         return;
     }
     esp_timer_stop(s_persist_timer);
@@ -111,6 +110,13 @@ esp_err_t storage_restore_scene(void)
     memcpy(patch.params, blob.params, sizeof(patch.params));
 
     return appstate_apply_patch(APP_SRC_STORAGE_RESTORE, &patch);
+}
+
+bool storage_load_power(void)
+{
+    uint8_t on = 0;
+    nvs_get_u8(s_nvs, NVS_KEY_POWER, &on);
+    return on != 0;
 }
 
 esp_err_t storage_save_pwm_hz(uint32_t hz)
