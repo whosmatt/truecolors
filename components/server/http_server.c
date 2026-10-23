@@ -5,9 +5,13 @@
 #include "app_config.h"
 #include "wifi_mgr.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
+#include "esp_secure_boot.h"
+#include "esp_heap_caps.h"
+#include "psa/crypto.h"
 #include "esp_system.h"
 #include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"
@@ -56,6 +60,21 @@ static esp_err_t spa_handler(httpd_req_t *req)
                            index_html_gz_end - index_html_gz_start);
 }
 
+// Reject bad OTA early. esp_ota_end does the final check anyways, so this is not critical
+static bool signature_ok(const uint8_t *img, size_t len)
+{
+    size_t signed_len = len - sizeof(ets_secure_boot_signature_t);
+    uint8_t digest[32];
+    size_t digest_len;
+    if (psa_crypto_init() != PSA_SUCCESS ||
+        psa_hash_compute(PSA_ALG_SHA_256, img, signed_len, digest, sizeof(digest),
+                         &digest_len) != PSA_SUCCESS) {
+        return false;
+    }
+    const ets_secure_boot_signature_t *sig = (const void *)(img + signed_len);
+    return esp_secure_boot_verify_sbv2_signature_block(sig, digest, NULL) == ESP_OK;
+}
+
 static esp_err_t ota_handler(httpd_req_t *req)
 {
     const esp_partition_t *part = esp_ota_get_next_update_partition(NULL);
@@ -64,27 +83,48 @@ static esp_err_t ota_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    esp_ota_handle_t ota;
-    if (esp_ota_begin(part, OTA_WITH_SEQUENTIAL_WRITES, &ota) != ESP_OK) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota begin failed");
+    // Buffer the entire image in PSRAM for signature verification
+    size_t len = req->content_len;
+    const size_t sig_len = sizeof(ets_secure_boot_signature_t);
+    if (len <= sig_len || len % sig_len || len > part->size) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "bad image size");
+        return ESP_FAIL;
+    }
+    uint8_t *img = heap_caps_malloc(len, MALLOC_CAP_SPIRAM);
+    if (!img) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no memory");
         return ESP_FAIL;
     }
 
-    char buf[1024];
-    int remaining = req->content_len;
-    while (remaining > 0) {
-        int got = httpd_req_recv(req, buf, remaining < (int)sizeof(buf) ? remaining : (int)sizeof(buf));
-        if (got <= 0) {
-            esp_ota_abort(ota);
+    for (size_t got = 0; got < len;) {
+        int n = httpd_req_recv(req, (char *)img + got, len - got);
+        if (n <= 0) {
+            free(img);
             httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "recv failed");
             return ESP_FAIL;
         }
-        if (esp_ota_write(ota, buf, got) != ESP_OK) {
+        got += n;
+    }
+
+    if (!signature_ok(img, len)) {
+        free(img);
+        ESP_LOGW(TAG, "OTA rejected: signature");
+        httpd_resp_send_err(req, HTTPD_403_FORBIDDEN, "bad signature");
+        return ESP_FAIL;
+    }
+
+    esp_ota_handle_t ota;
+    esp_err_t err = esp_ota_begin(part, len, &ota);
+    if (err == ESP_OK) {
+        err = esp_ota_write(ota, img, len);
+        if (err != ESP_OK) {
             esp_ota_abort(ota);
-            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota write failed");
-            return ESP_FAIL;
         }
-        remaining -= got;
+    }
+    free(img);
+    if (err != ESP_OK) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota write failed");
+        return ESP_FAIL;
     }
 
     if (esp_ota_end(ota) != ESP_OK || esp_ota_set_boot_partition(part) != ESP_OK) {

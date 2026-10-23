@@ -2,7 +2,7 @@ idf_component_register(
     SRCS "http_server.c" "ws.c"
     INCLUDE_DIRS "include"
     REQUIRES common appstate esp_http_server
-    PRIV_REQUIRES effects wifi storage laser audio beatnn espressif__cjson esp_system lwip app_update esp_app_format
+    PRIV_REQUIRES effects wifi storage laser audio beatnn espressif__cjson esp_system lwip app_update esp_app_format bootloader_support mbedtls
 )
 
 # Build the Svelte UI to a single gzipped index.html and embed it.
