@@ -11,6 +11,7 @@ import {
   type Metrics,
   type AccessPoint,
   type BeatgridEvent,
+  type ConfirmMsg,
 } from './state.svelte';
 
 const MIN_BACKOFF = 500;
@@ -76,6 +77,10 @@ interface SnapshotMsg {
   net: NetInfo;
   pwmHz?: number;
   epilepsySafe?: boolean;
+  confirm?: ConfirmMsg;
+}
+interface ConfirmServerMsg extends ConfirmMsg {
+  type: 'confirm';
 }
 interface PwmHzMsg {
   type: 'pwm_hz';
@@ -120,6 +125,7 @@ type ServerMsg =
   | PwmHzMsg
   | EpilepsySafeMsg
   | BeatgridMsg
+  | ConfirmServerMsg
   | ErrorMsg;
 
 function handleMessage(raw: string): void {
@@ -148,7 +154,11 @@ function handleMessage(raw: string): void {
         ssid: msg.ssid,
         hostname: msg.hostname,
         ip: msg.ip,
+        known: msg.known ?? [],
       });
+      break;
+    case 'confirm':
+      store.applyConfirm(msg);
       break;
     case 'metrics':
       store.applyMetrics({
@@ -255,8 +265,15 @@ export function wifiScan(): void {
   store.scanning = true;
   rawSend({ type: 'wifi_scan' });
 }
-export function wifiProvision(ssid: string, pass: string): void {
+
+export function addNetwork(ssid: string, pass: string): void {
   rawSend({ type: 'add_network', ssid, pass });
+}
+export function forgetNetwork(ssid: string): void {
+  rawSend({ type: 'forget_network', ssid });
+}
+export function cancelConfirm(): void {
+  rawSend({ type: 'confirm_cancel' });
 }
 export function wifiAp(): void {
   rawSend({ type: 'wifi_ap' });

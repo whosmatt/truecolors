@@ -185,3 +185,40 @@ select:focus {
 .btn-danger:hover {
   background: rgba(255, 77, 94, 0.12);
 }
+
+/* Dialogs (NetworkPanel, PressConfirm) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+.modal {
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg-elev-1, #16161f);
+  border: 1px solid var(--border-solid, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius, 14px);
+  padding: 22px;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+}
+.modal h3 {
+  margin: 0 0 10px;
+  font-size: 1.02rem;
+}
+.modal p {
+  margin: 0 0 20px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

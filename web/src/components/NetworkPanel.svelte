@@ -1,9 +1,11 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
   import { store } from '../lib/state.svelte';
+  import PressConfirm from './PressConfirm.svelte';
   import {
     wifiScan,
-    wifiProvision,
+    addNetwork,
+    forgetNetwork,
     wifiAp,
     reboot,
     factoryReset,
@@ -26,8 +28,11 @@
   }
   let pending = $state<Confirm | null>(null);
 
+  let showForget = $state(false); // saved-network list
+
   function cancel() {
     pending = null;
+    showForget = false;
   }
   function confirmAction() {
     const p = pending;
@@ -58,32 +63,23 @@
     return 1;
   }
 
-  function provision() {
+  function add() {
     if (!selectedSsid) return;
-    wifiProvision(selectedSsid, password);
+    addNetwork(selectedSsid, password);
     password = '';
   }
 
-  function forgetNetwork() {
-    // Same as connect but with empty credentials
-    wifiProvision('', '');
-    selectedSsid = '';
-    password = '';
+  function forget(ssid: string) {
+    showForget = false;
+    forgetNetwork(ssid);
   }
 
   const askAp = () =>
     (pending = {
       title: 'Switch to AP mode',
-      body: 'The device will switch to temporary AP mode. If you want persistent AP mode, use \'Forget network\' instead.',
+      body: 'Enable AP until a network is added or the device is restarted',
       label: 'Switch to AP',
       run: wifiAp,
-    });
-  const askForget = () =>
-    (pending = {
-      title: 'Forget network',
-      body: 'The device will disconnect and enter AP mode.',
-      label: 'Forget network',
-      run: forgetNetwork,
     });
   const askReboot = () =>
     (pending = {
@@ -91,14 +87,6 @@
       body: 'Do you want to reboot the device?',
       label: 'Reboot',
       run: reboot,
-    });
-  const askFactoryReset = () =>
-    (pending = {
-      title: 'Factory reset',
-      body: 'Clear NVS and restore default settings?',
-      label: 'Erase & reset',
-      danger: true,
-      run: factoryReset,
     });
 
   // ---- Firmware (OTA) update ----
@@ -215,6 +203,9 @@
             >
               <span class="ap-name">{ap.ssid}</span>
               <span class="ap-meta">
+                {#if store.net.known.includes(ap.ssid)}
+                  <span class="saved">Saved</span>
+                {/if}
                 <span class="auth">{authLabel(ap.auth)}</span>
                 <span class="bars" aria-label="{ap.rssi} dBm">
                   {#each [1, 2, 3, 4] as b (b)}
@@ -242,18 +233,24 @@
         />
         <button
           class="btn btn-primary"
-          onclick={provision}
+          onclick={add}
           disabled={!selectedSsid}
         >
-          Connect
+          Add network
         </button>
       </div>
 
       <div class="admin">
         <button class="btn" onclick={askAp}>AP Mode</button>
-        <button class="btn" onclick={askForget}>Forget Network</button>
+        <button
+          class="btn"
+          onclick={() => (showForget = true)}
+          disabled={store.net.known.length === 0}
+        >
+          Forget Network
+        </button>
         <button class="btn" onclick={askReboot}>Reboot</button>
-        <button class="btn btn-danger" onclick={askFactoryReset}>
+        <button class="btn btn-danger" onclick={factoryReset}>
           Factory Reset
         </button>
       </div>
@@ -314,9 +311,42 @@
   {/if}
 </div>
 
+<PressConfirm />
+
+{#if showForget}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <div class="modal-overlay" role="presentation" onclick={cancel}>
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Forget network"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <h3>Forget network</h3>
+      <div class="known">
+        {#each store.net.known as ssid (ssid)}
+          <div class="known-row">
+            <span class="ap-name">{ssid}</span>
+            {#if ssid === store.net.ssid && store.net.mode === 'sta'}
+              <span class="auth">connected</span>
+            {/if}
+            <button class="btn btn-danger" onclick={() => forget(ssid)}>Forget</button>
+          </div>
+        {:else}
+          <span class="auth">No saved networks.</span>
+        {/each}
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick={cancel}>Close</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 {#if pending}
-  <!-- Backdrop click is a mouse convenience; Esc and the Cancel button give
-       keyboard users an equivalent path. -->
+  <!-- Backdrop click or esc also cancel -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <div class="modal-overlay" role="presentation" onclick={cancel}>
@@ -449,6 +479,28 @@
   .bars i.on {
     opacity: 1;
     background: var(--accent-2);
+  }
+  .saved {
+    font-size: 0.72rem;
+    color: var(--accent-2);
+  }
+  .known {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .known-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 6px 6px 11px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-elev-2);
+  }
+  .known-row .ap-name {
+    flex: 1 1 auto;
+    min-width: 0;
   }
   .provision {
     display: flex;
@@ -602,40 +654,5 @@
   }
   .settings {
     margin-top: 14px;
-  }
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(3px);
-  }
-  .modal {
-    width: 100%;
-    max-width: 380px;
-    background: var(--bg-elev-1, #16161f);
-    border: 1px solid var(--border-solid, rgba(255, 255, 255, 0.12));
-    border-radius: var(--radius, 14px);
-    padding: 22px;
-    box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
-  }
-  .modal h3 {
-    margin: 0 0 10px;
-    font-size: 1.02rem;
-  }
-  .modal p {
-    margin: 0 0 20px;
-    font-size: 0.88rem;
-    line-height: 1.5;
-    color: var(--text-dim);
-  }
-  .modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
   }
 </style>

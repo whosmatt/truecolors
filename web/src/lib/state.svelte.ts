@@ -54,6 +54,31 @@ export interface NetInfo {
   ssid: string;
   hostname: string;
   ip: string;
+  known: string[]; // saved networks, names only
+}
+
+// Pending or ended action
+export type PressAction = 'factory_reset' | 'add_network' | 'forget_network';
+export type PressState =
+  | 'armed'
+  | 'confirmed'
+  | 'expired'
+  | 'cancelled'
+  | 'busy' // another action pending
+  | 'rejected'; // see reason
+export interface PressConfirm {
+  state: PressState;
+  action?: PressAction;
+  ssid?: string;
+  deadline?: number; // performance.now() ms, armed only
+  reason?: 'invalid' | 'full' | 'unknown' | string;
+}
+export interface ConfirmMsg {
+  state: PressState;
+  action?: PressAction;
+  ssid?: string;
+  remainingMs?: number;
+  reason?: string;
 }
 
 export interface Metrics {
@@ -127,7 +152,8 @@ class Store {
   seq = $state(0);
   scene = $state<Scene>(emptyScene());
   effects = $state<EffectDef[]>([]);
-  net = $state<NetInfo>({ mode: 'boot', ssid: '', hostname: '', ip: '' });
+  net = $state<NetInfo>({ mode: 'boot', ssid: '', hostname: '', ip: '', known: [] });
+  press = $state<PressConfirm | null>(null);
   metrics = $state<Metrics | null>(null);
   pwmHz = $state(120);
   epilepsySafe = $state(true);
@@ -157,6 +183,7 @@ class Store {
     net: NetInfo;
     pwmHz?: number;
     epilepsySafe?: boolean;
+    confirm?: ConfirmMsg;
   }): void {
     this.seq = msg.seq;
     this.scene = { ...emptyScene(), ...msg.scene };
@@ -164,6 +191,24 @@ class Store {
     this.net = msg.net ?? this.net;
     this.pwmHz = msg.pwmHz ?? this.pwmHz;
     this.epilepsySafe = msg.epilepsySafe ?? this.epilepsySafe;
+    if (msg.confirm) this.applyConfirm({ ...msg.confirm, state: 'armed' });
+    else if (this.press?.state === 'armed') this.press = null;
+  }
+
+  applyConfirm(m: ConfirmMsg): void {
+    if (m.state === 'armed') {
+      this.press = {
+        state: 'armed',
+        action: m.action,
+        ssid: m.ssid,
+        deadline: performance.now() + (m.remainingMs ?? 0),
+      };
+    } else if (m.state === 'busy' || m.state === 'rejected') {
+      this.press = { state: m.state, reason: m.reason };
+    } else if (this.press?.state === 'armed') {
+      // Outcomes only matter to a client that was showing the prompt.
+      this.press = { state: m.state, action: m.action ?? this.press.action, ssid: this.press.ssid };
+    }
   }
 
   applyPatch(seq: number, set: ScenePatch): void {
