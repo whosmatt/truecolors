@@ -23,8 +23,14 @@ esp_err_t wifi_start(void);
 // Enter AP / provisioning mode.
 esp_err_t wifi_enter_ap(void);
 
-// Store credentials and (re)connect as a station.
-esp_err_t wifi_provision(const char *ssid, const char *pass);
+// Add and connect to a new network
+esp_err_t wifi_add_network(const char *ssid, const char *pass);
+
+// ESP_ERR_NOT_FOUND if unknown. Reconnects elsewhere if it is the current one.
+esp_err_t wifi_forget_network(const char *ssid);
+
+// SSIDs of the known networks, never passwords. Returns the count.
+int wifi_known_networks(char (*ssids)[33], int max);
 
 // Blocking scan, fills up to max entries, returns the count.
 int wifi_scan(wifi_ap_info_t *out, int max);

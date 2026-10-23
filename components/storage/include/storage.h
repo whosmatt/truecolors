@@ -19,8 +19,13 @@ esp_err_t storage_restore_scene(void);
 
 bool storage_load_power(void);   // false when unset
 
-esp_err_t storage_save_wifi(const char *ssid, const char *pass);
-bool storage_load_wifi(char *ssid, size_t ssid_len, char *pass, size_t pass_len);
+typedef struct {
+    char ssid[33];
+    char pass[65];
+} wifi_net_t;
+
+int storage_load_wifi_nets(wifi_net_t *out);
+esp_err_t storage_save_wifi_nets(const wifi_net_t *nets, int n);
 
 esp_err_t storage_save_pwm_hz(uint32_t hz);
 uint32_t storage_load_pwm_hz(void);   // TC_PWM_HZ when unset

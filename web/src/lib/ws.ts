@@ -256,7 +256,7 @@ export function wifiScan(): void {
   rawSend({ type: 'wifi_scan' });
 }
 export function wifiProvision(ssid: string, pass: string): void {
-  rawSend({ type: 'wifi_provision', ssid, pass });
+  rawSend({ type: 'add_network', ssid, pass });
 }
 export function wifiAp(): void {
   rawSend({ type: 'wifi_ap' });
@@ -275,9 +275,8 @@ export function factoryReset(): void {
 }
 
 // ---- OTA firmware update ---------------------------------------------------
-// The one non-WS path: stream the raw .bin to POST /api/ota. We use XHR (not
-// fetch) for upload progress. The device replies "ok" then reboots, so onDone
-// fires just before the socket drops.
+// Raw .bin to POST /api/ota with XHR for upload progress. 
+// Replies "ok" then reboots
 export interface OtaHandlers {
   onProgress?: (frac: number) => void;
   onDone?: () => void;

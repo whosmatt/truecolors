@@ -97,8 +97,8 @@
 // ---------------------------------------------------------------------------
 #define NVS_NAMESPACE        "truecolors"
 #define NVS_KEY_SCENE        "scene"        // packed app_state blob
-#define NVS_KEY_WIFI_SSID    "wifi_ssid"
-#define NVS_KEY_WIFI_PASS    "wifi_pass"
+#define NVS_KEY_WIFI_NETS    "wifi_nets"
+#define WIFI_NETS_MAX        8
 #define NVS_KEY_HOSTNAME     "hostname"
 #define NVS_KEY_PWM_HZ       "pwm_hz"
 #define NVS_KEY_EPI_SAFE     "epi_safe"

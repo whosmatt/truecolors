@@ -34,7 +34,7 @@ static SemaphoreHandle_t s_lock;
 static app_metrics_evt_t s_last_metrics;
 
 // Critical actions require pressing a physical button for confirmation
-typedef enum { PEND_NONE, PEND_FACTORY_RESET, PEND_ADD_NETWORK } pend_kind_t;
+typedef enum { PEND_NONE, PEND_FACTORY_RESET, PEND_ADD_NETWORK, PEND_FORGET_NETWORK } pend_kind_t;
 static SemaphoreHandle_t s_pend_lock;
 static struct {
     pend_kind_t kind;
@@ -171,6 +171,12 @@ static cJSON *net_obj(void)
     cJSON_AddStringToObject(o, "ssid", net.ssid);
     cJSON_AddStringToObject(o, "hostname", net.hostname);
     cJSON_AddStringToObject(o, "ip", net.ip);
+    char known[WIFI_NETS_MAX][33];
+    int n = wifi_known_networks(known, WIFI_NETS_MAX);
+    cJSON *k = cJSON_AddArrayToObject(o, "known");
+    for (int i = 0; i < n; i++) {
+        cJSON_AddItemToArray(k, cJSON_CreateString(known[i]));
+    }
     return o;
 }
 
@@ -186,6 +192,7 @@ static const char *pend_name(pend_kind_t k)
     switch (k) {
     case PEND_FACTORY_RESET: return "factory_reset";
     case PEND_ADD_NETWORK:   return "add_network";
+    case PEND_FORGET_NETWORK: return "forget_network";
     default:                 return NULL;
     }
 }
@@ -200,7 +207,7 @@ static void add_pending(cJSON *o)
     cJSON *c = cJSON_AddObjectToObject(o, "confirm");
     cJSON_AddStringToObject(c, "action", pend_name(s_pend.kind));
     cJSON_AddNumberToObject(c, "remainingMs", left > 0 ? left : 0);
-    if (s_pend.kind == PEND_ADD_NETWORK) {
+    if (s_pend.kind == PEND_ADD_NETWORK || s_pend.kind == PEND_FORGET_NETWORK) {
         cJSON_AddStringToObject(c, "ssid", s_pend.ssid);
     }
 }
@@ -470,6 +477,46 @@ static void request_confirm(httpd_req_t *req, pend_kind_t kind, const char *ssid
     xSemaphoreGive(s_pend_lock);
 }
 
+static void reject(httpd_req_t *req, const char *reason)
+{
+    char json[64];
+    snprintf(json, sizeof(json), "{\"type\":\"confirm\",\"state\":\"rejected\",\"reason\":\"%s\"}", reason);
+    send_one(req, json);
+}
+
+// Checked before arming, so nobody walks to the button for an action that can't succeed.
+static void request_network(httpd_req_t *req, bool forget, const cJSON *s, const cJSON *p)
+{
+    const char *ssid = cJSON_IsString(s) ? s->valuestring : "";
+    const char *pass = cJSON_IsString(p) ? p->valuestring : "";
+    size_t sl = strlen(ssid), pl = strlen(pass);
+    if (sl == 0 || sl >= sizeof(s_pend.ssid)) {
+        reject(req, "invalid");
+        return;
+    }
+
+    char known[WIFI_NETS_MAX][33];
+    int n = wifi_known_networks(known, WIFI_NETS_MAX);
+    bool is_known = false;
+    for (int i = 0; i < n; i++) {
+        is_known |= strcmp(known[i], ssid) == 0;
+    }
+
+    if (forget) {
+        if (!is_known) {
+            reject(req, "unknown");
+        } else {
+            request_confirm(req, PEND_FORGET_NETWORK, ssid, NULL);
+        }
+    } else if (pl != 0 && (pl < 8 || pl > 64)) {   // open, or WPA passphrase / 64 hex
+        reject(req, "invalid");
+    } else if (!is_known && n == WIFI_NETS_MAX) {
+        reject(req, "full");
+    } else {
+        request_confirm(req, PEND_ADD_NETWORK, ssid, pass);
+    }
+}
+
 static void send_wifi_list(httpd_req_t *req)
 {
     wifi_ap_info_t aps[16];
@@ -512,14 +559,9 @@ static void handle_message(httpd_req_t *req, const char *data)
             if (snap) { send_one(req, snap); free(snap); }
         } else if (strcmp(t, "wifi_scan") == 0) {
             send_wifi_list(req);
-        } else if (strcmp(t, "wifi_provision") == 0) {
-            cJSON *s = cJSON_GetObjectItem(root, "ssid");
-            cJSON *p = cJSON_GetObjectItem(root, "pass");
-            const char *pass = cJSON_IsString(p) ? p->valuestring : "";
-            if (cJSON_IsString(s) && *s->valuestring &&
-                strlen(s->valuestring) < sizeof(s_pend.ssid) && strlen(pass) < sizeof(s_pend.pass)) {
-                request_confirm(req, PEND_ADD_NETWORK, s->valuestring, pass);
-            }
+        } else if (strcmp(t, "add_network") == 0 || strcmp(t, "forget_network") == 0) {
+            request_network(req, t[0] == 'f', cJSON_GetObjectItem(root, "ssid"),
+                            cJSON_GetObjectItem(root, "pass"));
         } else if (strcmp(t, "confirm_cancel") == 0) {
             sysmgr_confirm_cancel();
         } else if (strcmp(t, "wifi_ap") == 0) {
@@ -657,7 +699,7 @@ static void on_confirm(void *arg, esp_event_base_t base, int32_t id, void *data)
         cJSON_AddStringToObject(root, "action", pend_name(s_pend.kind));
         if (e->state == CONFIRM_ARMED) {
             cJSON_AddNumberToObject(root, "remainingMs", e->remaining_ms);
-            if (s_pend.kind == PEND_ADD_NETWORK) {
+            if (s_pend.kind == PEND_ADD_NETWORK || s_pend.kind == PEND_FORGET_NETWORK) {
                 cJSON_AddStringToObject(root, "ssid", s_pend.ssid);
             }
         } else {
@@ -683,9 +725,13 @@ static void on_confirm(void *arg, esp_event_base_t base, int32_t id, void *data)
         esp_restart();
         break;
     case PEND_ADD_NETWORK:
-        ESP_LOGI(TAG, "network \"%s\" confirmed", ssid);
-        wifi_provision(ssid, pass);
+        ESP_LOGI(TAG, "add \"%s\" confirmed", ssid);
+        wifi_add_network(ssid, pass);
         memset(pass, 0, sizeof(pass));
+        break;
+    case PEND_FORGET_NETWORK:
+        ESP_LOGI(TAG, "forget \"%s\" confirmed", ssid);
+        wifi_forget_network(ssid);
         break;
     default:
         break;

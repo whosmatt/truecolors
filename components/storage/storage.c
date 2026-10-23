@@ -145,27 +145,24 @@ bool storage_load_epilepsy_safe(void)
     return on != 0;
 }
 
-esp_err_t storage_save_wifi(const char *ssid, const char *pass)
+esp_err_t storage_save_wifi_nets(const wifi_net_t *nets, int n)
 {
-    esp_err_t err = nvs_set_str(s_nvs, NVS_KEY_WIFI_SSID, ssid ? ssid : "");
-    if (err == ESP_OK) {
-        err = nvs_set_str(s_nvs, NVS_KEY_WIFI_PASS, pass ? pass : "");
+    esp_err_t err = n > 0 ? nvs_set_blob(s_nvs, NVS_KEY_WIFI_NETS, nets, n * sizeof(*nets))
+                          : nvs_erase_key(s_nvs, NVS_KEY_WIFI_NETS);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        err = ESP_OK;
     }
-    if (err == ESP_OK) {
-        err = nvs_commit(s_nvs);
-    }
-    return err;
+    return err == ESP_OK ? nvs_commit(s_nvs) : err;
 }
 
-bool storage_load_wifi(char *ssid, size_t ssid_len, char *pass, size_t pass_len)
+int storage_load_wifi_nets(wifi_net_t *out)
 {
-    if (nvs_get_str(s_nvs, NVS_KEY_WIFI_SSID, ssid, &ssid_len) != ESP_OK) {
-        return false;
+    memset(out, 0, WIFI_NETS_MAX * sizeof(*out));
+    size_t len = WIFI_NETS_MAX * sizeof(*out);
+    if (nvs_get_blob(s_nvs, NVS_KEY_WIFI_NETS, out, &len) != ESP_OK || len % sizeof(*out)) {
+        return 0;
     }
-    if (nvs_get_str(s_nvs, NVS_KEY_WIFI_PASS, pass, &pass_len) != ESP_OK) {
-        pass[0] = '\0';
-    }
-    return ssid[0] != '\0';
+    return (int)(len / sizeof(*out));
 }
 
 void storage_clear_all(void)
