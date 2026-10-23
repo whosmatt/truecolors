@@ -75,8 +75,61 @@ static bool signature_ok(const uint8_t *img, size_t len)
     return esp_secure_boot_verify_sbv2_signature_block(sig, digest, NULL) == ESP_OK;
 }
 
+#define OTA_CHUNK (64 * 1024)
+
+typedef struct {
+    httpd_req_t *req;   // async copy, answered once the write is done
+    const esp_partition_t *part;
+    uint8_t *img;
+    size_t len;
+} ota_job_t;
+
+static volatile bool s_ota_busy;
+
+static void ota_write_task(void *arg)
+{
+    ota_job_t *j = arg;
+    esp_ota_handle_t ota;
+    esp_err_t err = esp_ota_begin(j->part, OTA_WITH_SEQUENTIAL_WRITES, &ota);
+    if (err == ESP_OK) {
+        for (size_t off = 0; err == ESP_OK && off < j->len; off += OTA_CHUNK) {
+            size_t n = j->len - off < OTA_CHUNK ? j->len - off : OTA_CHUNK;
+            err = esp_ota_write(ota, j->img + off, n);
+            ws_broadcast_ota("write", (float)(off + n) / j->len);
+        }
+        if (err != ESP_OK) {
+            esp_ota_abort(ota);
+        } else if ((err = esp_ota_end(ota)) == ESP_OK) {
+            err = esp_ota_set_boot_partition(j->part);
+        }
+    }
+    free(j->img);
+
+    if (err == ESP_OK) {
+        ws_broadcast_ota("done", 1.0f);
+        httpd_resp_sendstr(j->req, "ok");
+    } else {
+        ESP_LOGE(TAG, "OTA write failed: %s", esp_err_to_name(err));
+        ws_broadcast_ota("error", 0.0f);
+        httpd_resp_send_err(j->req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota write failed");
+    }
+    httpd_req_async_handler_complete(j->req);
+    free(j);
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "OTA applied, rebooting");
+        vTaskDelay(pdMS_TO_TICKS(500));
+        esp_restart();
+    }
+    s_ota_busy = false;
+    vTaskDelete(NULL);
+}
+
 static esp_err_t ota_handler(httpd_req_t *req)
 {
+    if (s_ota_busy) {
+        httpd_resp_set_status(req, "409 Conflict");
+        return httpd_resp_sendstr(req, "ota in progress");
+    }
     const esp_partition_t *part = esp_ota_get_next_update_partition(NULL);
     if (!part) {
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no ota partition");
@@ -113,29 +166,26 @@ static esp_err_t ota_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    esp_ota_handle_t ota;
-    esp_err_t err = esp_ota_begin(part, len, &ota);
-    if (err == ESP_OK) {
-        err = esp_ota_write(ota, img, len);
-        if (err != ESP_OK) {
-            esp_ota_abort(ota);
-        }
-    }
-    free(img);
-    if (err != ESP_OK) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota write failed");
+    ota_job_t *job = malloc(sizeof(*job));
+    if (!job || httpd_req_async_handler_begin(req, &job->req) != ESP_OK) {
+        free(job);
+        free(img);
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "no memory");
         return ESP_FAIL;
     }
-
-    if (esp_ota_end(ota) != ESP_OK || esp_ota_set_boot_partition(part) != ESP_OK) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "ota finalize failed");
+    job->part = part;
+    job->img = img;
+    job->len = len;
+    s_ota_busy = true;
+    ws_broadcast_ota("write", 0.0f);
+    if (xTaskCreatePinnedToCore(ota_write_task, "ota_write", 8192, job, 3, NULL, 0) != pdPASS) {
+        s_ota_busy = false;
+        httpd_resp_send_err(job->req, HTTPD_500_INTERNAL_SERVER_ERROR, "no memory");
+        httpd_req_async_handler_complete(job->req);
+        free(img);
+        free(job);
         return ESP_FAIL;
     }
-
-    httpd_resp_sendstr(req, "ok");
-    ESP_LOGI(TAG, "OTA applied, rebooting");
-    vTaskDelay(pdMS_TO_TICKS(500));
-    esp_restart();
     return ESP_OK;
 }
 

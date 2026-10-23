@@ -103,8 +103,17 @@
     otaError = '';
   }
 
+  const otaPhase = $derived.by(() => {
+    if (otaProgress !== 1) return null;
+    return store.ota?.stage === 'write' ? 'write' : 'verify';
+  });
+  const otaBar = $derived(
+    otaPhase === 'write' ? (store.ota?.progress ?? 0) : typeof otaProgress === 'number' ? otaProgress : 0,
+  );
+
   function runOta() {
     if (!otaFile) return;
+    store.ota = null;
     otaProgress = 0;
     otaError = '';
     otaUpdate(otaFile, {
@@ -299,10 +308,18 @@
         </div>
 
         {#if typeof otaProgress === 'number'}
-          <div class="ota-bar"><div class="ota-fill" style="width:{Math.round(otaProgress * 100)}%"></div></div>
-          <span class="ota-status">Uploading… {Math.round(otaProgress * 100)}%</span>
+          <div class="ota-bar"><div class="ota-fill" style="width:{Math.round(otaBar * 100)}%"></div></div>
+          <span class="ota-status">
+            {#if otaPhase === 'write'}
+              Writing to flash… {Math.round(otaBar * 100)}%
+            {:else if otaPhase === 'verify'}
+              Verifying signature…
+            {:else}
+              Uploading… {Math.round(otaBar * 100)}%
+            {/if}
+          </span>
         {:else if otaProgress === 'done'}
-          <span class="ota-status ok">Upload complete, rebooting…</span>
+          <span class="ota-status ok">Update complete, rebooting…</span>
         {:else if otaProgress === 'error'}
           <span class="ota-status bad">Update failed: {otaError}</span>
         {/if}

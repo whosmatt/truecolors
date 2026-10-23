@@ -82,6 +82,11 @@ interface SnapshotMsg {
 interface ConfirmServerMsg extends ConfirmMsg {
   type: 'confirm';
 }
+interface OtaMsg {
+  type: 'ota';
+  stage: 'write' | 'done' | 'error';
+  progress: number;
+}
 interface PwmHzMsg {
   type: 'pwm_hz';
   hz: number;
@@ -126,6 +131,7 @@ type ServerMsg =
   | EpilepsySafeMsg
   | BeatgridMsg
   | ConfirmServerMsg
+  | OtaMsg
   | ErrorMsg;
 
 function handleMessage(raw: string): void {
@@ -159,6 +165,9 @@ function handleMessage(raw: string): void {
       break;
     case 'confirm':
       store.applyConfirm(msg);
+      break;
+    case 'ota':
+      store.ota = { stage: msg.stage, progress: msg.progress };
       break;
     case 'metrics':
       store.applyMetrics({

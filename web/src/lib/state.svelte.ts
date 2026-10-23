@@ -129,7 +129,6 @@ export interface BeatgridEvent {
 
 export type ConnStatus = 'connecting' | 'open' | 'closed';
 
-// Partial scene update — keys sent over the wire in a patch.
 export type ScenePatch = Partial<Scene>;
 
 function emptyScene(): Scene {
@@ -154,6 +153,7 @@ class Store {
   effects = $state<EffectDef[]>([]);
   net = $state<NetInfo>({ mode: 'boot', ssid: '', hostname: '', ip: '', known: [] });
   press = $state<PressConfirm | null>(null);
+  ota = $state<{ stage: 'write' | 'done' | 'error'; progress: number } | null>(null);
   metrics = $state<Metrics | null>(null);
   pwmHz = $state(120);
   epilepsySafe = $state(true);

@@ -738,6 +738,14 @@ static void on_confirm(void *arg, esp_event_base_t base, int32_t id, void *data)
     }
 }
 
+void ws_broadcast_ota(const char *stage, float progress)
+{
+    char json[64];
+    snprintf(json, sizeof(json), "{\"type\":\"ota\",\"stage\":\"%s\",\"progress\":%.3f}",
+             stage, progress);
+    broadcast(json);
+}
+
 void ws_start(httpd_handle_t server)
 {
     s_server = server;
